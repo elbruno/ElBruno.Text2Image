@@ -1,0 +1,44 @@
+{
+  "agents": {
+    "morpheus": {
+      "persistent_name": "Morpheus",
+      "role": "Lead",
+      "universe": "The Matrix",
+      "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "neo": {
+      "persistent_name": "Neo",
+      "role": "Core Dev",
+      "universe": "The Matrix",
+      "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "trinity": {
+      "persistent_name": "Trinity",
+      "role": "Backend Dev",
+      "universe": "The Matrix",
+      "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "tank": {
+      "persistent_name": "Tank",
+      "role": "Tester",
+      "universe": "The Matrix",
+      "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "oracle": {
+      "persistent_name": "Oracle",
+      "role": "AI/ML Specialist",
+      "universe": "The Matrix",
+      "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}
