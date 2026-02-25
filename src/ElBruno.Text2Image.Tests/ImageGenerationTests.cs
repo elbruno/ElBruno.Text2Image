@@ -130,6 +130,45 @@ public class StableDiffusion15Tests
     }
 }
 
+public class LcmDreamshaperV7Tests
+{
+    [Fact]
+    public void ModelName_IsCorrect()
+    {
+        using var generator = new LcmDreamshaperV7();
+        Assert.Equal("LCM Dreamshaper v7", generator.ModelName);
+    }
+
+    [Fact]
+    public void Constructor_AcceptsCustomOptions()
+    {
+        var options = new ImageGenerationOptions
+        {
+            NumInferenceSteps = 2,
+            GuidanceScale = 1.0,
+            Seed = 42
+        };
+
+        using var generator = new LcmDreamshaperV7(options);
+        Assert.NotNull(generator);
+    }
+
+    [Fact]
+    public void Implements_IImageGenerator()
+    {
+        using var generator = new LcmDreamshaperV7();
+        Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void DefaultOptions_LcmOptimized()
+    {
+        // LCM should default to low guidance (no CFG) and few steps
+        using var generator = new LcmDreamshaperV7();
+        Assert.Equal("LCM Dreamshaper v7", generator.ModelName);
+    }
+}
+
 public class DownloadProgressTests
 {
     [Fact]

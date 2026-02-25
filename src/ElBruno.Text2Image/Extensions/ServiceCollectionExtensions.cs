@@ -19,5 +19,23 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IImageGenerator>(new Models.StableDiffusion15(options));
         return services;
     }
+
+    /// <summary>
+    /// Adds the LCM Dreamshaper v7 image generator to the service collection.
+    /// LCM generates images in 2-4 steps with no classifier-free guidance needed.
+    /// </summary>
+    public static IServiceCollection AddLcmDreamshaperV7(
+        this IServiceCollection services,
+        Action<ImageGenerationOptions>? configureOptions = null)
+    {
+        var options = new ImageGenerationOptions
+        {
+            NumInferenceSteps = 4,
+            GuidanceScale = 1.0
+        };
+        configureOptions?.Invoke(options);
+        services.AddSingleton<IImageGenerator>(new Models.LcmDreamshaperV7(options));
+        return services;
+    }
 }
 

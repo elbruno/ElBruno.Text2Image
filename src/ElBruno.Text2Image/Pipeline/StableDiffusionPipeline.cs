@@ -14,13 +14,16 @@ internal sealed class StableDiffusionPipeline : IDisposable
     private readonly UNetDenoiser _unet;
     private readonly VaeDecoder _vaeDecoder;
     private readonly int _embeddingDim;
+    private readonly bool _useLcmScheduler;
 
     public StableDiffusionPipeline(
         string modelPath,
         Microsoft.ML.OnnxRuntime.SessionOptions sessionOptions,
-        int embeddingDim = 768)
+        int embeddingDim = 768,
+        bool useLcmScheduler = false)
     {
         _embeddingDim = embeddingDim;
+        _useLcmScheduler = useLcmScheduler;
 
         var tokenizerDir = Path.Combine(modelPath, "tokenizer");
         _tokenizer = ClipTokenizer.Load(tokenizerDir);
@@ -55,11 +58,25 @@ internal sealed class StableDiffusionPipeline : IDisposable
         var condTokens = _tokenizer.Tokenize(prompt);
         var uncondTokens = ClipTokenizer.CreateUnconditionalTokens();
 
-        // 2. Text encode (with classifier-free guidance)
-        var textEmbeddings = _textEncoder.EncodeWithGuidance(condTokens, uncondTokens, _embeddingDim);
+        // 2. Text encode
+        Microsoft.ML.OnnxRuntime.Tensors.DenseTensor<float> textEmbeddings;
+        bool useCfg = options.GuidanceScale > 1.0;
+
+        if (useCfg)
+        {
+            // Standard SD: encode both conditional and unconditional for CFG
+            textEmbeddings = _textEncoder.EncodeWithGuidance(condTokens, uncondTokens, _embeddingDim);
+        }
+        else
+        {
+            // LCM mode: no CFG needed, just encode the prompt
+            textEmbeddings = _textEncoder.Encode(condTokens, _embeddingDim);
+        }
 
         // 3. Create scheduler and set timesteps
-        IScheduler scheduler = new EulerAncestralDiscreteScheduler();
+        IScheduler scheduler = _useLcmScheduler
+            ? new LCMScheduler()
+            : new EulerAncestralDiscreteScheduler();
         var timesteps = scheduler.SetTimesteps(options.NumInferenceSteps);
 
         // 4. Generate initial latent noise
@@ -68,23 +85,34 @@ internal sealed class StableDiffusionPipeline : IDisposable
         // 5. Denoising loop
         for (int t = 0; t < timesteps.Length; t++)
         {
-            // Duplicate latents for CFG: [2, 4, H/8, W/8]
-            var latentModelInput = TensorHelper.Duplicate(
-                latents.Buffer.ToArray(),
-                new int[] { 2, 4, height / 8, width / 8 });
+            Microsoft.ML.OnnxRuntime.Tensors.DenseTensor<float> noisePred;
 
-            // Scale input
-            latentModelInput = scheduler.ScaleInput(latentModelInput, timesteps[t]);
+            if (useCfg)
+            {
+                // Duplicate latents for CFG: [2, 4, H/8, W/8]
+                var latentModelInput = TensorHelper.Duplicate(
+                    latents.Buffer.ToArray(),
+                    new int[] { 2, 4, height / 8, width / 8 });
 
-            // Run UNet
-            var noisePred = _unet.Predict(latentModelInput, timesteps[t], textEmbeddings);
+                // Scale input
+                latentModelInput = scheduler.ScaleInput(latentModelInput, timesteps[t]);
 
-            // Split into unconditional and conditional predictions
-            var (noisePredUncond, noisePredText) = TensorHelper.SplitTensor(
-                noisePred, 4, height / 8, width / 8);
+                // Run UNet
+                noisePred = _unet.Predict(latentModelInput, timesteps[t], textEmbeddings);
 
-            // Apply classifier-free guidance
-            noisePred = TensorHelper.ApplyGuidance(noisePredUncond, noisePredText, options.GuidanceScale);
+                // Split into unconditional and conditional predictions
+                var (noisePredUncond, noisePredText) = TensorHelper.SplitTensor(
+                    noisePred, 4, height / 8, width / 8);
+
+                // Apply classifier-free guidance
+                noisePred = TensorHelper.ApplyGuidance(noisePredUncond, noisePredText, options.GuidanceScale);
+            }
+            else
+            {
+                // LCM: no CFG, single forward pass
+                var latentModelInput = scheduler.ScaleInput(latents, timesteps[t]);
+                noisePred = _unet.Predict(latentModelInput, timesteps[t], textEmbeddings);
+            }
 
             // Scheduler step
             latents = scheduler.Step(noisePred, timesteps[t], latents);

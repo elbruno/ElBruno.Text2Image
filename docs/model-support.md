@@ -7,7 +7,7 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 | Model | Class | ONNX Source | Steps | VRAM | Status |
 |-------|-------|------------|-------|------|--------|
 | **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Implemented |
-| **LCM Dreamshaper v7** | *(planned)* | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | 🔜 Planned |
+| **LCM Dreamshaper v7** | `LcmDreamshaperV7` | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | ✅ Implemented |
 | **SDXL Turbo** | *(planned)* | Needs ONNX export | 1-4 | ~8 GB | 🔜 Planned |
 | **SD 2.1 Base** | *(planned)* | Needs ONNX export | 15-50 | ~5 GB | 🔜 Planned |
 

@@ -84,7 +84,7 @@ public class MyService(IImageGenerator generator)
 | Model | Class | ONNX Source | Steps | VRAM | Status |
 |-------|-------|------------|-------|------|--------|
 | **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Available |
-| LCM Dreamshaper v7 | *Coming soon* | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | 🔜 Planned |
+| **LCM Dreamshaper v7** | `LcmDreamshaperV7` | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | ✅ Available |
 | SDXL Turbo | *Coming soon* | Needs ONNX export | 1-4 | ~8 GB | 🔜 Planned |
 | SD 2.1 Base | *Coming soon* | Needs ONNX export | 15-50 | ~5 GB | 🔜 Planned |
 
