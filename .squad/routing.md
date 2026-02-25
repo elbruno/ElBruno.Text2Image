@@ -6,13 +6,13 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| Architecture & scope | Morpheus | System design, project structure, tech decisions |
-| Core implementation | Neo | Feature development, main application logic, refactoring |
-| APIs & services | Trinity | Backend endpoints, data services, infrastructure |
-| AI/ML & image generation | Oracle | Model integration, prompt engineering, image pipelines |
-| Testing & quality | Tank | Unit tests, integration tests, edge cases, coverage |
-| Code review | Morpheus | Review PRs, check quality, approve/reject work |
-| Scope & priorities | Morpheus | What to build next, trade-offs, decisions |
+| Architecture & scope | Mal | System design, project structure, tech decisions |
+| Core implementation | Kaylee | Feature development, main application logic, refactoring |
+| APIs & services | Wash | Backend endpoints, data services, infrastructure |
+| AI/ML & image generation | River | Model integration, prompt engineering, image pipelines |
+| Testing & quality | Jayne | Unit tests, integration tests, edge cases, coverage |
+| Code review | Mal | Review PRs, check quality, approve/reject work |
+| Scope & priorities | Mal | What to build next, trade-offs, decisions |
 | Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
 | Session logging | Scribe | Automatic — never needs routing |
 
@@ -20,26 +20,26 @@ How to decide who handles what.
 
 | Label | Action | Who |
 |-------|--------|-----|
-| `squad` | Triage: analyze issue, evaluate @copilot fit, assign `squad:{member}` label | Morpheus |
-| `squad:morpheus` | Architecture, scope, or review work | Morpheus |
-| `squad:neo` | Core implementation tasks | Neo |
-| `squad:trinity` | Backend/API/infrastructure tasks | Trinity |
-| `squad:oracle` | AI/ML and image generation tasks | Oracle |
-| `squad:tank` | Testing and quality tasks | Tank |
+| `squad` | Triage: analyze issue, evaluate @copilot fit, assign `squad:{member}` label | Mal |
+| `squad:mal` | Architecture, scope, or review work | Mal |
+| `squad:kaylee` | Core implementation tasks | Kaylee |
+| `squad:wash` | Backend/API/infrastructure tasks | Wash |
+| `squad:river` | AI/ML and image generation tasks | River |
+| `squad:jayne` | Testing and quality tasks | Jayne |
 | `squad:copilot` | Assign to @copilot for autonomous work (if enabled) | @copilot 🤖 |
 
 ### How Issue Assignment Works
 
-1. When a GitHub issue gets the `squad` label, **Morpheus** triages it — analyzing content, evaluating @copilot's capability profile, assigning the right `squad:{member}` label, and commenting with triage notes.
-2. **@copilot evaluation:** Morpheus checks if the issue matches @copilot's capability profile (🟢 good fit / 🟡 needs review / 🔴 not suitable). If it's a good fit, Morpheus may route to `squad:copilot` instead of a squad member.
+1. When a GitHub issue gets the `squad` label, **Mal** triages it — analyzing content, evaluating @copilot's capability profile, assigning the right `squad:{member}` label, and commenting with triage notes.
+2. **@copilot evaluation:** Mal checks if the issue matches @copilot's capability profile (🟢 good fit / 🟡 needs review / 🔴 not suitable). If it's a good fit, Mal may route to `squad:copilot` instead of a squad member.
 3. When a `squad:{member}` label is applied, that member picks up the issue in their next session.
 4. When `squad:copilot` is applied and auto-assign is enabled, `@copilot` is assigned on the issue and picks it up autonomously.
 5. Members can reassign by removing their label and adding another member's label.
-6. The `squad` label is the "inbox" — untriaged issues waiting for Morpheus's review.
+6. The `squad` label is the "inbox" — untriaged issues waiting for Mal's review.
 
 ### Lead Triage Guidance for @copilot
 
-When triaging, Morpheus should ask:
+When triaging, Mal should ask:
 
 1. **Is this well-defined?** Clear title, reproduction steps or acceptance criteria, bounded scope → likely 🟢
 2. **Does it follow existing patterns?** Adding a test, fixing a known bug, updating a dependency → likely 🟢

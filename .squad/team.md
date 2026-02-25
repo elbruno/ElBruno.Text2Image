@@ -12,11 +12,11 @@
 
 | Name | Role | Charter | Status |
 |------|------|---------|--------|
-| Morpheus | Lead | `.squad/agents/morpheus/charter.md` | ✅ Active |
-| Neo | Core Dev | `.squad/agents/neo/charter.md` | ✅ Active |
-| Trinity | Backend Dev | `.squad/agents/trinity/charter.md` | ✅ Active |
-| Tank | Tester | `.squad/agents/tank/charter.md` | ✅ Active |
-| Oracle | AI/ML Specialist | `.squad/agents/oracle/charter.md` | ✅ Active |
+| Mal | Lead | `.squad/agents/mal/charter.md` | ✅ Active |
+| Kaylee | Core Dev | `.squad/agents/kaylee/charter.md` | ✅ Active |
+| Wash | Backend Dev | `.squad/agents/wash/charter.md` | ✅ Active |
+| Jayne | Tester | `.squad/agents/jayne/charter.md` | ✅ Active |
+| River | AI/ML Specialist | `.squad/agents/river/charter.md` | ✅ Active |
 | Scribe | Session Logger | `.squad/agents/scribe/charter.md` | 📋 Silent |
 | Ralph | Work Monitor | — | 🔄 Monitor |
 

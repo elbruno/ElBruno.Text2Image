@@ -6,7 +6,7 @@
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
       "legacy_named": false,
-      "status": "active"
+      "status": "retired"
     },
     "neo": {
       "persistent_name": "Neo",
@@ -14,7 +14,7 @@
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
       "legacy_named": false,
-      "status": "active"
+      "status": "retired"
     },
     "trinity": {
       "persistent_name": "Trinity",
@@ -22,7 +22,7 @@
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
       "legacy_named": false,
-      "status": "active"
+      "status": "retired"
     },
     "tank": {
       "persistent_name": "Tank",
@@ -30,13 +30,53 @@
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
       "legacy_named": false,
-      "status": "active"
+      "status": "retired"
     },
     "oracle": {
       "persistent_name": "Oracle",
       "role": "AI/ML Specialist",
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
+      "legacy_named": false,
+      "status": "retired"
+    },
+    "mal": {
+      "persistent_name": "Mal",
+      "role": "Lead",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "kaylee": {
+      "persistent_name": "Kaylee",
+      "role": "Core Dev",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "wash": {
+      "persistent_name": "Wash",
+      "role": "Backend Dev",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "jayne": {
+      "persistent_name": "Jayne",
+      "role": "Tester",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "river": {
+      "persistent_name": "River",
+      "role": "AI/ML Specialist",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
       "legacy_named": false,
       "status": "active"
     }

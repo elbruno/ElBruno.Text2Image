@@ -4,6 +4,11 @@
       "universe": "The Matrix",
       "used_at": "2025-07-25T00:00:00Z",
       "repo": "elbruno-text2image"
+    },
+    {
+      "universe": "Firefly",
+      "used_at": "2025-07-25T12:00:00Z",
+      "repo": "elbruno-text2image"
     }
   ],
   "assignment_cast_snapshots": {
@@ -11,12 +16,25 @@
       "assignment_id": "assignment-001",
       "universe": "The Matrix",
       "created_at": "2025-07-25T00:00:00Z",
+      "retired_at": "2025-07-25T12:00:00Z",
       "agents": {
         "morpheus": "Lead",
         "neo": "Core Dev",
         "trinity": "Backend Dev",
         "tank": "Tester",
         "oracle": "AI/ML Specialist"
+      }
+    },
+    "assignment-002": {
+      "assignment_id": "assignment-002",
+      "universe": "Firefly",
+      "created_at": "2025-07-25T12:00:00Z",
+      "agents": {
+        "mal": "Lead",
+        "kaylee": "Core Dev",
+        "wash": "Backend Dev",
+        "jayne": "Tester",
+        "river": "AI/ML Specialist"
       }
     }
   }
