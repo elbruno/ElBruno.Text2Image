@@ -8,28 +8,16 @@ namespace ElBruno.Text2Image.Extensions;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds the ViT-GPT2 image captioner to the service collection.
+    /// Adds the Stable Diffusion 1.5 image generator to the service collection.
     /// </summary>
-    public static IServiceCollection AddViTGpt2Captioner(
+    public static IServiceCollection AddStableDiffusion15(
         this IServiceCollection services,
-        Action<ImageCaptionerOptions>? configureOptions = null)
+        Action<ImageGenerationOptions>? configureOptions = null)
     {
-        var options = new ImageCaptionerOptions();
+        var options = new ImageGenerationOptions();
         configureOptions?.Invoke(options);
-        services.AddSingleton<IImageCaptioner>(new Models.ViTGpt2Captioner(options));
-        return services;
-    }
-
-    /// <summary>
-    /// Adds the BLIP image captioner to the service collection.
-    /// </summary>
-    public static IServiceCollection AddBlipCaptioner(
-        this IServiceCollection services,
-        Action<ImageCaptionerOptions>? configureOptions = null)
-    {
-        var options = new ImageCaptionerOptions();
-        configureOptions?.Invoke(options);
-        services.AddSingleton<IImageCaptioner>(new Models.BlipCaptioner(options));
+        services.AddSingleton<IImageGenerator>(new Models.StableDiffusion15(options));
         return services;
     }
 }
+

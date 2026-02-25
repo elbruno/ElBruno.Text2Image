@@ -1,180 +1,127 @@
-# ONNX Model Conversion Guide
+# ONNX Conversion Guide for Stable Diffusion Models
 
-This document describes how to convert Hugging Face vision-language models to ONNX format for use with the ElBruno.Text2Image library.
+This document describes how to convert Stable Diffusion models to ONNX format for use with ElBruno.Text2Image.
 
 ## Prerequisites
 
 ```bash
-pip install optimum[onnxruntime] transformers torch pillow
+pip install optimum[onnxruntime] diffusers transformers torch
 ```
 
-## Models Already in ONNX Format
+## Pre-exported ONNX Models
 
-These models already have ONNX weights available on Hugging Face and do **not** need conversion:
+Some models already have ONNX exports available on HuggingFace. The library uses these by default:
 
-| Model | ONNX Source | Notes |
-|-------|------------|-------|
-| ViT-GPT2 | [Xenova/vit-gpt2-image-captioning](https://huggingface.co/Xenova/vit-gpt2-image-captioning) | Encoder + decoder, quantized variants available |
-| BLIP Base | [onnx-community/Salesforce_blip-image-captioning-base](https://huggingface.co/onnx-community/Salesforce_blip-image-captioning-base) | Vision model + text decoder split |
-| Florence-2 Base | [onnx-community/Florence-2-base](https://huggingface.co/onnx-community/Florence-2-base) | Multi-part encoder/decoder |
+| Model | ONNX Source | Size |
+|-------|------------|------|
+| SD 1.5 | `onnx-community/stable-diffusion-v1-5-ONNX` | ~5.1 GB |
+| LCM Dreamshaper v7 | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | ~5 GB |
 
-## Converting GIT (GenerativeImage2Text) to ONNX
+## Exporting to ONNX with Optimum CLI
 
-The Microsoft GIT model can be exported using `optimum-cli`:
+For models without pre-exported ONNX versions, use the Hugging Face Optimum CLI:
+
+### Stable Diffusion 1.5
 
 ```bash
-# Install optimum
-pip install optimum[onnxruntime]
-
-# Export GIT base COCO to ONNX
 optimum-cli export onnx \
-  --model microsoft/git-base-coco \
-  --task image-to-text \
-  ./git-base-coco-onnx/
-
-# Validate the export
-python scripts/validate_onnx_export.py --model-path ./git-base-coco-onnx/ --original microsoft/git-base-coco
+  --model stable-diffusion-v1-5/stable-diffusion-v1-5 \
+  --task stable-diffusion \
+  sd_v15_onnx/
 ```
 
-Alternatively, use the provided script:
+### Stable Diffusion 2.1
 
 ```bash
-python scripts/export_git_onnx.py
+optimum-cli export onnx \
+  --model stabilityai/stable-diffusion-2-1-base \
+  --task stable-diffusion \
+  sd_v21_onnx/
 ```
 
-### GIT ONNX Structure
-
-After export, you'll find:
-- `encoder_model.onnx` — CLIP ViT image encoder
-- `decoder_model.onnx` / `decoder_model_merged.onnx` — Text decoder with optional KV-cache
-- `preprocessor_config.json` — Image preprocessing config
-- `tokenizer.json` — Tokenizer vocabulary
-
-### GIT Input/Output Details
-
-**Encoder:**
-- Input: `pixel_values` — shape `[batch, 3, 224, 224]`, float32
-- Output: `last_hidden_state` — shape `[batch, seq_len, hidden_size]`
-
-**Decoder:**
-- Inputs: `input_ids` (long), `encoder_hidden_states` (float32), optional KV-cache
-- Output: `logits` — shape `[batch, seq_len, vocab_size]`
-
-## Converting Moondream to ONNX
-
-> ⚠️ **Complex** — Moondream uses a custom architecture with `trust_remote_code=True`, making standard `optimum-cli export` unreliable. A custom export script is needed.
+### SDXL Turbo
 
 ```bash
-python scripts/export_moondream_onnx.py
+optimum-cli export onnx \
+  --model stabilityai/sdxl-turbo \
+  --task stable-diffusion-xl \
+  sdxl_turbo_onnx/
 ```
 
-See `scripts/export_moondream_onnx.py` for the full conversion pipeline.
+## Expected ONNX File Structure
 
-### Moondream Export Challenges
+After export, you should have the following directory structure:
 
-1. **Custom architecture**: Requires `trust_remote_code=True`
-2. **Large model size**: ~1.8B params, consider quantization
-3. **Dynamic shapes**: Variable-length text generation requires careful dynamic axis configuration
-4. **Multi-modal inputs**: Both image and text embeddings need to be handled
+```
+model_onnx/
+├── text_encoder/
+│   └── model.onnx          # CLIP text encoder
+├── unet/
+│   ├── model.onnx           # UNet denoiser (largest file, ~1.6-3.4 GB)
+│   └── weights.pb           # External weights (if separated)
+├── vae_decoder/
+│   └── model.onnx           # VAE decoder (latents → image)
+├── vae_encoder/
+│   └── model.onnx           # VAE encoder (image → latents, optional)
+├── tokenizer/
+│   ├── vocab.json            # CLIP tokenizer vocabulary
+│   ├── merges.txt            # BPE merge rules
+│   ├── special_tokens_map.json
+│   └── tokenizer_config.json
+├── scheduler/
+│   └── scheduler_config.json # Scheduler configuration
+├── safety_checker/
+│   └── model.onnx           # NSFW safety checker (optional)
+└── model_index.json          # Pipeline configuration
+```
 
-## Uploading ONNX Models to Hugging Face
+## FP16 Export (Smaller, Faster on GPU)
 
-After validating the exported model, upload to a Hugging Face repository:
+To export in FP16 for GPU-accelerated inference:
+
+```bash
+optimum-cli export onnx \
+  --model stable-diffusion-v1-5/stable-diffusion-v1-5 \
+  --task stable-diffusion \
+  --fp16 \
+  sd_v15_fp16_onnx/
+```
+
+## Validating the Export
+
+Run a quick test with the Python diffusers library:
+
+```python
+from optimum.onnxruntime import ORTStableDiffusionPipeline
+
+pipe = ORTStableDiffusionPipeline.from_pretrained("./sd_v15_onnx/")
+image = pipe("a cat sitting on a windowsill").images[0]
+image.save("test_output.png")
+```
+
+## Uploading to HuggingFace
+
+After validating, upload the ONNX model to HuggingFace:
 
 ```bash
 python scripts/upload_to_huggingface.py \
-  --model-path ./git-base-coco-onnx/ \
-  --repo-id elbruno/git-base-coco-onnx \
-  --commit-message "Add ONNX weights for git-base-coco"
+  --model-dir ./sd_v15_onnx/ \
+  --repo-id elbruno/stable-diffusion-v1-5-onnx \
+  --token $HF_TOKEN
 ```
 
-Or manually:
-
-```bash
-# Install huggingface_hub CLI
-pip install huggingface_hub
-
-# Login
-huggingface-cli login
-
-# Create repo and upload
-huggingface-cli repo create git-base-coco-onnx --type model
-huggingface-cli upload elbruno/git-base-coco-onnx ./git-base-coco-onnx/
-```
-
-## Validating ONNX Exports
-
-Always validate that the ONNX model produces the same output as the original PyTorch model:
-
-```python
-import numpy as np
-from PIL import Image
-from transformers import AutoProcessor, AutoModelForCausalLM
-import onnxruntime as ort
-
-# Load original model
-processor = AutoProcessor.from_pretrained("microsoft/git-base-coco")
-model = AutoModelForCausalLM.from_pretrained("microsoft/git-base-coco")
-
-# Run PyTorch inference
-image = Image.open("test.jpg")
-inputs = processor(images=image, return_tensors="pt")
-with torch.no_grad():
-    outputs = model.generate(**inputs, max_length=50)
-pytorch_caption = processor.decode(outputs[0], skip_special_tokens=True)
-
-# Run ONNX inference
-encoder_session = ort.InferenceSession("git-base-coco-onnx/encoder_model.onnx")
-decoder_session = ort.InferenceSession("git-base-coco-onnx/decoder_model.onnx")
-# ... run inference ...
-
-# Compare outputs
-print(f"PyTorch: {pytorch_caption}")
-print(f"ONNX: {onnx_caption}")
-```
-
-## Image Preprocessing Requirements
-
-Each model expects specific image preprocessing:
-
-| Model | Size | Mean | Std | Notes |
-|-------|------|------|-----|-------|
-| ViT-GPT2 | 224×224 | [0.5, 0.5, 0.5] | [0.5, 0.5, 0.5] | Resize shortest edge, center crop |
-| BLIP | 384×384 | [0.48145, 0.45783, 0.40821] | [0.26863, 0.26130, 0.27578] | CLIP normalization |
-| GIT | 224×224 | [0.48145, 0.45783, 0.40821] | [0.26863, 0.26130, 0.27578] | CLIP normalization |
-| Florence-2 | 768×768 | [0.485, 0.456, 0.406] | [0.229, 0.224, 0.225] | ImageNet normalization |
-
-## Quantization
-
-For smaller model sizes and faster CPU inference, consider quantizing ONNX models:
-
-```bash
-# Dynamic quantization (easiest, good for CPU)
-python -m onnxruntime.quantization.quantize \
-  --input encoder_model.onnx \
-  --output encoder_model_quantized.onnx \
-  --per_channel
-
-# Or use optimum
-optimum-cli export onnx \
-  --model microsoft/git-base-coco \
-  --task image-to-text \
-  --optimize O2 \
-  ./git-base-coco-onnx-optimized/
-```
+See `scripts/upload_to_huggingface.py` for the full upload script.
 
 ## Troubleshooting
 
-### Common Issues
+### OOM during export
+The export requires ~16GB RAM. If you run out of memory, try:
+- Close other applications
+- Use a machine with more RAM
+- Export individual components separately
 
-1. **"Model type X is not supported"** — Check if Optimum supports the model. Florence-2 and Moondream may require custom export configs.
+### Missing `weights.pb`
+Some exports separate large weights into a `.pb` file alongside `model.onnx`. Both files must be present.
 
-2. **Shape mismatch errors** — Ensure dynamic axes are configured correctly for variable sequence lengths.
-
-3. **Large model files** — Use Git LFS for files > 50MB when uploading to Hugging Face:
-   ```bash
-   git lfs track "*.onnx"
-   git lfs track "*.onnx.data"
-   ```
-
-4. **Missing KV-cache outputs** — Use `--task image-to-text-with-past` with optimum-cli to export models with KV-cache support for efficient autoregressive decoding.
+### Tokenizer files
+The tokenizer directory must contain `vocab.json` and `merges.txt`. These are critical for the C# CLIP tokenizer implementation.

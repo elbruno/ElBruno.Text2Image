@@ -7,8 +7,8 @@
     <PackageId>ElBruno.Text2Image</PackageId>
     <Version>0.1.0-preview</Version>
     <Authors>Bruno Capuano</Authors>
-    <Description>A .NET library for local image captioning using ONNX Runtime. Supports multiple vision models (ViT-GPT2, BLIP, GIT, Florence-2) with automatic model download from HuggingFace and native C# inference — no Python dependency.</Description>
-    <PackageTags>image-captioning;vision;onnx;onnxruntime;ai;ml;huggingface;blip;florence;vit-gpt2</PackageTags>
+    <Description>A .NET library for local text-to-image generation using Stable Diffusion and ONNX Runtime. Supports multiple models (SD 1.5, LCM Dreamshaper) with automatic model download from HuggingFace and native C# inference — no Python dependency.</Description>
+    <PackageTags>text-to-image;stable-diffusion;image-generation;onnx;onnxruntime;ai;ml;huggingface;diffusion</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
     <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
@@ -26,7 +26,6 @@
   <ItemGroup>
     <PackageReference Include="ElBruno.HuggingFace.Downloader" Version="0.5.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" />
-    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.*" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.*" />
   </ItemGroup>

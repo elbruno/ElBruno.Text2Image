@@ -5,8 +5,6 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="src/samples/scenario-01-simple/scenario-01-simple.csproj" />
-    <Project Path="src/samples/scenario-02-blip-conditional/scenario-02-blip-conditional.csproj" />
-    <Project Path="src/samples/scenario-03-florence2-multitask/scenario-03-florence2-multitask.csproj" />
-    <Project Path="src/samples/scenario-04-compare-models/scenario-04-compare-models.csproj" />
+    <Project Path="src/samples/scenario-02-custom-options/scenario-02-custom-options.csproj" />
   </Folder>
 </Solution>

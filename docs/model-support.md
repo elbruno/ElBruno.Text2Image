@@ -1,59 +1,63 @@
 # Model Support Matrix
 
+This document lists all models supported by ElBruno.Text2Image and their status.
+
 ## Supported Models
 
-| Model | Status | ONNX Source | Parameters | Task | Quality |
-|-------|--------|------------|------------|------|---------|
-| **ViT-GPT2** | ✅ Ready | [Xenova/vit-gpt2-image-captioning](https://huggingface.co/Xenova/vit-gpt2-image-captioning) | ~300M | Caption | Good for simple captions |
-| **BLIP Base** | ✅ Ready | [onnx-community/Salesforce_blip-image-captioning-base](https://huggingface.co/onnx-community/Salesforce_blip-image-captioning-base) | ~385M | Caption (conditional/unconditional) | Great for captioning |
-| **Florence-2 Base** | 🔜 Planned | [onnx-community/Florence-2-base](https://huggingface.co/onnx-community/Florence-2-base) | ~230M | Multi-task (caption, OD, OCR) | Excellent multi-task |
-| **GIT Base COCO** | 🔜 Planned | Needs ONNX export | ~130M | Caption | Good for COCO-style |
-| **Moondream 2** | 🔜 Planned | Needs ONNX export | ~1.8B | Caption, VQA, Detection | Best quality, largest |
+| Model | Class | ONNX Source | Steps | VRAM | Status |
+|-------|-------|------------|-------|------|--------|
+| **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Implemented |
+| **LCM Dreamshaper v7** | *(planned)* | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | 🔜 Planned |
+| **SDXL Turbo** | *(planned)* | Needs ONNX export | 1-4 | ~8 GB | 🔜 Planned |
+| **SD 2.1 Base** | *(planned)* | Needs ONNX export | 15-50 | ~5 GB | 🔜 Planned |
 
-## Model Comparison
+## Model Details
 
-### ViT-GPT2
-- **Best for**: Quick, simple image captioning
-- **Architecture**: ViT encoder + GPT-2 decoder
-- **Preprocessing**: 224×224, mean/std = 0.5
-- **Tokenizer**: GPT-2 BPE
-- **ONNX files**: `encoder_model.onnx` + `decoder_model_merged.onnx`
-- **Quantized variants**: ✅ Available
+### Stable Diffusion 1.5
 
-### BLIP Base (Salesforce)
-- **Best for**: Flexible captioning with optional text prompts
-- **Architecture**: ViT encoder + text decoder
-- **Preprocessing**: 384×384, CLIP normalization
-- **Tokenizer**: BERT WordPiece
-- **ONNX files**: `split_0.onnx` (vision) + `split_1.onnx` (decoder)
-- **Special feature**: Conditional captioning (provide a text prompt to guide the caption)
+- **Resolution**: 512×512 (default)
+- **Embedding dimension**: 768
+- **Scheduler**: Euler Ancestral Discrete / LMS Discrete
+- **License**: CreativeML OpenRAIL-M
+- **Download size**: ~5.1 GB
+- **Auto-download**: Yes (from HuggingFace)
 
-### Florence-2 (Microsoft)
-- **Best for**: Multi-task vision understanding
-- **Architecture**: DaViT encoder + sequence-to-sequence decoder
-- **Tasks**: `<CAPTION>`, `<DETAILED_CAPTION>`, `<OD>`, `<OCR>`, `<OCR_WITH_REGION>`
-- **Preprocessing**: 768×768, ImageNet normalization
-- **Special feature**: Prompt-based multi-task — one model for many vision tasks
+### LCM Dreamshaper v7 (Planned)
 
-### GIT Base COCO (Microsoft)
-- **Best for**: Image captioning with CLIP-based vision
-- **Architecture**: CLIP ViT encoder + GPT-2-style decoder
-- **Preprocessing**: 224×224, CLIP normalization
-- **Special feature**: Strong zero-shot performance
+- **Resolution**: 512×512
+- **Key advantage**: Only 2-4 inference steps needed (near-instant generation)
+- **No CFG needed**: guidance_scale = 1.0
+- **License**: CreativeML OpenRAIL-M
+- **Based on**: Dreamshaper v7 fine-tune of SD 1.5
 
-### Moondream 2
-- **Best for**: Highest quality vision-language understanding
-- **Architecture**: SigLIP encoder + Phi-1.5 decoder
-- **Tasks**: Captioning, VQA, object detection, pointing
-- **Size**: ~1.8B parameters (quantized variants available)
-- **Special feature**: Runs efficiently with quantization, supports complex queries
+### SDXL Turbo (Planned)
 
-## Choosing a Model
+- **Resolution**: 512×512 (native) to 1024×1024
+- **Key advantage**: 1-4 inference steps
+- **VRAM requirement**: ~8 GB minimum
+- **License**: Stability AI Community License
 
-| Use Case | Recommended Model | Why |
-|----------|------------------|-----|
-| Quick prototype | ViT-GPT2 | Smallest, fastest download, simplest API |
-| Production captioning | BLIP Base | Best quality/size ratio, conditional captioning |
-| Multi-task vision | Florence-2 | One model for captioning, detection, OCR |
-| Highest quality | Moondream 2 | Best understanding, but largest |
-| Edge/mobile | ViT-GPT2 (quantized) | Smallest footprint |
+### SD 2.1 Base (Planned)
+
+- **Resolution**: 512×512 (base) or 768×768
+- **Embedding dimension**: 1024 (uses OpenCLIP ViT-H)
+- **License**: CreativeML OpenRAIL-M
+- **Notes**: Better text understanding than SD 1.5
+
+## Execution Providers
+
+| Provider | GPU Required | Platform | Notes |
+|----------|-------------|----------|-------|
+| **CPU** | No | All | Works everywhere, slower |
+| **CUDA** | NVIDIA GPU | All | Fastest for NVIDIA GPUs |
+| **DirectML** | Any GPU | Windows | AMD, Intel, NVIDIA on Windows |
+
+## Default Options
+
+| Option | Default | Range | Description |
+|--------|---------|-------|-------------|
+| `NumInferenceSteps` | 20 | 1-100 | More steps = better quality, slower |
+| `GuidanceScale` | 7.5 | 1.0-20.0 | Higher = follows prompt more closely |
+| `Width` | 512 | Multiple of 8 | Image width in pixels |
+| `Height` | 512 | Multiple of 8 | Image height in pixels |
+| `Seed` | random | Any int | For reproducible generation |

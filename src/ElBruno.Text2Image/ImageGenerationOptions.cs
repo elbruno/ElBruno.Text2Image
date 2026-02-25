@@ -1,9 +1,9 @@
 namespace ElBruno.Text2Image;
 
 /// <summary>
-/// Configuration options for image captioning.
+/// Configuration options for image generation.
 /// </summary>
-public sealed class ImageCaptionerOptions
+public sealed class ImageGenerationOptions
 {
     /// <summary>
     /// Local directory to store downloaded models. Defaults to a subfolder in the user's local app data.
@@ -16,19 +16,29 @@ public sealed class ImageCaptionerOptions
     public ExecutionProvider ExecutionProvider { get; set; } = ExecutionProvider.Cpu;
 
     /// <summary>
-    /// Maximum number of tokens to generate. Default is 50.
+    /// Number of denoising steps. More steps = better quality but slower. Default is 20.
     /// </summary>
-    public int MaxTokens { get; set; } = 50;
+    public int NumInferenceSteps { get; set; } = 20;
 
     /// <summary>
-    /// Whether to use quantized model variants when available. Default is false.
+    /// Classifier-free guidance scale. Higher values follow the prompt more closely. Default is 7.5.
     /// </summary>
-    public bool UseQuantized { get; set; }
+    public double GuidanceScale { get; set; } = 7.5;
 
     /// <summary>
-    /// Optional text prompt for models that support conditional captioning (e.g., BLIP).
+    /// Image width in pixels. Must be a multiple of 8. Default is 512.
     /// </summary>
-    public string? TextPrompt { get; set; }
+    public int Width { get; set; } = 512;
+
+    /// <summary>
+    /// Image height in pixels. Must be a multiple of 8. Default is 512.
+    /// </summary>
+    public int Height { get; set; } = 512;
+
+    /// <summary>
+    /// Random seed for reproducible generation. If null, a random seed is used.
+    /// </summary>
+    public int? Seed { get; set; }
 
     /// <summary>
     /// Gets the resolved model directory path.

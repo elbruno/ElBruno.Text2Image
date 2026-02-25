@@ -3,16 +3,17 @@
 [![NuGet](https://img.shields.io/nuget/v/ElBruno.Text2Image.svg)](https://www.nuget.org/packages/ElBruno.Text2Image)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A .NET library for **local image captioning** using ONNX Runtime. Supports multiple vision models with automatic model download from HuggingFace — no Python dependency required.
+A .NET library for **local text-to-image generation** using Stable Diffusion and ONNX Runtime. Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
 
 ## Features
 
-- 🖼️ **Image Captioning** — Generate text descriptions from images
-- 🤖 **Multiple Models** — ViT-GPT2, BLIP, and more coming soon
-- ⬇️ **Auto-Download** — Models are automatically downloaded from HuggingFace on first use
+- 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion
+- 🤖 **Multiple Models** — Stable Diffusion 1.5, with LCM Dreamshaper and SDXL Turbo planned
+- ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
 - 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
+- 🌱 **Reproducible** — Seed-based generation for reproducible results
 
 ## Quick Start
 
@@ -28,59 +29,64 @@ dotnet add package ElBruno.Text2Image
 using ElBruno.Text2Image;
 using ElBruno.Text2Image.Models;
 
-// Create a captioner (model downloads automatically on first use)
-using var captioner = new ViTGpt2Captioner();
+// Create a Stable Diffusion 1.5 generator (model downloads automatically on first use)
+using var generator = new StableDiffusion15();
 
-// Generate a caption
-var result = await captioner.CaptionAsync("photo.jpg");
-Console.WriteLine(result.Caption);
-// Output: "a cat sitting on a table"
+// Generate an image from a text prompt
+var result = await generator.GenerateAsync("a beautiful sunset over a mountain lake, digital art");
+
+// Save the generated image
+await result.SaveAsync("output.png");
+Console.WriteLine($"Generated in {result.InferenceTimeMs}ms (seed: {result.Seed})");
 ```
 
-### With Options
+### With Custom Options
 
 ```csharp
-using var captioner = new ViTGpt2Captioner(new ImageCaptionerOptions
-{
-    MaxTokens = 30,
-    UseQuantized = true,  // Smaller, faster model
-    ExecutionProvider = ExecutionProvider.Cpu
-});
+using var generator = new StableDiffusion15();
 
-var result = await captioner.CaptionAsync("photo.jpg");
-Console.WriteLine($"Caption: {result.Caption}");
-Console.WriteLine($"Time: {result.InferenceTimeMs}ms");
+var result = await generator.GenerateAsync("a futuristic cityscape at night, neon lights",
+    new ImageGenerationOptions
+    {
+        NumInferenceSteps = 20,  // More steps = better quality
+        GuidanceScale = 7.5,     // Higher = follows prompt more closely
+        Width = 512,
+        Height = 512,
+        Seed = 42,               // For reproducible results
+        ExecutionProvider = ExecutionProvider.Cpu
+    });
+
+await result.SaveAsync("cityscape.png");
 ```
 
 ### Dependency Injection
 
 ```csharp
-services.AddViTGpt2Captioner(options =>
+services.AddStableDiffusion15(options =>
 {
-    options.MaxTokens = 50;
+    options.NumInferenceSteps = 20;
     options.ModelDirectory = "/path/to/models";
 });
 
-// Inject IImageCaptioner anywhere
-public class MyService(IImageCaptioner captioner)
+// Inject IImageGenerator anywhere
+public class MyService(IImageGenerator generator)
 {
-    public async Task<string> DescribeImage(string path)
+    public async Task<byte[]> GenerateImage(string prompt)
     {
-        var result = await captioner.CaptionAsync(path);
-        return result.Caption;
+        var result = await generator.GenerateAsync(prompt);
+        return result.ImageBytes;
     }
 }
 ```
 
 ## Supported Models
 
-| Model | Class | Size | Best For |
-|-------|-------|------|----------|
-| **ViT-GPT2** | `ViTGpt2Captioner` | ~300M | Quick, simple captioning |
-| **BLIP Base** | `BlipCaptioner` | ~385M | Flexible captioning with text prompts |
-| Florence-2 | *Coming soon* | ~230M | Multi-task vision (caption, detection, OCR) |
-| GIT Base | *Coming soon* | ~130M | COCO-style captioning |
-| Moondream 2 | *Coming soon* | ~1.8B | Highest quality VLM |
+| Model | Class | ONNX Source | Steps | VRAM | Status |
+|-------|-------|------------|-------|------|--------|
+| **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Available |
+| LCM Dreamshaper v7 | *Coming soon* | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | 🔜 Planned |
+| SDXL Turbo | *Coming soon* | Needs ONNX export | 1-4 | ~8 GB | 🔜 Planned |
+| SD 2.1 Base | *Coming soon* | Needs ONNX export | 15-50 | ~5 GB | 🔜 Planned |
 
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
@@ -88,45 +94,44 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 
 | Sample | Description |
 |--------|-------------|
-| [scenario-01-simple](src/samples/scenario-01-simple/) | Basic image captioning with ViT-GPT2 |
-| [scenario-02-blip-conditional](src/samples/scenario-02-blip-conditional/) | BLIP with conditional captioning |
-| [scenario-03-florence2-multitask](src/samples/scenario-03-florence2-multitask/) | Florence-2 multi-task (coming soon) |
-| [scenario-04-compare-models](src/samples/scenario-04-compare-models/) | Compare all available models |
+| [scenario-01-simple](src/samples/scenario-01-simple/) | Basic text-to-image generation with SD 1.5 |
+| [scenario-02-custom-options](src/samples/scenario-02-custom-options/) | Custom seeds, guidance scale, and steps |
 
 ### Run a Sample
 
 ```bash
 cd src/samples/scenario-01-simple
-dotnet run -- path/to/image.jpg
+dotnet run
 ```
 
 ## Architecture
 
 ```
-Image File/Stream
-       │
-       ▼
-┌──────────────┐
-│ Preprocessor │  Resize, normalize, to tensor
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│   Encoder    │  ViT / CLIP / DaViT (ONNX)
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│   Decoder    │  GPT-2 / BERT / Custom (ONNX, autoregressive)
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│  Tokenizer   │  Token IDs → text
-└──────┬───────┘
-       │
-       ▼
-   Caption text
+Text Prompt
+    │
+    ▼
+┌─────────────────┐
+│ CLIP Tokenizer   │  Text → token IDs (77 tokens)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Text Encoder     │  text_encoder/model.onnx → embeddings [2,77,768]
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ UNet + Scheduler │  unet/model.onnx — iterative denoising loop
+│                   │  Euler Ancestral / LMS scheduler
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ VAE Decoder      │  vae_decoder/model.onnx → pixels [1,3,512,512]
+└────────┬────────┘
+         │
+         ▼
+   PNG Image (512×512)
 ```
 
 ## ONNX Model Conversion
@@ -139,7 +144,6 @@ For models not yet in ONNX format, see:
 
 - [ElBruno.HuggingFace.Downloader](https://github.com/elbruno/ElBruno.HuggingFace.Downloader) — Model download from HuggingFace
 - [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime) — ONNX inference
-- [Microsoft.ML.Tokenizers](https://www.nuget.org/packages/Microsoft.ML.Tokenizers) — Tokenization
 - [SixLabors.ImageSharp](https://www.nuget.org/packages/SixLabors.ImageSharp) — Cross-platform image processing
 
 ## Building

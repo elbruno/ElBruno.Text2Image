@@ -1,35 +1,41 @@
 using ElBruno.Text2Image;
 using ElBruno.Text2Image.Models;
 
-Console.WriteLine("=== ElBruno.Text2Image - Simple Image Captioning ===");
+Console.WriteLine("=== ElBruno.Text2Image - Simple Text-to-Image Generation ===");
 Console.WriteLine();
 
-// Check if an image path was provided
-var imagePath = args.Length > 0 ? args[0] : null;
-if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath))
+// Create a Stable Diffusion 1.5 generator
+using var generator = new StableDiffusion15();
+
+// Download the model if not already present
+Console.WriteLine("Ensuring model is available (this may take a while on first run)...");
+await generator.EnsureModelAvailableAsync(
+    new Progress<DownloadProgress>(p =>
+    {
+        if (p.CurrentFile != null)
+            Console.Write($"\r  Downloading: {p.CurrentFile} ({p.PercentComplete:F0}%)   ");
+    }));
+Console.WriteLine();
+Console.WriteLine("Model ready!");
+Console.WriteLine();
+
+// Generate an image from a text prompt
+var prompt = "a beautiful sunset over a mountain lake, digital art, highly detailed";
+Console.WriteLine($"Generating image for prompt: \"{prompt}\"");
+Console.WriteLine("This may take a few minutes on CPU...");
+
+var result = await generator.GenerateAsync(prompt, new ImageGenerationOptions
 {
-    Console.WriteLine("Usage: scenario-01-simple <image-path>");
-    Console.WriteLine("Example: scenario-01-simple photo.jpg");
-    return;
-}
+    NumInferenceSteps = 15,
+    GuidanceScale = 7.5,
+    Width = 512,
+    Height = 512
+});
 
-// Create the ViT-GPT2 captioner (smallest, fastest model)
-using var captioner = new ViTGpt2Captioner();
-
-// Ensure model is downloaded (automatic on first use)
-Console.WriteLine("Downloading model (if needed)...");
-await captioner.EnsureModelAvailableAsync(new Progress<DownloadProgress>(p =>
-{
-    if (!string.IsNullOrEmpty(p.CurrentFile))
-        Console.Write($"\r  Downloading: {p.CurrentFile} ({p.PercentComplete:F0}%)   ");
-}));
+// Save the result
+var outputPath = "generated_image.png";
+await result.SaveAsync(outputPath);
 Console.WriteLine();
-
-// Generate caption
-Console.WriteLine($"Captioning: {imagePath}");
-var result = await captioner.CaptionAsync(imagePath);
-
-Console.WriteLine();
-Console.WriteLine($"Caption: {result.Caption}");
-Console.WriteLine($"Model: {result.ModelName}");
+Console.WriteLine($"Image saved to: {Path.GetFullPath(outputPath)}");
+Console.WriteLine($"Seed: {result.Seed}");
 Console.WriteLine($"Inference time: {result.InferenceTimeMs}ms");
