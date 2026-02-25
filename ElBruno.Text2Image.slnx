@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ElBruno.Text2Image/ElBruno.Text2Image.csproj" />
+    <Project Path="src/ElBruno.Text2Image.Tests/ElBruno.Text2Image.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="src/samples/scenario-01-simple/scenario-01-simple.csproj" />
+    <Project Path="src/samples/scenario-02-blip-conditional/scenario-02-blip-conditional.csproj" />
+    <Project Path="src/samples/scenario-03-florence2-multitask/scenario-03-florence2-multitask.csproj" />
+    <Project Path="src/samples/scenario-04-compare-models/scenario-04-compare-models.csproj" />
+  </Folder>
+</Solution>
