@@ -316,7 +316,7 @@ public class Flux2GeneratorTests
     public void Constructor_DefaultModelName()
     {
         using var generator = new Flux2Generator("https://example.com/api", "test-key");
-        Assert.Equal("FLUX.2", generator.ModelName);
+        Assert.Equal("FLUX.2-flex", generator.ModelName);
     }
 
     [Fact]
@@ -375,7 +375,7 @@ public class Flux2GeneratorTests
     {
         var httpClient = new HttpClient();
         using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient: httpClient);
-        Assert.Equal("FLUX.2", generator.ModelName);
+        Assert.Equal("FLUX.2-flex", generator.ModelName);
         httpClient.Dispose();
     }
 }

@@ -21,8 +21,8 @@ var apiKey = config["FLUX2_API_KEY"];
 // For deployment-based endpoints (model in URL), this can be omitted.
 var modelId = config["FLUX2_MODEL_ID"];
 
-// Optional: display name (defaults to "FLUX.2")
-var modelName = config["FLUX2_MODEL_NAME"] ?? "FLUX.2";
+// Model name defaults to "FLUX.2-flex" — override via FLUX2_MODEL_NAME user secret
+var modelName = config["FLUX2_MODEL_NAME"] ?? "FLUX.2-flex";
 
 if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
 {
@@ -35,8 +35,8 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("    dotnet user-secrets set FLUX2_API_KEY \"your-api-key-here\"");
     Console.WriteLine();
     Console.WriteLine("  Optional model configuration:");
-    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_ID \"FLUX.2-pro\"    # or \"FLUX.2-flex\"");
-    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_NAME \"FLUX.2 Pro\"  # display name");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_NAME \"FLUX.2-flex\"  # default value");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_ID \"FLUX.2-flex\"    # or \"FLUX.2-pro\"");
     Console.WriteLine();
     Console.WriteLine("  Option 2 - Environment Variables:");
     Console.WriteLine("    set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com/...");

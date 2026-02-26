@@ -1,19 +1,32 @@
 # FLUX.2 Setup Guide — Microsoft Foundry
 
-This guide explains how to set up and use the **FLUX.2** text-to-image model via Microsoft Microsoft Foundry with the `Flux2Generator` class.
+This guide explains how to set up and use the **FLUX.2** text-to-image models via Microsoft Foundry with the `Flux2Generator` class.
 
 ## Overview
 
-FLUX.2 is a cloud-based text-to-image model available through [Microsoft Microsoft Foundry](https://ai.azure.com). Unlike the local Stable Diffusion models, FLUX.2 runs on Azure infrastructure — no local GPU or ONNX models are needed.
+FLUX.2 is a cloud-based text-to-image model family available through [Microsoft Foundry](https://ai.azure.com). Unlike the local Stable Diffusion models, FLUX.2 runs on Azure infrastructure — no local GPU or ONNX models are needed.
 
 **Available variants:**
 
-| Variant | Best for |
-|---------|----------|
-| **FLUX.2 Pro** | Photorealistic image generation |
-| **FLUX.2 Flex** | Text-heavy design and UI prototyping |
+| Variant | Model ID | Best for | Pricing |
+|---------|----------|----------|---------|
+| **FLUX.2 Flex** (default) | `FLUX.2-flex` | Text-heavy design, UI prototyping, logos | $0.05 per megapixel |
+| **FLUX.2 Pro** | `FLUX.2-pro` | Photorealistic and cinematic-quality images | See [pricing page](https://azure.microsoft.com/en-us/pricing/details/ai-foundry-models/black-forest-labs/) |
 
-> Reference: [Meet FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
+### About FLUX.2 Flex
+
+> 📢 **[Meet FLUX.2 Flex for text‑heavy design and UI prototyping — now available on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)**
+
+**FLUX.2 [flex]** is purpose-built for typography and text-forward workflows. Key capabilities:
+
+- **Best-in-class text rendering** — Logos, UI copy, product packaging, and social graphics with readable typography
+- **Fine-grained control** — Adjust inference steps and guidance scale for precise production outputs
+- **Detail preservation** — Maintains fine details and small elements in complex scenes at any resolution
+- **Multi-reference editing** — Supports up to 8 reference images via API for complex multi-image compositing
+
+Use cases: brand design, product UI prototyping, social graphics, marketing collateral, editorial layouts, and any project requiring accurate text rendering.
+
+> 💡 **Tip:** Use FLUX.2 [pro] when your workflow prioritizes photorealistic imagery or cinematic-quality renders rather than text-forward or graphic design outputs.
 
 ## Prerequisites
 
@@ -57,9 +70,13 @@ Navigate to the sample project directory and initialize secrets:
 ```bash
 cd src/samples/scenario-03-flux2-cloud
 
-# Store the endpoint and API key securely (not committed to git)
+# Required: endpoint and API key
 dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview"
 dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
+
+# Optional: model name and ID (defaults to FLUX.2-flex)
+dotnet user-secrets set FLUX2_MODEL_NAME "FLUX.2-flex"
+dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-flex"
 ```
 
 Secrets are stored in your user profile at:
@@ -146,17 +163,17 @@ Console.WriteLine($"Generated in {result.InferenceTimeMs}ms");
 
 | Model ID | Display Name | Best for |
 |---|---|---|
+| `FLUX.2-flex` (default) | FLUX.2 Flex | Text-heavy design, logos, UI prototyping |
 | `FLUX.2-pro` | FLUX.2 Pro | Photorealistic image generation |
-| `FLUX.2-flex` | FLUX.2 Flex | Text-heavy design and UI prototyping |
 
 ```csharp
+// FLUX.2 Flex — text-heavy design (default)
+using var flexPipeline = new Flux2Generator(endpoint, apiKey,
+    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
+
 // FLUX.2 Pro — photorealistic
 using var proPipeline = new Flux2Generator(endpoint, apiKey,
     modelName: "FLUX.2 Pro", modelId: "FLUX.2-pro");
-
-// FLUX.2 Flex — text-heavy design
-using var flexPipeline = new Flux2Generator(endpoint, apiKey,
-    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
 ```
 
 > **Note:** The `modelId` is sent as the `"model"` field in the API request body. If your endpoint

@@ -13,9 +13,10 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 
 ## Cloud Models (REST API)
 
-| Model | Class | Provider | Resolution | Status |
-|-------|-------|----------|------------|--------|
-| **FLUX.2** | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Implemented |
+| Model | Model ID | Class | Provider | Resolution | Status |
+|-------|----------|-------|----------|------------|--------|
+| **FLUX.2 Flex** | `FLUX.2-flex` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Default |
+| **FLUX.2 Pro** | `FLUX.2-pro` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
 
 ## Model Details
 
@@ -61,11 +62,15 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 ### FLUX.2 (Cloud API)
 
 - **Class**: `Flux2Generator`
-- **Provider**: Microsoft Microsoft Foundry
+- **Provider**: Microsoft Foundry
+- **Default model**: `FLUX.2-flex` (text-heavy design and UI prototyping)
 - **Resolution**: 1024×1024 (default)
-- **Variants**: FLUX.2 Pro (photorealistic), FLUX.2 Flex (text-heavy design / UI prototyping)
+- **Variants**:
+  - **FLUX.2 Flex** (`FLUX.2-flex`) — Best-in-class text rendering, logos, UI copy, product packaging. $0.05/megapixel.
+  - **FLUX.2 Pro** (`FLUX.2-pro`) — Photorealistic and cinematic-quality image generation.
 - **No local model needed**: Runs via REST API
 - **Authentication**: API key from Microsoft Foundry
+- **Announcement**: [Meet FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
 - **Setup guide**: [flux2-setup-guide.md](flux2-setup-guide.md)
 
 ## Execution Providers

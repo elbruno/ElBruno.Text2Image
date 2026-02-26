@@ -37,7 +37,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// </summary>
     /// <param name="endpoint">The full Microsoft Foundry endpoint URL for the FLUX.2 deployment.</param>
     /// <param name="apiKey">The API key for authentication.</param>
-    /// <param name="modelName">Display name for the model. Defaults to "FLUX.2".</param>
+    /// <param name="modelName">Display name for the model. Defaults to "FLUX.2-flex".</param>
     /// <param name="modelId">
     /// Optional model identifier to include in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
     /// Required for model-based endpoints. Not needed for deployment-based endpoints where the model is
@@ -51,7 +51,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
         _endpoint = endpoint.TrimEnd('/');
         _apiKey = apiKey;
-        _modelDisplayName = modelName ?? "FLUX.2";
+        _modelDisplayName = modelName ?? "FLUX.2-flex";
         _modelId = modelId;
 
         if (httpClient != null)
