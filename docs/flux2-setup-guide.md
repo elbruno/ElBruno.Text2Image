@@ -46,18 +46,89 @@ FLUX.2 is a cloud-based text-to-image model available through [Microsoft Microso
    ```
 3. Copy the **API key** from the **Keys and Endpoint** section
 
-## Step 4: Use in C#
+## Step 4: Configure Credentials
+
+You have three options for providing the endpoint and API key. **User Secrets is recommended for local development** because it keeps secrets out of source control.
+
+### Option A: User Secrets (Recommended)
+
+Navigate to the sample project directory and initialize secrets:
+
+```bash
+cd src/samples/scenario-03-flux2-cloud
+
+# Store the endpoint and API key securely (not committed to git)
+dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview"
+dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
+```
+
+Secrets are stored in your user profile at:
+- **Windows:** `%APPDATA%\Microsoft\UserSecrets\elbruno-text2image-flux2\secrets.json`
+- **macOS/Linux:** `~/.microsoft/usersecrets/elbruno-text2image-flux2/secrets.json`
+
+To verify or list stored secrets:
+
+```bash
+dotnet user-secrets list
+```
+
+### Option B: Environment Variables
+
+```bash
+# Windows
+set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview
+set FLUX2_API_KEY=your-api-key-here
+
+# Linux / macOS
+export FLUX2_ENDPOINT="https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview"
+export FLUX2_API_KEY="your-api-key-here"
+```
+
+### Option C: appsettings.json (Not recommended — don't commit secrets)
+
+Create `appsettings.json` in the sample project directory:
+
+```json
+{
+  "FLUX2_ENDPOINT": "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
+  "FLUX2_API_KEY": "your-api-key-here"
+}
+```
+
+> ⚠️ If using this method, ensure `appsettings.json` is in `.gitignore` to avoid leaking credentials.
+
+### Configuration Priority
+
+The sample uses `Microsoft.Extensions.Configuration` and loads settings in this order (last wins):
+
+1. `appsettings.json`
+2. Environment variables
+3. User Secrets
+
+This means user secrets override environment variables, which override appsettings.json.
+
+## Step 5: Use in C#
 
 ### Basic Usage
 
 ```csharp
 using ElBruno.Text2Image;
-using ElBruno.Text2Image.Models;
+using ElBruno.Text2Image.Foundry;
+using Microsoft.Extensions.Configuration;
 
-using var generator = new Flux2Generator(
-    endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
-    apiKey: "your-api-key",
-    modelName: "FLUX.2 Pro");
+// Build configuration with User Secrets support
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddEnvironmentVariables()
+    .AddUserSecrets<Program>(optional: true)
+    .Build();
+
+var endpoint = config["FLUX2_ENDPOINT"]
+    ?? throw new InvalidOperationException("Set FLUX2_ENDPOINT via user secrets or environment variable");
+var apiKey = config["FLUX2_API_KEY"]
+    ?? throw new InvalidOperationException("Set FLUX2_API_KEY via user secrets or environment variable");
+
+using var generator = new Flux2Generator(endpoint, apiKey, modelName: "FLUX.2 Pro");
 
 var result = await generator.GenerateAsync("a futuristic cityscape at sunset, photorealistic");
 await result.SaveAsync("flux2-output.png");
@@ -86,17 +157,35 @@ services.AddFlux2Generator(
     modelName: "FLUX.2 Pro");
 ```
 
-### Using Environment Variables (Recommended)
+### Using User Secrets in Your Own Project
 
-Store credentials in environment variables to avoid hardcoding:
+To add user secrets support to your own project:
+
+```bash
+# 1. Add the UserSecretsId to your csproj
+dotnet user-secrets init
+
+# 2. Add the configuration packages
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.UserSecrets
+dotnet add package Microsoft.Extensions.Configuration.EnvironmentVariables
+
+# 3. Store your secrets
+dotnet user-secrets set FLUX2_ENDPOINT "https://..."
+dotnet user-secrets set FLUX2_API_KEY "your-key"
+```
+
+Then load them in code:
 
 ```csharp
-var endpoint = Environment.GetEnvironmentVariable("FLUX2_ENDPOINT")
-    ?? throw new InvalidOperationException("Set FLUX2_ENDPOINT environment variable");
-var apiKey = Environment.GetEnvironmentVariable("FLUX2_API_KEY")
-    ?? throw new InvalidOperationException("Set FLUX2_API_KEY environment variable");
+var config = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
+    .AddUserSecrets<Program>(optional: true)
+    .Build();
 
-using var generator = new Flux2Generator(endpoint, apiKey, "FLUX.2 Pro");
+var endpoint = config["FLUX2_ENDPOINT"]!;
+var apiKey = config["FLUX2_API_KEY"]!;
+using var generator = new Flux2Generator(endpoint, apiKey);
 ```
 
 ## API Details
