@@ -16,6 +16,7 @@ A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Run
 - ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
 - ☁️ **Cloud API** — FLUX.2 via Azure AI Foundry for high-quality text-heavy designs
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
+- ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
 - 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
 - 🌱 **Reproducible** — Seed-based generation for reproducible results
@@ -190,6 +191,7 @@ Text Prompt
 
 ## Documentation
 
+- [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Azure AI Foundry FLUX.2 setup

@@ -12,8 +12,9 @@ public sealed class ImageGenerationOptions
 
     /// <summary>
     /// The execution provider to use for ONNX Runtime inference.
+    /// Defaults to Auto (probes CUDA → DirectML → CPU).
     /// </summary>
-    public ExecutionProvider ExecutionProvider { get; set; } = ExecutionProvider.Cpu;
+    public ExecutionProvider ExecutionProvider { get; set; } = ExecutionProvider.Auto;
 
     /// <summary>
     /// Number of denoising steps. More steps = better quality but slower. Default is 20.

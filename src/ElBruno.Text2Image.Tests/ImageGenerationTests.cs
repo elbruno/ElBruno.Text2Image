@@ -10,7 +10,7 @@ public class ImageGenerationOptionsTests
     {
         var options = new ImageGenerationOptions();
 
-        Assert.Equal(ExecutionProvider.Cpu, options.ExecutionProvider);
+        Assert.Equal(ExecutionProvider.Auto, options.ExecutionProvider);
         Assert.Equal(20, options.NumInferenceSteps);
         Assert.Equal(7.5, options.GuidanceScale);
         Assert.Equal(512, options.Width);
@@ -93,9 +93,55 @@ public class ExecutionProviderTests
     [Fact]
     public void ExecutionProvider_HasExpectedValues()
     {
+        Assert.Equal(-1, (int)ExecutionProvider.Auto);
         Assert.Equal(0, (int)ExecutionProvider.Cpu);
         Assert.Equal(1, (int)ExecutionProvider.Cuda);
         Assert.Equal(2, (int)ExecutionProvider.DirectML);
+    }
+
+    [Fact]
+    public void Auto_IsDefault()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Equal(ExecutionProvider.Auto, options.ExecutionProvider);
+    }
+
+    [Fact]
+    public void DetectBestProvider_ReturnsValidProvider()
+    {
+        var provider = SessionOptionsHelper.DetectBestProvider();
+        Assert.True(
+            provider == ExecutionProvider.Cpu ||
+            provider == ExecutionProvider.Cuda ||
+            provider == ExecutionProvider.DirectML);
+    }
+
+    [Fact]
+    public void ResolveProvider_Auto_ReturnsConcreteProvider()
+    {
+        var resolved = SessionOptionsHelper.ResolveProvider(ExecutionProvider.Auto);
+        Assert.NotEqual(ExecutionProvider.Auto, resolved);
+    }
+
+    [Fact]
+    public void ResolveProvider_Explicit_ReturnsSame()
+    {
+        Assert.Equal(ExecutionProvider.Cpu, SessionOptionsHelper.ResolveProvider(ExecutionProvider.Cpu));
+    }
+
+    [Fact]
+    public void Create_Auto_ReturnsSessionOptions()
+    {
+        using var options = SessionOptionsHelper.Create(ExecutionProvider.Auto);
+        Assert.NotNull(options);
+    }
+
+    [Fact]
+    public void DetectBestProvider_IsCached()
+    {
+        var first = SessionOptionsHelper.DetectBestProvider();
+        var second = SessionOptionsHelper.DetectBestProvider();
+        Assert.Equal(first, second);
     }
 }
 
