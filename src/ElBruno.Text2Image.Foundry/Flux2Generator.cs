@@ -18,6 +18,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     private readonly string _endpoint;
     private readonly string _apiKey;
     private readonly string _modelDisplayName;
+    private readonly string? _modelId;
     private readonly bool _ownsHttpClient;
 
     private const int MaxErrorBodyLength = 1024;
@@ -26,13 +27,24 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     public string ModelName => _modelDisplayName;
 
     /// <summary>
+    /// The model identifier sent in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
+    /// Null if the model is determined by the endpoint URL (deployment-based routing).
+    /// </summary>
+    public string? ModelId => _modelId;
+
+    /// <summary>
     /// Creates a new FLUX.2 generator targeting a Microsoft Foundry deployment.
     /// </summary>
     /// <param name="endpoint">The full Microsoft Foundry endpoint URL for the FLUX.2 deployment.</param>
     /// <param name="apiKey">The API key for authentication.</param>
     /// <param name="modelName">Display name for the model. Defaults to "FLUX.2".</param>
+    /// <param name="modelId">
+    /// Optional model identifier to include in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
+    /// Required for model-based endpoints. Not needed for deployment-based endpoints where the model is
+    /// embedded in the URL path.
+    /// </param>
     /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
-    public Flux2Generator(string endpoint, string apiKey, string? modelName = null, HttpClient? httpClient = null)
+    public Flux2Generator(string endpoint, string apiKey, string? modelName = null, string? modelId = null, HttpClient? httpClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
@@ -40,6 +52,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         _endpoint = endpoint.TrimEnd('/');
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2";
+        _modelId = modelId;
 
         if (httpClient != null)
         {
@@ -84,6 +97,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         var requestBody = new Flux2Request
         {
             Prompt = prompt,
+            Model = _modelId,
             N = 1,
             Size = $"{options.Width}x{options.Height}",
             ResponseFormat = "b64_json"
@@ -179,6 +193,10 @@ internal sealed class Flux2Request
 {
     [JsonPropertyName("prompt")]
     public required string Prompt { get; set; }
+
+    [JsonPropertyName("model")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Model { get; set; }
 
     [JsonPropertyName("n")]
     public int N { get; set; } = 1;
