@@ -57,6 +57,9 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
 // Create a FLUX.2 generator
 // - modelId is the deployment/model name sent in the request body
 // - modelName is just a display label
+// Uncomment the next line to use a custom HttpClient with a longer timeout (e.g., 600 seconds)
+// var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(600) };
+// using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId, httpClient: httpClient);
 using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId);
 
 Console.WriteLine($"Model: {generator.ModelName}");
