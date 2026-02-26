@@ -7,6 +7,13 @@ Console.WriteLine();
 // Create a Stable Diffusion 1.5 generator
 using var generator = new StableDiffusion15();
 
+// Show where models will be stored
+var modelDir = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    "ElBruno", "Text2Image", "stable-diffusion-v1-5-onnx");
+Console.WriteLine($"Model location: {modelDir}");
+Console.WriteLine();
+
 // Download the model if not already present
 Console.WriteLine("Ensuring model is available (this may take a while on first run)...");
 await generator.EnsureModelAvailableAsync(

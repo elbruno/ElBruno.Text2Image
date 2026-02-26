@@ -27,12 +27,24 @@ internal sealed class UNetDenoiser : IDisposable
         long timestep,
         DenseTensor<float> encoderHiddenStates)
     {
-        var timestepTensor = new DenseTensor<long>(new long[] { timestep }, new int[] { 1 });
+        // Some ONNX exports expect timestep as float, others as int64.
+        var timestepMeta = _session.InputMetadata["timestep"];
+        NamedOnnxValue timestepValue;
+        if (timestepMeta.ElementDataType == TensorElementType.Float)
+        {
+            var t = new DenseTensor<float>(new float[] { (float)timestep }, new int[] { 1 });
+            timestepValue = NamedOnnxValue.CreateFromTensor("timestep", t);
+        }
+        else
+        {
+            var t = new DenseTensor<long>(new long[] { timestep }, new int[] { 1 });
+            timestepValue = NamedOnnxValue.CreateFromTensor("timestep", t);
+        }
 
         var input = new List<NamedOnnxValue>
         {
             NamedOnnxValue.CreateFromTensor("sample", sample),
-            NamedOnnxValue.CreateFromTensor("timestep", timestepTensor),
+            timestepValue,
             NamedOnnxValue.CreateFromTensor("encoder_hidden_states", encoderHiddenStates)
         };
 
