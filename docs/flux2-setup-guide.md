@@ -128,13 +128,39 @@ var endpoint = config["FLUX2_ENDPOINT"]
 var apiKey = config["FLUX2_API_KEY"]
     ?? throw new InvalidOperationException("Set FLUX2_API_KEY via user secrets or environment variable");
 
-using var generator = new Flux2Generator(endpoint, apiKey, modelName: "FLUX.2 Pro");
+// Model ID selects the variant: "FLUX.2-pro" or "FLUX.2-flex"
+// Required for model-based endpoints; optional for deployment-based endpoints (model in URL)
+var modelId = config["FLUX2_MODEL_ID"]; // e.g., "FLUX.2-pro"
+
+using var generator = new Flux2Generator(endpoint, apiKey,
+    modelName: "FLUX.2 Pro",   // Display name (for logging/UI)
+    modelId: modelId);          // API model identifier (sent in request body)
 
 var result = await generator.GenerateAsync("a futuristic cityscape at sunset, photorealistic");
 await result.SaveAsync("flux2-output.png");
 
 Console.WriteLine($"Generated in {result.InferenceTimeMs}ms");
 ```
+
+### Choosing a Model Variant
+
+| Model ID | Display Name | Best for |
+|---|---|---|
+| `FLUX.2-pro` | FLUX.2 Pro | Photorealistic image generation |
+| `FLUX.2-flex` | FLUX.2 Flex | Text-heavy design and UI prototyping |
+
+```csharp
+// FLUX.2 Pro — photorealistic
+using var proPipeline = new Flux2Generator(endpoint, apiKey,
+    modelName: "FLUX.2 Pro", modelId: "FLUX.2-pro");
+
+// FLUX.2 Flex — text-heavy design
+using var flexPipeline = new Flux2Generator(endpoint, apiKey,
+    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
+```
+
+> **Note:** The `modelId` is sent as the `"model"` field in the API request body. If your endpoint
+> is deployment-based (the model is embedded in the URL path), you can omit `modelId`.
 
 ### With Custom Options
 
@@ -151,10 +177,18 @@ var result = await generator.GenerateAsync(
 ### Dependency Injection
 
 ```csharp
+// Deployment-based endpoint (model in URL)
 services.AddFlux2Generator(
     endpoint: "https://your-resource.services.ai.azure.com/...",
     apiKey: "your-api-key",
     modelName: "FLUX.2 Pro");
+
+// Model-based endpoint (model in request body)
+services.AddFlux2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
+    apiKey: "your-api-key",
+    modelName: "FLUX.2 Flex",
+    modelId: "FLUX.2-flex");
 ```
 
 ### Using User Secrets in Your Own Project

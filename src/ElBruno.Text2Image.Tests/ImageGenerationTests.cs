@@ -320,6 +320,30 @@ public class Flux2GeneratorTests
     }
 
     [Fact]
+    public void Constructor_SetsModelId()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", modelId: "FLUX.2-pro");
+        Assert.Equal("FLUX.2-pro", generator.ModelId);
+    }
+
+    [Fact]
+    public void Constructor_ModelId_NullByDefault()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        Assert.Null(generator.ModelId);
+    }
+
+    [Fact]
+    public void Constructor_AllParameters()
+    {
+        using var generator = new Flux2Generator(
+            "https://example.com/api", "test-key",
+            modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
+        Assert.Equal("FLUX.2 Flex", generator.ModelName);
+        Assert.Equal("FLUX.2-flex", generator.ModelId);
+    }
+
+    [Fact]
     public void Implements_IImageGenerator()
     {
         using var generator = new Flux2Generator("https://example.com/api", "test-key");
