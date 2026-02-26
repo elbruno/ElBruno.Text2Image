@@ -190,6 +190,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-08-meai-interface](src/samples/scenario-08-meai-interface/) | Use via Microsoft.Extensions.AI `IImageGenerator` |
 | [scenario-09-batch-generation](src/samples/scenario-09-batch-generation/) | Generate multiple images from a batch of prompts |
 | [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
+| [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 
 ### Run a Sample
 

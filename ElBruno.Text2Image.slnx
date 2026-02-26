@@ -14,5 +14,6 @@
     <Project Path="src/samples/scenario-08-meai-interface/scenario-08-meai-interface.csproj" />
     <Project Path="src/samples/scenario-09-batch-generation/scenario-09-batch-generation.csproj" />
     <Project Path="src/samples/scenario-10-progress-reporting/scenario-10-progress-reporting.csproj" />
+    <Project Path="src/samples/scenario-11-gpu-diagnostics/scenario-11-gpu-diagnostics.csproj" />
   </Folder>
 </Solution>
