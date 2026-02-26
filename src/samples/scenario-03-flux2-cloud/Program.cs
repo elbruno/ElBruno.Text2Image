@@ -65,8 +65,8 @@ Console.WriteLine($"Endpoint: {generator.Endpoint}");
 Console.WriteLine("FLUX.2 cloud model ready (no download required)");
 Console.WriteLine();
 
-// Generate an image
-var prompt = "A professional logo design for a tech startup called 'NovaTech' with clean modern typography, blue and silver color scheme";
+// Generate a small logo image for the repository
+var prompt = "a simple flat icon of a paintbrush and a sparkle, purple and blue gradient, white background, minimal, square logo";
 Console.WriteLine($"Generating image for: \"{prompt}\"");
 Console.WriteLine("Calling Microsoft Foundry API...");
 
@@ -74,8 +74,8 @@ try
 {
     var result = await generator.GenerateAsync(prompt, new ImageGenerationOptions
     {
-        Width = 1024,
-        Height = 1024
+        Width = 512,
+        Height = 512
     });
 
     var outputPath = "flux2_output.png";

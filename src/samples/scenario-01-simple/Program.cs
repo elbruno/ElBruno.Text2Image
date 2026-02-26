@@ -37,8 +37,8 @@ Console.WriteLine();
 Console.WriteLine("Model ready!");
 Console.WriteLine();
 
-// Generate an image from a text prompt
-var prompt = "a beautiful sunset over a mountain lake, digital art, highly detailed";
+// Generate a small logo image (same prompt as scenario-03 cloud sample)
+var prompt = "a simple flat icon of a paintbrush and a sparkle, purple and blue gradient, white background, minimal, square logo";
 Console.WriteLine($"Generating image for prompt: \"{prompt}\"");
 Console.WriteLine($"Generating with {resolvedProvider}...");
 
