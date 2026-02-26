@@ -53,17 +53,25 @@ Use cases: brand design, product UI prototyping, social graphics, marketing coll
 ## Step 3: Get the Endpoint and API Key
 
 1. In Microsoft Foundry, go to your deployment
-2. Copy the **Endpoint URL** — there are two approaches:
-   - **Base URL** (recommended): Just the resource URL, e.g.:
+2. Copy the **Endpoint URL**:
+   - **Recommended**: Use the `.services.ai.azure.com` base URL:
+     ```
+     https://your-resource.services.ai.azure.com
+     ```
+     The library will automatically build the BFL Native API path (e.g., `/providers/blackforestlabs/v1/flux-2-pro?api-version=preview`)
+   - **Also supported**: A `.openai.azure.com` URL — the library auto-converts it:
      ```
      https://your-resource.openai.azure.com
      ```
-     The library will automatically append `/openai/v1/images/generations`
-   - **Full URL**: The complete endpoint URL from your deployment:
+   - **Full URL**: The complete BFL endpoint — used as-is:
      ```
-     https://your-resource.openai.azure.com/openai/v1/images/generations
+     https://your-resource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview
      ```
 3. Copy the **API key** from the **Keys and Endpoint** section
+
+> ⚠️ **Important:** FLUX.2 models use the **BFL (Black Forest Labs) Native API**, not the OpenAI-compatible API.
+> The correct endpoint domain is `.services.ai.azure.com`, not `.openai.azure.com`. The library handles this
+> conversion automatically, but using `.services.ai.azure.com` directly is recommended.
 
 ## Step 4: Configure Credentials
 
@@ -77,7 +85,7 @@ Navigate to the sample project directory and initialize secrets:
 cd src/samples/scenario-03-flux2-cloud
 
 # Required: endpoint and API key
-dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.openai.azure.com"
+dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com"
 dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
 
 # Model configuration (defaults to FLUX.2-pro)
@@ -86,8 +94,9 @@ dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-pro"
 ```
 
 > **Note on FLUX2_ENDPOINT:** You can provide either:
-> - A **base URL** like `https://your-resource.openai.azure.com` — the library auto-appends `/openai/v1/images/generations`
-> - A **full URL** like `https://your-resource.openai.azure.com/openai/v1/images/generations` — used as-is
+> - A **`.services.ai.azure.com` base URL** (recommended) — the library auto-builds the BFL API path
+> - A **`.openai.azure.com` base URL** — auto-converted to `.services.ai.azure.com`
+> - A **full BFL API URL** — used as-is
 
 Secrets are stored in your user profile at:
 - **Windows:** `%APPDATA%\Microsoft\UserSecrets\elbruno-text2image-flux2\secrets.json`
@@ -103,11 +112,11 @@ dotnet user-secrets list
 
 ```bash
 # Windows
-set FLUX2_ENDPOINT=https://your-resource.openai.azure.com
+set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com
 set FLUX2_API_KEY=your-api-key-here
 
 # Linux / macOS
-export FLUX2_ENDPOINT="https://your-resource.openai.azure.com"
+export FLUX2_ENDPOINT="https://your-resource.services.ai.azure.com"
 export FLUX2_API_KEY="your-api-key-here"
 ```
 
@@ -117,7 +126,7 @@ Create `appsettings.json` in the sample project directory:
 
 ```json
 {
-  "FLUX2_ENDPOINT": "https://your-resource.openai.azure.com",
+  "FLUX2_ENDPOINT": "https://your-resource.services.ai.azure.com",
   "FLUX2_API_KEY": "your-api-key-here",
   "FLUX2_MODEL_ID": "FLUX.2-pro"
 }
@@ -186,8 +195,8 @@ using var flexPipeline = new Flux2Generator(endpoint, apiKey,
     modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
 ```
 
-> **Note:** The `modelId` is sent as the `"model"` field in the API request body. This matches
-> the deployment name you created in Microsoft Foundry.
+> **Note:** The `modelId` determines both the `"model"` field in the API request body and the
+> BFL API path (e.g., `FLUX.2-pro` → `/providers/blackforestlabs/v1/flux-2-pro`).
 
 ### With Custom Options
 
@@ -206,14 +215,14 @@ var result = await generator.GenerateAsync(
 ```csharp
 // FLUX.2 Pro (default)
 services.AddFlux2Generator(
-    endpoint: "https://your-resource.openai.azure.com",
+    endpoint: "https://your-resource.services.ai.azure.com",
     apiKey: "your-api-key",
     modelName: "FLUX.2 Pro",
     modelId: "FLUX.2-pro");
 
 // FLUX.2 Flex
 services.AddFlux2Generator(
-    endpoint: "https://your-resource.openai.azure.com",
+    endpoint: "https://your-resource.services.ai.azure.com",
     apiKey: "your-api-key",
     modelName: "FLUX.2 Flex",
     modelId: "FLUX.2-flex");

@@ -380,38 +380,45 @@ public class Flux2GeneratorTests
     }
 
     [Fact]
-    public void Endpoint_BaseUrl_BuildsOpenAiV1Path()
+    public void Endpoint_ServicesBaseUrl_BuildsBflNativePath()
+    {
+        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key");
+        Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
+    }
+
+    [Fact]
+    public void Endpoint_OpenAiBaseUrl_ConvertsToServicesBflPath()
     {
         using var generator = new Flux2Generator("https://myresource.openai.azure.com", "test-key");
-        Assert.Equal("https://myresource.openai.azure.com/openai/v1/images/generations", generator.Endpoint);
+        Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
-    public void Endpoint_BaseUrlWithTrailingSlash_BuildsOpenAiV1Path()
-    {
-        using var generator = new Flux2Generator("https://myresource.openai.azure.com/", "test-key");
-        Assert.Equal("https://myresource.openai.azure.com/openai/v1/images/generations", generator.Endpoint);
-    }
-
-    [Fact]
-    public void Endpoint_OpenAiV1Base_AppendsImagesGenerations()
+    public void Endpoint_OpenAiWithPath_ConvertsToServicesBflPath()
     {
         using var generator = new Flux2Generator("https://myresource.openai.azure.com/openai/v1/", "test-key");
-        Assert.Equal("https://myresource.openai.azure.com/openai/v1/images/generations", generator.Endpoint);
+        Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
-    public void Endpoint_FullUrl_UsedAsIs()
+    public void Endpoint_FlexModel_UsesBflFlexPath()
     {
-        var fullUrl = "https://myresource.openai.azure.com/openai/v1/images/generations";
+        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key", modelId: "FLUX.2-flex");
+        Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-flex?api-version=preview", generator.Endpoint);
+    }
+
+    [Fact]
+    public void Endpoint_FullBflUrl_UsedAsIs()
+    {
+        var fullUrl = "https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview";
         using var generator = new Flux2Generator(fullUrl, "test-key");
         Assert.Equal(fullUrl, generator.Endpoint);
     }
 
     [Fact]
-    public void Endpoint_LegacyFullUrl_UsedAsIs()
+    public void Endpoint_CustomFullUrl_UsedAsIs()
     {
-        var fullUrl = "https://myresource.openai.azure.com/openai/deployments/custom/images/generations?api-version=2024-06-01";
+        var fullUrl = "https://custom-endpoint.example.com/api/generate";
         using var generator = new Flux2Generator(fullUrl, "test-key");
         Assert.Equal(fullUrl, generator.Endpoint);
     }

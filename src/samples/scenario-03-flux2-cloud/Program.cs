@@ -30,13 +30,13 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("Configure using one of these methods:");
     Console.WriteLine();
     Console.WriteLine("  Option 1 - User Secrets (recommended for development):");
-    Console.WriteLine("    dotnet user-secrets set FLUX2_ENDPOINT \"https://your-resource.openai.azure.com\"");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_ENDPOINT \"https://your-resource.services.ai.azure.com\"");
     Console.WriteLine("    dotnet user-secrets set FLUX2_API_KEY \"your-api-key-here\"");
     Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_NAME \"FLUX.2-pro\"");
     Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_ID \"FLUX.2-pro\"");
     Console.WriteLine();
     Console.WriteLine("  Option 2 - Environment Variables:");
-    Console.WriteLine("    set FLUX2_ENDPOINT=https://your-resource.openai.azure.com");
+    Console.WriteLine("    set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com");
     Console.WriteLine("    set FLUX2_API_KEY=your-api-key-here");
     Console.WriteLine("    set FLUX2_MODEL_ID=FLUX.2-pro");
     Console.WriteLine();
@@ -50,7 +50,7 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("To get endpoint and API key:");
     Console.WriteLine("  1. Go to Microsoft Foundry portal (https://ai.azure.com)");
     Console.WriteLine("  2. Deploy a FLUX.2 model");
-    Console.WriteLine("  3. Copy the endpoint URL and API key from the deployment");
+    Console.WriteLine("  3. Copy the .services.ai.azure.com endpoint URL and API key from the deployment");
     return;
 }
 

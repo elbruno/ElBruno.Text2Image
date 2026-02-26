@@ -76,7 +76,7 @@ using ElBruno.Text2Image.Foundry;
 // Create a FLUX.2 generator using Microsoft Foundry
 // Default model is FLUX.2-pro (photorealistic image generation)
 using var generator = new Flux2Generator(
-    endpoint: "https://your-resource.openai.azure.com",
+    endpoint: "https://your-resource.services.ai.azure.com",
     apiKey: "your-api-key",
     modelName: "FLUX.2 Pro",       // display name
     modelId: "FLUX.2-pro");        // deployment/model name

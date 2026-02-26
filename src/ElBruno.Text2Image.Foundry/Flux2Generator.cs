@@ -9,10 +9,10 @@ using Microsoft.Extensions.AI;
 namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
-/// FLUX.2 text-to-image generator using the Microsoft Foundry REST API.
+/// FLUX.2 text-to-image generator using the Microsoft Foundry BFL Native API.
 /// Supports both FLUX.2 [pro] (photorealistic) and FLUX.2 [flex] (text-heavy design).
 /// This is a cloud API model — no local ONNX models are needed.
-/// Uses the OpenAI-compatible /openai/v1/images/generations endpoint.
+/// Uses the Black Forest Labs provider endpoint at .services.ai.azure.com.
 /// Handles both synchronous (200) and asynchronous (202 + polling) API patterns.
 /// </summary>
 public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
@@ -47,8 +47,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// <param name="endpoint">
     /// The endpoint URL. Can be either:
     /// <list type="bullet">
-    /// <item><description>A base resource URL (e.g., "https://myresource.openai.azure.com") — <c>/openai/v1/images/generations</c> will be appended automatically.</description></item>
-    /// <item><description>A full endpoint URL (e.g., "https://myresource.openai.azure.com/openai/v1/images/generations") — used as-is.</description></item>
+    /// <item><description>A .services.ai.azure.com base URL (e.g., "https://myresource.services.ai.azure.com") — BFL API path appended automatically.</description></item>
+    /// <item><description>A .openai.azure.com base URL (e.g., "https://myresource.openai.azure.com") — auto-converted to .services.ai.azure.com.</description></item>
+    /// <item><description>A full BFL API URL (e.g., "https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview") — used as-is.</description></item>
     /// </list>
     /// </param>
     /// <param name="apiKey">The API key for authentication.</param>
@@ -68,7 +69,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        _endpoint = BuildEndpointUrl(endpoint);
+        _endpoint = BuildEndpointUrl(endpoint, modelId ?? "FLUX.2-pro");
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2-pro";
         _modelId = modelId ?? "FLUX.2-pro";
@@ -80,36 +81,76 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         }
         else
         {
-            _httpClient = new HttpClient();
+            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
             _ownsHttpClient = true;
         }
     }
 
     /// <summary>
-    /// Builds the full API endpoint URL. If the user provides just a base URL
-    /// (e.g., "https://resource.openai.azure.com"), appends the OpenAI-compatible
-    /// image generation path. Accepts both base URLs and full endpoint URLs.
+    /// Builds the full API endpoint URL for the BFL Native API.
+    /// FLUX.2 models use the Black Forest Labs provider path, not the OpenAI-compatible API.
     /// </summary>
-    private static string BuildEndpointUrl(string endpoint)
+    private static string BuildEndpointUrl(string endpoint, string modelId)
     {
         endpoint = endpoint.TrimEnd('/');
-
         var uri = new Uri(endpoint);
 
-        // If the path is empty or just "/", this is a base URL — append the API path
+        // If the URL already contains the BFL provider path, use as-is
+        if (uri.AbsolutePath.Contains("/providers/blackforestlabs/", StringComparison.OrdinalIgnoreCase))
+        {
+            return endpoint;
+        }
+
+        // Map model ID to BFL API path segment
+        var bflModelPath = MapModelToBflPath(modelId);
+
+        // If base URL (path is empty or just "/"), build the full BFL path
         if (string.IsNullOrEmpty(uri.AbsolutePath) || uri.AbsolutePath == "/")
         {
-            return $"{endpoint}/openai/v1/images/generations";
+            // Auto-convert .openai.azure.com to .services.ai.azure.com
+            var baseUrl = ConvertToServicesEndpoint(endpoint);
+            return $"{baseUrl}/providers/blackforestlabs/v1/{bflModelPath}?api-version=preview";
         }
 
-        // If path ends with /openai/v1 or /openai/v1/, append images/generations
-        if (uri.AbsolutePath.TrimEnd('/').EndsWith("/openai/v1", StringComparison.OrdinalIgnoreCase))
+        // If the path contains /openai/, this is the wrong endpoint type for FLUX.2
+        // Auto-convert to .services.ai.azure.com
+        if (uri.AbsolutePath.Contains("/openai/", StringComparison.OrdinalIgnoreCase))
         {
-            return $"{endpoint.TrimEnd('/')}/images/generations";
+            var baseUrl = $"{uri.Scheme}://{uri.Host}";
+            baseUrl = ConvertToServicesEndpoint(baseUrl);
+            return $"{baseUrl}/providers/blackforestlabs/v1/{bflModelPath}?api-version=preview";
         }
 
-        // If it already has a full path (user provided complete URL), use as-is
+        // Otherwise use as-is (user provided a complete custom URL)
         return endpoint;
+    }
+
+    /// <summary>
+    /// Converts an .openai.azure.com hostname to .services.ai.azure.com,
+    /// which is required for the BFL Native API used by FLUX.2 models.
+    /// </summary>
+    private static string ConvertToServicesEndpoint(string endpoint)
+    {
+        if (endpoint.Contains(".openai.azure.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return endpoint.Replace(".openai.azure.com", ".services.ai.azure.com", StringComparison.OrdinalIgnoreCase);
+        }
+        return endpoint;
+    }
+
+    /// <summary>
+    /// Maps a FLUX model ID (e.g., "FLUX.2-pro") to the BFL API path segment.
+    /// </summary>
+    private static string MapModelToBflPath(string modelId)
+    {
+        return modelId.ToUpperInvariant() switch
+        {
+            "FLUX.2-PRO" => "flux-2-pro",
+            "FLUX.2-FLEX" => "flux-2-flex",
+            "FLUX-1.1-PRO" or "FLUX.1-PRO" => "flux-pro-1.1",
+            "FLUX.1-KONTEXT-PRO" => "flux-1-kontext-pro",
+            _ => modelId.ToLowerInvariant().Replace(".", "-")
+        };
     }
 
     /// <summary>
@@ -145,7 +186,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             Prompt = prompt,
             Model = _modelId,
             N = 1,
-            Size = $"{options.Width}x{options.Height}"
+            Width = options.Width,
+            Height = options.Height,
+            OutputFormat = "png"
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
@@ -161,12 +204,12 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
             var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
-                ? "\n\nHint: The endpoint URL may be incorrect. Ensure you have deployed the FLUX.2 model in Microsoft Foundry " +
-                  "and are using the correct endpoint URL from the deployment page. " +
+                ? "\n\nHint: The endpoint URL may be incorrect. FLUX.2 models use the BFL Native API, not the OpenAI-compatible API.\n" +
                   $"The resolved endpoint was: {_endpoint}\n" +
-                  "You can provide either:\n" +
-                  "  - A base URL (e.g., https://your-resource.openai.azure.com)\n" +
-                  "  - A full URL (e.g., https://your-resource.openai.azure.com/openai/v1/images/generations)"
+                  "Ensure you provide either:\n" +
+                  "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
+                  "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
+                  "  - A full BFL API URL (e.g., https://your-resource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview)"
                 : "";
 
             throw new HttpRequestException(
@@ -366,8 +409,14 @@ internal sealed class Flux2Request
     [JsonPropertyName("n")]
     public int N { get; set; } = 1;
 
-    [JsonPropertyName("size")]
-    public string Size { get; set; } = "1024x1024";
+    [JsonPropertyName("width")]
+    public int Width { get; set; } = 1024;
+
+    [JsonPropertyName("height")]
+    public int Height { get; set; } = 1024;
+
+    [JsonPropertyName("output_format")]
+    public string OutputFormat { get; set; } = "png";
 }
 
 internal sealed class Flux2Response
