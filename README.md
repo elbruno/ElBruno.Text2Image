@@ -74,13 +74,12 @@ using ElBruno.Text2Image;
 using ElBruno.Text2Image.Foundry;
 
 // Create a FLUX.2 generator using Microsoft Foundry
-// Default model is FLUX.2-flex (text-heavy design and UI prototyping)
+// Default model is FLUX.2-pro (photorealistic image generation)
 using var generator = new Flux2Generator(
     endpoint: "https://your-resource.openai.azure.com",
     apiKey: "your-api-key",
-    modelName: "FLUX.2 Flex",          // display name
-    modelId: "FLUX.2-flex",            // API model identifier
-    deploymentName: "FLUX.2-flex");    // Azure deployment name
+    modelName: "FLUX.2 Pro",       // display name
+    modelId: "FLUX.2-pro");        // deployment/model name
 
 // Generate an image — same interface as local models
 var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
@@ -164,8 +163,7 @@ services.AddStableDiffusion15(options =>
 services.AddFlux2Generator(
     endpoint: "https://your-resource.openai.azure.com",
     apiKey: "your-api-key",
-    modelId: "FLUX.2-flex",
-    deploymentName: "FLUX.2-flex");
+    modelId: "FLUX.2-pro");
 
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
@@ -193,8 +191,8 @@ public class MyService(IImageGenerator generator)
 
 | Model | Class | Provider | Quality | Status |
 |-------|-------|----------|---------|--------|
-| **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Default |
-| **FLUX.2 Pro** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
+| **FLUX.2 Pro** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Default |
+| **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
 ## Samples

@@ -12,6 +12,7 @@ namespace ElBruno.Text2Image.Foundry;
 /// FLUX.2 text-to-image generator using the Microsoft Foundry REST API.
 /// Supports both FLUX.2 [pro] (photorealistic) and FLUX.2 [flex] (text-heavy design).
 /// This is a cloud API model — no local ONNX models are needed.
+/// Uses the OpenAI-compatible /openai/v1/images/generations endpoint.
 /// Handles both synchronous (200) and asynchronous (202 + polling) API patterns.
 /// </summary>
 public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
@@ -20,22 +21,20 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     private readonly string _endpoint;
     private readonly string _apiKey;
     private readonly string _modelDisplayName;
-    private readonly string? _modelId;
+    private readonly string _modelId;
     private readonly bool _ownsHttpClient;
 
     private const int MaxErrorBodyLength = 1024;
     private const int MaxPollAttempts = 120;
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
-    private const string DefaultApiVersion = "2024-06-01";
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
 
     /// <summary>
-    /// The model identifier sent in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
-    /// Null if the model is determined by the endpoint URL (deployment-based routing).
+    /// The model/deployment name sent in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
     /// </summary>
-    public string? ModelId => _modelId;
+    public string ModelId => _modelId;
 
     /// <summary>
     /// The resolved API endpoint URL (may differ from the input if a base URL was auto-expanded).
@@ -48,21 +47,15 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// <param name="endpoint">
     /// The endpoint URL. Can be either:
     /// <list type="bullet">
-    /// <item><description>A base resource URL (e.g., "https://myresource.openai.azure.com") — the deployment path and API version will be appended automatically using <paramref name="deploymentName"/>.</description></item>
-    /// <item><description>A full endpoint URL (e.g., "https://myresource.openai.azure.com/openai/deployments/flux/images/generations?api-version=2024-06-01") — used as-is.</description></item>
+    /// <item><description>A base resource URL (e.g., "https://myresource.openai.azure.com") — <c>/openai/v1/images/generations</c> will be appended automatically.</description></item>
+    /// <item><description>A full endpoint URL (e.g., "https://myresource.openai.azure.com/openai/v1/images/generations") — used as-is.</description></item>
     /// </list>
     /// </param>
     /// <param name="apiKey">The API key for authentication.</param>
-    /// <param name="modelName">Display name for the model. Defaults to "FLUX.2-flex".</param>
+    /// <param name="modelName">Display name for the model (for logging/UI). Defaults to "FLUX.2-pro".</param>
     /// <param name="modelId">
-    /// Optional model identifier to include in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
-    /// Required for model-based endpoints. Not needed for deployment-based endpoints where the model is
-    /// embedded in the URL path.
-    /// </param>
-    /// <param name="deploymentName">
-    /// The Azure deployment name. Used when <paramref name="endpoint"/> is a base URL to build:
-    /// <c>/openai/deployments/{deploymentName}/images/generations?api-version=2024-06-01</c>.
-    /// Defaults to "FLUX.2-flex" if not specified.
+    /// The model/deployment name sent in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
+    /// This matches the deployment name you created in Microsoft Foundry. Defaults to "FLUX.2-pro".
     /// </param>
     /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
     public Flux2Generator(
@@ -70,16 +63,15 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         string apiKey,
         string? modelName = null,
         string? modelId = null,
-        string? deploymentName = null,
         HttpClient? httpClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        _endpoint = BuildEndpointUrl(endpoint, deploymentName ?? modelId ?? "FLUX.2-flex");
+        _endpoint = BuildEndpointUrl(endpoint);
         _apiKey = apiKey;
-        _modelDisplayName = modelName ?? "FLUX.2-flex";
-        _modelId = modelId;
+        _modelDisplayName = modelName ?? "FLUX.2-pro";
+        _modelId = modelId ?? "FLUX.2-pro";
 
         if (httpClient != null)
         {
@@ -95,24 +87,28 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
     /// <summary>
     /// Builds the full API endpoint URL. If the user provides just a base URL
-    /// (e.g., "https://resource.openai.azure.com"), appends the standard Azure
-    /// OpenAI image generation path using the deployment name and API version.
-    /// Accepts both base URLs and full endpoint URLs.
+    /// (e.g., "https://resource.openai.azure.com"), appends the OpenAI-compatible
+    /// image generation path. Accepts both base URLs and full endpoint URLs.
     /// </summary>
-    private static string BuildEndpointUrl(string endpoint, string deploymentName)
+    private static string BuildEndpointUrl(string endpoint)
     {
         endpoint = endpoint.TrimEnd('/');
 
         var uri = new Uri(endpoint);
 
-        // If the path is empty or just "/", this is a base URL — build the full path
+        // If the path is empty or just "/", this is a base URL — append the API path
         if (string.IsNullOrEmpty(uri.AbsolutePath) || uri.AbsolutePath == "/")
         {
-            var path = $"/openai/deployments/{Uri.EscapeDataString(deploymentName)}/images/generations";
-            return $"{endpoint}{path}?api-version={DefaultApiVersion}";
+            return $"{endpoint}/openai/v1/images/generations";
         }
 
-        // If it already has a path (user provided full URL), use as-is
+        // If path ends with /openai/v1 or /openai/v1/, append images/generations
+        if (uri.AbsolutePath.TrimEnd('/').EndsWith("/openai/v1", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{endpoint.TrimEnd('/')}/images/generations";
+        }
+
+        // If it already has a full path (user provided complete URL), use as-is
         return endpoint;
     }
 
@@ -149,8 +145,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             Prompt = prompt,
             Model = _modelId,
             N = 1,
-            Size = $"{options.Width}x{options.Height}",
-            ResponseFormat = "b64_json"
+            Size = $"{options.Width}x{options.Height}"
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
@@ -170,8 +165,8 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
                   "and are using the correct endpoint URL from the deployment page. " +
                   $"The resolved endpoint was: {_endpoint}\n" +
                   "You can provide either:\n" +
-                  "  - A full endpoint URL (e.g., https://resource.openai.azure.com/openai/deployments/FLUX.2-flex/images/generations?api-version=2024-06-01)\n" +
-                  "  - A base URL (e.g., https://resource.openai.azure.com) with the correct FLUX2_DEPLOYMENT_NAME"
+                  "  - A base URL (e.g., https://your-resource.openai.azure.com)\n" +
+                  "  - A full URL (e.g., https://your-resource.openai.azure.com/openai/v1/images/generations)"
                 : "";
 
             throw new HttpRequestException(
@@ -366,17 +361,13 @@ internal sealed class Flux2Request
     public required string Prompt { get; set; }
 
     [JsonPropertyName("model")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Model { get; set; }
+    public required string Model { get; set; }
 
     [JsonPropertyName("n")]
     public int N { get; set; } = 1;
 
     [JsonPropertyName("size")]
     public string Size { get; set; } = "1024x1024";
-
-    [JsonPropertyName("response_format")]
-    public string ResponseFormat { get; set; } = "b64_json";
 }
 
 internal sealed class Flux2Response
