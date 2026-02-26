@@ -280,6 +280,7 @@ Text Prompt
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
+- [docs/security.md](docs/security.md) — Security considerations and hardening
 - [scripts/](scripts/) — Python conversion and upload scripts
 
 ## Dependencies
