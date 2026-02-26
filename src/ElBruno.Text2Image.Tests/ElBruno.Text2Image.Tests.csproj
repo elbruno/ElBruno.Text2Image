@@ -11,6 +11,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="xunit" Version="2.*" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
+    <!-- Direct reference needed: the Cpu project has no source files (thin metapackage),
+         so native assets from Microsoft.ML.OnnxRuntime don't flow transitively. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" />
   </ItemGroup>
 
   <ItemGroup>
