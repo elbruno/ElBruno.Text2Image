@@ -5,6 +5,6 @@
     <TargetFrameworks></TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj" />
+    <ProjectReference Include="..\..\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj" />
   </ItemGroup>
 </Project>

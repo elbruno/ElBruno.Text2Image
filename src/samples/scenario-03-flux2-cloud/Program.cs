@@ -1,12 +1,12 @@
 using ElBruno.Text2Image;
-using ElBruno.Text2Image.Models;
+using ElBruno.Text2Image.Foundry;
 
-Console.WriteLine("=== ElBruno.Text2Image - FLUX.2 Cloud API Demo ===");
+Console.WriteLine("=== ElBruno.Text2Image - FLUX.2 Cloud API Demo (Microsoft Foundry) ===");
 Console.WriteLine();
 
-// FLUX.2 requires an Azure AI Foundry deployment
+// FLUX.2 requires a Microsoft Foundry deployment
 // Set these environment variables before running:
-//   FLUX2_ENDPOINT - Your Azure AI Foundry FLUX.2 endpoint URL
+//   FLUX2_ENDPOINT - Your Microsoft Foundry FLUX.2 endpoint URL
 //   FLUX2_API_KEY  - Your API key
 var endpoint = Environment.GetEnvironmentVariable("FLUX2_ENDPOINT");
 var apiKey = Environment.GetEnvironmentVariable("FLUX2_API_KEY");
@@ -16,7 +16,7 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("ERROR: Please set FLUX2_ENDPOINT and FLUX2_API_KEY environment variables.");
     Console.WriteLine();
     Console.WriteLine("To get these values:");
-    Console.WriteLine("  1. Go to https://ai.azure.com/");
+    Console.WriteLine("  1. Go to Microsoft Foundry portal");
     Console.WriteLine("  2. Deploy a FLUX.2 model (FLUX.2-pro or FLUX.2-flex)");
     Console.WriteLine("  3. Copy the endpoint URL and API key from the deployment");
     Console.WriteLine();

@@ -2,46 +2,43 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ElBruno.Text2Image;
 using Microsoft.Extensions.AI;
 
-namespace ElBruno.Text2Image.Models;
+namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
-/// FLUX.2 text-to-image generator using the Microsoft Azure AI Foundry REST API.
+/// FLUX.2 text-to-image generator using the Microsoft Foundry REST API.
 /// Supports both FLUX.2 [pro] (photorealistic) and FLUX.2 [flex] (text-heavy design).
 /// This is a cloud API model — no local ONNX models are needed.
 /// </summary>
-/// <remarks>
-/// Requires an Azure AI Foundry deployment of a FLUX.2 model.
-/// See https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text-heavy-design
-/// </remarks>
 public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private readonly HttpClient _httpClient;
     private readonly string _endpoint;
+    private readonly string _apiKey;
     private readonly string _modelDisplayName;
     private readonly bool _ownsHttpClient;
+
+    private const int MaxErrorBodyLength = 1024;
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
 
     /// <summary>
-    /// Creates a new FLUX.2 generator targeting a Microsoft Azure AI Foundry deployment.
+    /// Creates a new FLUX.2 generator targeting a Microsoft Foundry deployment.
     /// </summary>
-    /// <param name="endpoint">
-    /// The full Azure AI Foundry endpoint URL for the FLUX.2 deployment.
-    /// Example: "https://myresource.services.ai.azure.com/openai/deployments/flux-2-pro/images/generations?api-version=2024-06-01"
-    /// Or a simpler endpoint like: "https://myresource.services.ai.azure.com/api/models/flux-2-pro:generate"
-    /// </param>
+    /// <param name="endpoint">The full Microsoft Foundry endpoint URL for the FLUX.2 deployment.</param>
     /// <param name="apiKey">The API key for authentication.</param>
     /// <param name="modelName">Display name for the model. Defaults to "FLUX.2".</param>
-    /// <param name="httpClient">Optional HttpClient instance for custom configuration.</param>
+    /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
     public Flux2Generator(string endpoint, string apiKey, string? modelName = null, HttpClient? httpClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
         _endpoint = endpoint.TrimEnd('/');
+        _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2";
 
         if (httpClient != null)
@@ -54,13 +51,10 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             _httpClient = new HttpClient();
             _ownsHttpClient = true;
         }
-
-        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("api-key", apiKey);
     }
 
     /// <summary>
     /// No-op for cloud models. The model is always available on the server.
-    /// Optionally performs a connectivity check.
     /// </summary>
     public Task EnsureModelAvailableAsync(
         IProgress<DownloadProgress>? progress = null,
@@ -95,11 +89,17 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             ResponseFormat = "b64_json"
         };
 
-        var response = await _httpClient.PostAsJsonAsync(_endpoint, requestBody, Flux2JsonContext.Default.Flux2Request, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+        request.Headers.TryAddWithoutValidation("api-key", _apiKey);
+        request.Content = JsonContent.Create(requestBody, Flux2JsonContext.Default.Flux2Request);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (errorBody.Length > MaxErrorBodyLength)
+                errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
             throw new HttpRequestException(
                 $"FLUX.2 API returned {response.StatusCode}: {errorBody}");
         }
@@ -117,7 +117,11 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         }
         else if (!string.IsNullOrEmpty(imageData.Url))
         {
-            imageBytes = await _httpClient.GetByteArrayAsync(imageData.Url, cancellationToken);
+            // Use a separate request WITHOUT the API key to avoid credential leakage (SSRF mitigation)
+            using var imageRequest = new HttpRequestMessage(HttpMethod.Get, imageData.Url);
+            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken);
+            imageResponse.EnsureSuccessStatusCode();
+            imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
         }
         else
         {
@@ -142,18 +146,18 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// Generates an image using the Microsoft.Extensions.AI interface.
     /// </summary>
     async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(
-        ImageGenerationRequest request,
+        ImageGenerationRequest imageRequest,
         Microsoft.Extensions.AI.ImageGenerationOptions? options,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(imageRequest);
         var localOptions = new ImageGenerationOptions();
         if (options?.ImageSize is { } size)
         {
             localOptions.Width = size.Width;
             localOptions.Height = size.Height;
         }
-        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
 

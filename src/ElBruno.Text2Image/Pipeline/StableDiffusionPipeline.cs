@@ -13,6 +13,8 @@ internal sealed class StableDiffusionPipeline : IDisposable
     private readonly TextEncoder _textEncoder;
     private readonly UNetDenoiser _unet;
     private readonly VaeDecoder _vaeDecoder;
+    private readonly Microsoft.ML.OnnxRuntime.SessionOptions _sessionOptions;
+    private readonly Microsoft.ML.OnnxRuntime.SessionOptions _cpuOptions;
     private readonly int _embeddingDim;
     private readonly bool _useLcmScheduler;
 
@@ -24,6 +26,7 @@ internal sealed class StableDiffusionPipeline : IDisposable
     {
         _embeddingDim = embeddingDim;
         _useLcmScheduler = useLcmScheduler;
+        _sessionOptions = sessionOptions;
 
         var tokenizerDir = Path.Combine(modelPath, "tokenizer");
         _tokenizer = ClipTokenizer.Load(tokenizerDir);
@@ -36,9 +39,9 @@ internal sealed class StableDiffusionPipeline : IDisposable
 
         var vaeDecoderPath = Path.Combine(modelPath, "vae_decoder", "model.onnx");
         // VAE decoder often works best on CPU to avoid OOM
-        var cpuOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
-        cpuOptions.AppendExecutionProvider_CPU();
-        _vaeDecoder = new VaeDecoder(vaeDecoderPath, cpuOptions);
+        _cpuOptions = new Microsoft.ML.OnnxRuntime.SessionOptions();
+        _cpuOptions.AppendExecutionProvider_CPU();
+        _vaeDecoder = new VaeDecoder(vaeDecoderPath, _cpuOptions);
     }
 
     /// <summary>
@@ -141,5 +144,7 @@ internal sealed class StableDiffusionPipeline : IDisposable
         _textEncoder.Dispose();
         _unet.Dispose();
         _vaeDecoder.Dispose();
+        _sessionOptions.Dispose();
+        _cpuOptions.Dispose();
     }
 }

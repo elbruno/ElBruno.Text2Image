@@ -15,7 +15,7 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 
 | Model | Class | Provider | Resolution | Status |
 |-------|-------|----------|------------|--------|
-| **FLUX.2** | `Flux2Generator` | Azure AI Foundry | 1024×1024 | ✅ Implemented |
+| **FLUX.2** | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Implemented |
 
 ## Model Details
 
@@ -61,11 +61,11 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 ### FLUX.2 (Cloud API)
 
 - **Class**: `Flux2Generator`
-- **Provider**: Microsoft Azure AI Foundry
+- **Provider**: Microsoft Microsoft Foundry
 - **Resolution**: 1024×1024 (default)
 - **Variants**: FLUX.2 Pro (photorealistic), FLUX.2 Flex (text-heavy design / UI prototyping)
 - **No local model needed**: Runs via REST API
-- **Authentication**: API key from Azure AI Foundry
+- **Authentication**: API key from Microsoft Foundry
 - **Setup guide**: [flux2-setup-guide.md](flux2-setup-guide.md)
 
 ## Execution Providers

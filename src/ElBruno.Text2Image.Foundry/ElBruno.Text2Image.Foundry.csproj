@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElBruno.Text2Image.Foundry</RootNamespace>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>ElBruno.Text2Image.Foundry</PackageId>
+    <Version>0.1.0-preview</Version>
+    <Authors>Bruno Capuano</Authors>
+    <Description>Microsoft Foundry cloud image generation for ElBruno.Text2Image. Provides FLUX.2 text-to-image generation via the Microsoft Foundry REST API. No local models needed — runs in the cloud.</Description>
+    <PackageTags>text-to-image;flux2;image-generation;microsoft-foundry;cloud;ai</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo_01_nuget.png</PackageIcon>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />
+    <None Include="..\..\images\logo_01_nuget.png" Pack="true" PackagePath="\" Link="logo_01_nuget.png" />
+  </ItemGroup>
+
+</Project>

@@ -1,10 +1,10 @@
-# FLUX.2 Setup Guide — Azure AI Foundry
+# FLUX.2 Setup Guide — Microsoft Foundry
 
-This guide explains how to set up and use the **FLUX.2** text-to-image model via Microsoft Azure AI Foundry with the `Flux2Generator` class.
+This guide explains how to set up and use the **FLUX.2** text-to-image model via Microsoft Microsoft Foundry with the `Flux2Generator` class.
 
 ## Overview
 
-FLUX.2 is a cloud-based text-to-image model available through [Microsoft Azure AI Foundry](https://ai.azure.com). Unlike the local Stable Diffusion models, FLUX.2 runs on Azure infrastructure — no local GPU or ONNX models are needed.
+FLUX.2 is a cloud-based text-to-image model available through [Microsoft Microsoft Foundry](https://ai.azure.com). Unlike the local Stable Diffusion models, FLUX.2 runs on Azure infrastructure — no local GPU or ONNX models are needed.
 
 **Available variants:**
 
@@ -13,25 +13,25 @@ FLUX.2 is a cloud-based text-to-image model available through [Microsoft Azure A
 | **FLUX.2 Pro** | Photorealistic image generation |
 | **FLUX.2 Flex** | Text-heavy design and UI prototyping |
 
-> Reference: [Meet FLUX.2 Flex on Azure AI Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
+> Reference: [Meet FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
 
 ## Prerequisites
 
 1. An **Azure subscription**
-2. An **Azure AI Foundry** resource (formerly Azure OpenAI Service)
+2. An **Microsoft Foundry** resource (formerly Azure OpenAI Service)
 3. A **FLUX.2 model deployment** (Pro or Flex)
 4. The deployment **endpoint URL** and **API key**
 
-## Step 1: Create an Azure AI Foundry Resource
+## Step 1: Create an Microsoft Foundry Resource
 
 1. Go to [Azure Portal](https://portal.azure.com)
-2. Click **Create a resource** → search for **Azure AI Foundry**
+2. Click **Create a resource** → search for **Microsoft Foundry**
 3. Select your subscription, resource group, and region
 4. Click **Review + create** → **Create**
 
 ## Step 2: Deploy a FLUX.2 Model
 
-1. Go to [Azure AI Foundry](https://ai.azure.com)
+1. Go to [Microsoft Foundry](https://ai.azure.com)
 2. Open your resource → **Model catalog**
 3. Search for **FLUX.2** (Pro or Flex)
 4. Click **Deploy** and follow the prompts
@@ -39,7 +39,7 @@ FLUX.2 is a cloud-based text-to-image model available through [Microsoft Azure A
 
 ## Step 3: Get the Endpoint and API Key
 
-1. In Azure AI Foundry, go to your deployment
+1. In Microsoft Foundry, go to your deployment
 2. Copy the **Endpoint URL** — it will look like:
    ```
    https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview
@@ -101,7 +101,7 @@ using var generator = new Flux2Generator(endpoint, apiKey, "FLUX.2 Pro");
 
 ## API Details
 
-The `Flux2Generator` sends HTTP POST requests to the Azure AI Foundry endpoint:
+The `Flux2Generator` sends HTTP POST requests to the Microsoft Foundry endpoint:
 
 **Request:**
 ```json
@@ -144,12 +144,12 @@ var result = await generator.GenerateAsync("a beautiful landscape");
 
 ## Pricing
 
-FLUX.2 on Azure AI Foundry is a pay-per-use service. Pricing depends on:
+FLUX.2 on Microsoft Foundry is a pay-per-use service. Pricing depends on:
 - The model variant (Pro vs Flex)
 - Image resolution
 - Your Azure region
 
-Check the [Azure AI Foundry pricing page](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for current rates.
+Check the [Microsoft Foundry pricing page](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for current rates.
 
 ## Troubleshooting
 

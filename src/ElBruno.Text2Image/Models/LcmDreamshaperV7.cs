@@ -34,6 +34,7 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
     };
 
     private readonly ImageGenerationOptions _defaultOptions;
+    private readonly object _pipelineLock = new();
     private StableDiffusionPipeline? _pipeline;
 
     /// <inheritdoc />
@@ -76,8 +77,14 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
 
         if (_pipeline == null)
         {
-            var sessionOptions = SessionOptionsHelper.Create(options.ExecutionProvider);
-            _pipeline = new StableDiffusionPipeline(modelPath, sessionOptions, EmbeddingDim, useLcmScheduler: true);
+            lock (_pipelineLock)
+            {
+                if (_pipeline == null)
+                {
+                    var sessionOptions = SessionOptionsHelper.Create(options.ExecutionProvider);
+                    _pipeline = new StableDiffusionPipeline(modelPath, sessionOptions, EmbeddingDim, useLcmScheduler: true);
+                }
+            }
         }
 
         return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken);

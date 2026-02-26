@@ -11,14 +11,14 @@
 [![SD 2.1 ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SD%202.1%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
 [![SDXL Turbo ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SDXL%20Turbo%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
 
-A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Runtime) and cloud APIs (Azure AI Foundry FLUX.2). Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
+A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Runtime) and cloud APIs (Microsoft Foundry FLUX.2). Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
 
 ## Features
 
 - 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion or FLUX.2
 - 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2 (cloud)
 - ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
-- ☁️ **Cloud API** — FLUX.2 via Azure AI Foundry for high-quality text-heavy designs
+- ☁️ **Cloud API** — FLUX.2 via Microsoft Foundry for high-quality text-heavy designs
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
@@ -41,6 +41,9 @@ dotnet add package ElBruno.Text2Image.Cuda
 
 # DirectML (AMD/Intel/NVIDIA on Windows)
 dotnet add package ElBruno.Text2Image.DirectML
+
+# FLUX.2 cloud via Microsoft Foundry (no GPU needed)
+dotnet add package ElBruno.Text2Image.Foundry
 ```
 
 > **Note:** These are mutually exclusive — install only ONE, following the same pattern as `Microsoft.ML.OnnxRuntime` vs `Microsoft.ML.OnnxRuntime.Gpu`.
@@ -62,13 +65,13 @@ await result.SaveAsync("output.png");
 Console.WriteLine($"Generated in {result.InferenceTimeMs}ms (seed: {result.Seed})");
 ```
 
-### Basic Usage — Cloud (FLUX.2 via Azure AI Foundry)
+### Basic Usage — Cloud (FLUX.2 via Microsoft Foundry)
 
 ```csharp
 using ElBruno.Text2Image;
-using ElBruno.Text2Image.Models;
+using ElBruno.Text2Image.Foundry;
 
-// Create a FLUX.2 generator using Azure AI Foundry
+// Create a FLUX.2 generator using Microsoft Foundry
 using var generator = new Flux2Generator(
     endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
     apiKey: "your-api-key",
@@ -152,7 +155,7 @@ services.AddStableDiffusion15(options =>
     options.ModelDirectory = "/path/to/models";
 });
 
-// Cloud model
+// Cloud model (requires ElBruno.Text2Image.Foundry package)
 services.AddFlux2Generator(
     endpoint: "https://your-resource.services.ai.azure.com/...",
     apiKey: "your-api-key");
@@ -183,8 +186,7 @@ public class MyService(IImageGenerator generator)
 
 | Model | Class | Provider | Quality | Status |
 |-------|-------|----------|---------|--------|
-| **FLUX.2** | `Flux2Generator` | Azure AI Foundry | Excellent | ✅ Available |
-
+| **FLUX.2** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
 ## Samples
@@ -193,7 +195,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 |--------|-------------|
 | [scenario-01-simple](src/samples/scenario-01-simple/) | Basic text-to-image generation with SD 1.5 |
 | [scenario-02-custom-options](src/samples/scenario-02-custom-options/) | Custom seeds, guidance scale, and steps |
-| [scenario-03-flux2-cloud](src/samples/scenario-03-flux2-cloud/) | FLUX.2 cloud API via Azure AI Foundry |
+| [scenario-03-flux2-cloud](src/samples/scenario-03-flux2-cloud/) | FLUX.2 cloud API via Microsoft Foundry |
 | [scenario-04-lcm-fast](src/samples/scenario-04-lcm-fast/) | Ultra-fast generation with LCM Dreamshaper (2-4 steps) |
 | [scenario-05-sd21](src/samples/scenario-05-sd21/) | Stable Diffusion 2.1 at 768×768 native resolution |
 | [scenario-06-model-comparison](src/samples/scenario-06-model-comparison/) | Compare SD 1.5 vs LCM side-by-side |
@@ -223,6 +225,7 @@ ElBruno.Text2Image              ← Core library (C# managed code, no native run
 ElBruno.Text2Image.Cpu          ← Core + OnnxRuntime CPU native
 ElBruno.Text2Image.Cuda         ← Core + OnnxRuntime.Gpu CUDA native
 ElBruno.Text2Image.DirectML     ← Core + OnnxRuntime.DirectML native
+ElBruno.Text2Image.Foundry      ← Core + FLUX.2 via Microsoft Foundry cloud API
 ```
 
 ### Local Pipeline (Stable Diffusion)
@@ -275,7 +278,7 @@ Text Prompt
 - [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
-- [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Azure AI Foundry FLUX.2 setup
+- [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [scripts/](scripts/) — Python conversion and upload scripts
 

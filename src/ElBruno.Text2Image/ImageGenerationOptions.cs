@@ -27,14 +27,36 @@ public sealed class ImageGenerationOptions
     public double GuidanceScale { get; set; } = 7.5;
 
     /// <summary>
-    /// Image width in pixels. Must be a multiple of 8. Default is 512.
+    /// Image width in pixels. Must be a multiple of 8 and between 64 and 4096. Default is 512.
     /// </summary>
-    public int Width { get; set; } = 512;
+    public int Width
+    {
+        get => _width;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 64);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 4096);
+            if (value % 8 != 0) throw new ArgumentException("Width must be a multiple of 8.", nameof(value));
+            _width = value;
+        }
+    }
+    private int _width = 512;
 
     /// <summary>
-    /// Image height in pixels. Must be a multiple of 8. Default is 512.
+    /// Image height in pixels. Must be a multiple of 8 and between 64 and 4096. Default is 512.
     /// </summary>
-    public int Height { get; set; } = 512;
+    public int Height
+    {
+        get => _height;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 64);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 4096);
+            if (value % 8 != 0) throw new ArgumentException("Height must be a multiple of 8.", nameof(value));
+            _height = value;
+        }
+    }
+    private int _height = 512;
 
     /// <summary>
     /// Random seed for reproducible generation. If null, a random seed is used.

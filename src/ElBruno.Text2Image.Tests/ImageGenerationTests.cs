@@ -1,5 +1,6 @@
 using Xunit;
 using ElBruno.Text2Image.Models;
+using ElBruno.Text2Image.Foundry;
 
 namespace ElBruno.Text2Image.Tests;
 
