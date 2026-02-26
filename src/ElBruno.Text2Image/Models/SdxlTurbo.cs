@@ -1,4 +1,5 @@
 using ElBruno.Text2Image.Pipeline;
+using Microsoft.Extensions.AI;
 
 namespace ElBruno.Text2Image.Models;
 
@@ -8,7 +9,7 @@ namespace ElBruno.Text2Image.Models;
 /// ONNX models exported and hosted at elbruno/sdxl-turbo-ONNX.
 /// Note: SDXL uses a dual text encoder architecture; the pipeline uses the primary encoder.
 /// </summary>
-public sealed class SdxlTurbo : IImageGenerator
+public sealed class SdxlTurbo : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private const string HuggingFaceRepo = "elbruno/sdxl-turbo-ONNX";
     private const string ModelSubfolder = "sdxl-turbo-onnx";
@@ -94,6 +95,24 @@ public sealed class SdxlTurbo : IImageGenerator
 
         return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken);
     }
+
+    /// <summary>
+    /// Generates an image using the Microsoft.Extensions.AI interface.
+    /// </summary>
+    async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(
+        ImageGenerationRequest request,
+        Microsoft.Extensions.AI.ImageGenerationOptions? options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var localOptions = ImageGenerationOptionsConverter.FromMeaiOptions(options);
+        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        return ImageGenerationOptionsConverter.ToMeaiResponse(result);
+    }
+
+    /// <inheritdoc />
+    object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey)
+        => serviceType == GetType() ? this : null;
 
     /// <inheritdoc />
     public void Dispose()

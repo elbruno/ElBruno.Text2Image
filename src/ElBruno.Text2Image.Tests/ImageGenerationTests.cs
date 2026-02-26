@@ -325,3 +325,133 @@ public class Flux2GeneratorTests
         httpClient.Dispose();
     }
 }
+
+public class MeaiInterfaceTests
+{
+    [Fact]
+    public void StableDiffusion15_Implements_MeaiIImageGenerator()
+    {
+        using var generator = new StableDiffusion15();
+        Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void LcmDreamshaperV7_Implements_MeaiIImageGenerator()
+    {
+        using var generator = new LcmDreamshaperV7();
+        Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void SdxlTurbo_Implements_MeaiIImageGenerator()
+    {
+        using var generator = new SdxlTurbo();
+        Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void StableDiffusion21_Implements_MeaiIImageGenerator()
+    {
+        using var generator = new StableDiffusion21();
+        Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void Flux2Generator_Implements_MeaiIImageGenerator()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void GetService_Returnsself_ForOwnType()
+    {
+        using var generator = new StableDiffusion15();
+        var meai = (Microsoft.Extensions.AI.IImageGenerator)generator;
+        var service = meai.GetService(typeof(StableDiffusion15));
+        Assert.Same(generator, service);
+    }
+
+    [Fact]
+    public void GetService_ReturnsNull_ForUnknownType()
+    {
+        using var generator = new StableDiffusion15();
+        var meai = (Microsoft.Extensions.AI.IImageGenerator)generator;
+        var service = meai.GetService(typeof(string));
+        Assert.Null(service);
+    }
+}
+
+public class MeaiOptionsConverterTests
+{
+    [Fact]
+    public void FromMeaiOptions_Null_ReturnsDefaults()
+    {
+        var result = ImageGenerationOptionsConverter.FromMeaiOptions(null);
+        Assert.Equal(512, result.Width);
+        Assert.Equal(512, result.Height);
+    }
+
+    [Fact]
+    public void FromMeaiOptions_MapsImageSize()
+    {
+        var meaiOptions = new Microsoft.Extensions.AI.ImageGenerationOptions
+        {
+            ImageSize = new System.Drawing.Size(768, 768)
+        };
+        var result = ImageGenerationOptionsConverter.FromMeaiOptions(meaiOptions);
+        Assert.Equal(768, result.Width);
+        Assert.Equal(768, result.Height);
+    }
+
+    [Fact]
+    public void FromMeaiOptions_MapsAdditionalProperties()
+    {
+        var meaiOptions = new Microsoft.Extensions.AI.ImageGenerationOptions
+        {
+            AdditionalProperties = new Microsoft.Extensions.AI.AdditionalPropertiesDictionary
+            {
+                [Text2ImagePropertyNames.NumInferenceSteps] = 30,
+                [Text2ImagePropertyNames.GuidanceScale] = 9.0,
+                [Text2ImagePropertyNames.Seed] = 123,
+                [Text2ImagePropertyNames.ExecutionProvider] = "Cpu"
+            }
+        };
+        var result = ImageGenerationOptionsConverter.FromMeaiOptions(meaiOptions);
+        Assert.Equal(30, result.NumInferenceSteps);
+        Assert.Equal(9.0, result.GuidanceScale);
+        Assert.Equal(123, result.Seed);
+        Assert.Equal(ExecutionProvider.Cpu, result.ExecutionProvider);
+    }
+
+    [Fact]
+    public void ToMeaiResponse_ContainsImageData()
+    {
+        var genResult = new ImageGenerationResult
+        {
+            ImageBytes = new byte[] { 1, 2, 3 },
+            ModelName = "Test",
+            Prompt = "test"
+        };
+        var response = ImageGenerationOptionsConverter.ToMeaiResponse(genResult);
+        Assert.Single(response.Contents);
+        var data = Assert.IsType<Microsoft.Extensions.AI.DataContent>(response.Contents[0]);
+        Assert.Equal("image/png", data.MediaType);
+        Assert.Equal(3, data.Data.Length);
+    }
+
+    [Fact]
+    public void ToMeaiResponse_RawRepresentation_IsOriginalResult()
+    {
+        var genResult = new ImageGenerationResult
+        {
+            ImageBytes = new byte[] { 1, 2, 3 },
+            ModelName = "Test",
+            Prompt = "test",
+            Seed = 42
+        };
+        var response = ImageGenerationOptionsConverter.ToMeaiResponse(genResult);
+        var raw = Assert.IsType<ImageGenerationResult>(response.RawRepresentation);
+        Assert.Equal(42, raw.Seed);
+    }
+}

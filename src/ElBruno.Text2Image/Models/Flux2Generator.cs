@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.AI;
 
 namespace ElBruno.Text2Image.Models;
 
@@ -14,7 +15,7 @@ namespace ElBruno.Text2Image.Models;
 /// Requires an Azure AI Foundry deployment of a FLUX.2 model.
 /// See https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text-heavy-design
 /// </remarks>
-public sealed class Flux2Generator : IImageGenerator
+public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private readonly HttpClient _httpClient;
     private readonly string _endpoint;
@@ -136,6 +137,29 @@ public sealed class Flux2Generator : IImageGenerator
             Height = options.Height
         };
     }
+
+    /// <summary>
+    /// Generates an image using the Microsoft.Extensions.AI interface.
+    /// </summary>
+    async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(
+        ImageGenerationRequest request,
+        Microsoft.Extensions.AI.ImageGenerationOptions? options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var localOptions = new ImageGenerationOptions();
+        if (options?.ImageSize is { } size)
+        {
+            localOptions.Width = size.Width;
+            localOptions.Height = size.Height;
+        }
+        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        return ImageGenerationOptionsConverter.ToMeaiResponse(result);
+    }
+
+    /// <inheritdoc />
+    object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey)
+        => serviceType == GetType() ? this : null;
 
     /// <inheritdoc />
     public void Dispose()

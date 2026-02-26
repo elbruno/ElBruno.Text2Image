@@ -7,6 +7,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/elbruno/ElBruno.Text2Image?style=social)](https://github.com/elbruno/ElBruno.Text2Image)
 [![Twitter Follow](https://img.shields.io/twitter/follow/elbruno?style=social)](https://twitter.com/elbruno)
 
+**HuggingFace ONNX Models:**
+[![SD 2.1 ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SD%202.1%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
+[![SDXL Turbo ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SDXL%20Turbo%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
+
 A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Runtime) and cloud APIs (Azure AI Foundry FLUX.2). Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
 
 ## Features
@@ -19,6 +23,7 @@ A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Run
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
 - 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
+- 🔌 **Microsoft.Extensions.AI** — All generators implement `IImageGenerator` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions)
 - 🌱 **Reproducible** — Seed-based generation for reproducible results
 
 ## Quick Start
@@ -82,6 +87,50 @@ var result = await generator.GenerateAsync("a futuristic cityscape at night, neo
 await result.SaveAsync("cityscape.png");
 ```
 
+### Microsoft.Extensions.AI Interface
+
+All generators implement `Microsoft.Extensions.AI.IImageGenerator`, enabling a standard API:
+
+```csharp
+using Microsoft.Extensions.AI;
+using ElBruno.Text2Image.Models;
+
+// Any generator can be used via the M.E.AI interface
+using var sd15 = new StableDiffusion15();
+IImageGenerator generator = sd15;
+
+var request = new ImageGenerationRequest("a whimsical treehouse in a fantasy forest");
+var options = new ImageGenerationOptions
+{
+    ImageSize = new System.Drawing.Size(512, 512),
+    AdditionalProperties = new AdditionalPropertiesDictionary
+    {
+        ["num_inference_steps"] = 15,
+        ["guidance_scale"] = 7.5,
+        ["seed"] = 42
+    }
+};
+
+var response = await generator.GenerateAsync(request, options);
+var imageBytes = response.Contents.OfType<DataContent>().First().Data.ToArray();
+await File.WriteAllBytesAsync("output.png", imageBytes);
+```
+
+### Custom Model Directory
+
+```csharp
+// Download and use models from a specific directory
+using var generator = new StableDiffusion15(new ImageGenerationOptions
+{
+    ModelDirectory = @"D:\MyModels",
+    NumInferenceSteps = 15
+});
+
+await generator.EnsureModelAvailableAsync();
+var result = await generator.GenerateAsync("a serene lake");
+await result.SaveAsync("output.png");
+```
+
 ### Dependency Injection
 
 ```csharp
@@ -134,6 +183,13 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-01-simple](src/samples/scenario-01-simple/) | Basic text-to-image generation with SD 1.5 |
 | [scenario-02-custom-options](src/samples/scenario-02-custom-options/) | Custom seeds, guidance scale, and steps |
 | [scenario-03-flux2-cloud](src/samples/scenario-03-flux2-cloud/) | FLUX.2 cloud API via Azure AI Foundry |
+| [scenario-04-lcm-fast](src/samples/scenario-04-lcm-fast/) | Ultra-fast generation with LCM Dreamshaper (2-4 steps) |
+| [scenario-05-sd21](src/samples/scenario-05-sd21/) | Stable Diffusion 2.1 at 768×768 native resolution |
+| [scenario-06-model-comparison](src/samples/scenario-06-model-comparison/) | Compare SD 1.5 vs LCM side-by-side |
+| [scenario-07-custom-model-directory](src/samples/scenario-07-custom-model-directory/) | Download models to a custom directory |
+| [scenario-08-meai-interface](src/samples/scenario-08-meai-interface/) | Use via Microsoft.Extensions.AI `IImageGenerator` |
+| [scenario-09-batch-generation](src/samples/scenario-09-batch-generation/) | Generate multiple images from a batch of prompts |
+| [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
 
 ### Run a Sample
 
@@ -202,6 +258,7 @@ Text Prompt
 
 - [ElBruno.HuggingFace.Downloader](https://github.com/elbruno/ElBruno.HuggingFace.Downloader) — Model download from HuggingFace
 - [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime) — ONNX inference
+- [Microsoft.Extensions.AI.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions) — Standard AI interfaces (`IImageGenerator`)
 - [SixLabors.ImageSharp](https://www.nuget.org/packages/SixLabors.ImageSharp) — Cross-platform image processing
 
 ## Building

@@ -1,4 +1,5 @@
 using ElBruno.Text2Image.Pipeline;
+using Microsoft.Extensions.AI;
 
 namespace ElBruno.Text2Image.Models;
 
@@ -7,7 +8,7 @@ namespace ElBruno.Text2Image.Models;
 /// Uses OpenCLIP ViT-H text encoder (1024 embedding dimension).
 /// ONNX models exported and hosted at elbruno/stable-diffusion-2-1-ONNX.
 /// </summary>
-public sealed class StableDiffusion21 : IImageGenerator
+public sealed class StableDiffusion21 : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private const string HuggingFaceRepo = "elbruno/stable-diffusion-2-1-ONNX";
     private const string ModelSubfolder = "stable-diffusion-2-1-onnx";
@@ -84,6 +85,24 @@ public sealed class StableDiffusion21 : IImageGenerator
 
         return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken);
     }
+
+    /// <summary>
+    /// Generates an image using the Microsoft.Extensions.AI interface.
+    /// </summary>
+    async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(
+        ImageGenerationRequest request,
+        Microsoft.Extensions.AI.ImageGenerationOptions? options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var localOptions = ImageGenerationOptionsConverter.FromMeaiOptions(options);
+        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        return ImageGenerationOptionsConverter.ToMeaiResponse(result);
+    }
+
+    /// <inheritdoc />
+    object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey)
+        => serviceType == GetType() ? this : null;
 
     /// <inheritdoc />
     public void Dispose()

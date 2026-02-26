@@ -1,4 +1,5 @@
 using ElBruno.Text2Image.Pipeline;
+using Microsoft.Extensions.AI;
 
 namespace ElBruno.Text2Image.Models;
 
@@ -7,7 +8,7 @@ namespace ElBruno.Text2Image.Models;
 /// Uses Latent Consistency Models for very fast (2-4 step) inference.
 /// ONNX models from TheyCallMeHex/LCM-Dreamshaper-V7-ONNX on HuggingFace.
 /// </summary>
-public sealed class LcmDreamshaperV7 : IImageGenerator
+public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private const string HuggingFaceRepo = "TheyCallMeHex/LCM-Dreamshaper-V7-ONNX";
     private const string ModelSubfolder = "lcm-dreamshaper-v7-onnx";
@@ -81,6 +82,29 @@ public sealed class LcmDreamshaperV7 : IImageGenerator
 
         return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken);
     }
+
+    /// <summary>
+    /// Generates an image using the Microsoft.Extensions.AI interface.
+    /// </summary>
+    async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(
+        ImageGenerationRequest request,
+        Microsoft.Extensions.AI.ImageGenerationOptions? options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var localOptions = ImageGenerationOptionsConverter.FromMeaiOptions(options);
+        // Apply LCM defaults if not overridden
+        if (options?.AdditionalProperties == null || !options.AdditionalProperties.ContainsKey(Text2ImagePropertyNames.NumInferenceSteps))
+            localOptions.NumInferenceSteps = 4;
+        if (options?.AdditionalProperties == null || !options.AdditionalProperties.ContainsKey(Text2ImagePropertyNames.GuidanceScale))
+            localOptions.GuidanceScale = 1.0;
+        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        return ImageGenerationOptionsConverter.ToMeaiResponse(result);
+    }
+
+    /// <inheritdoc />
+    object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey)
+        => serviceType == GetType() ? this : null;
 
     /// <inheritdoc />
     public void Dispose()

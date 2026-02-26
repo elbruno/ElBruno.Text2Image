@@ -7,5 +7,12 @@
     <Project Path="src/samples/scenario-01-simple/scenario-01-simple.csproj" />
     <Project Path="src/samples/scenario-02-custom-options/scenario-02-custom-options.csproj" />
     <Project Path="src/samples/scenario-03-flux2-cloud/scenario-03-flux2-cloud.csproj" />
+    <Project Path="src/samples/scenario-04-lcm-fast/scenario-04-lcm-fast.csproj" />
+    <Project Path="src/samples/scenario-05-sd21/scenario-05-sd21.csproj" />
+    <Project Path="src/samples/scenario-06-model-comparison/scenario-06-model-comparison.csproj" />
+    <Project Path="src/samples/scenario-07-custom-model-directory/scenario-07-custom-model-directory.csproj" />
+    <Project Path="src/samples/scenario-08-meai-interface/scenario-08-meai-interface.csproj" />
+    <Project Path="src/samples/scenario-09-batch-generation/scenario-09-batch-generation.csproj" />
+    <Project Path="src/samples/scenario-10-progress-reporting/scenario-10-progress-reporting.csproj" />
   </Folder>
 </Solution>
