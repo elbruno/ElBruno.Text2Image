@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj" />
   </ItemGroup>
 
 </Project>

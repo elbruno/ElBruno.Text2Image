@@ -5,6 +5,11 @@
     <TargetFrameworks></TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+    <ProjectReference Include="..\..\ElBruno.Text2Image.Cuda\ElBruno.Text2Image.Cuda.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Override the CPU-only OnnxRuntime with GPU version -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" ExcludeAssets="native" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.24.1" />
   </ItemGroup>
 </Project>

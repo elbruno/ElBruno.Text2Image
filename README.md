@@ -30,9 +30,20 @@ A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Run
 
 ### Install
 
+Choose the package matching your hardware:
+
 ```bash
-dotnet add package ElBruno.Text2Image
+# CPU (default — works everywhere)
+dotnet add package ElBruno.Text2Image.Cpu
+
+# NVIDIA GPU (CUDA — 4x faster)
+dotnet add package ElBruno.Text2Image.Cuda
+
+# DirectML (AMD/Intel/NVIDIA on Windows)
+dotnet add package ElBruno.Text2Image.DirectML
 ```
+
+> **Note:** These are mutually exclusive — install only ONE, following the same pattern as `Microsoft.ML.OnnxRuntime` vs `Microsoft.ML.OnnxRuntime.Gpu`.
 
 ### Basic Usage — Local (Stable Diffusion 1.5)
 
@@ -200,6 +211,19 @@ dotnet run
 ```
 
 ## Architecture
+
+### Package Structure
+
+Following the same pattern as Microsoft.ML.OnnxRuntime:
+
+```
+ElBruno.Text2Image              ← Core library (C# managed code, no native runtime)
+    ├── depends on: OnnxRuntime.Managed (managed API only)
+    │
+ElBruno.Text2Image.Cpu          ← Core + OnnxRuntime CPU native
+ElBruno.Text2Image.Cuda         ← Core + OnnxRuntime.Gpu CUDA native
+ElBruno.Text2Image.DirectML     ← Core + OnnxRuntime.DirectML native
+```
 
 ### Local Pipeline (Stable Diffusion)
 

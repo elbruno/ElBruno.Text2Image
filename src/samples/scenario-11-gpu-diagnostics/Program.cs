@@ -54,15 +54,23 @@ Console.WriteLine();
 if (detected == ExecutionProvider.Cpu && !providers.Contains("CUDAExecutionProvider") && !providers.Contains("DmlExecutionProvider"))
 {
     Console.WriteLine("⚠️  No GPU provider is available.");
-    Console.WriteLine("   To enable GPU acceleration, replace the OnnxRuntime NuGet package:");
+    Console.WriteLine("   Install a GPU-enabled package instead:");
     Console.WriteLine();
-    Console.WriteLine("   NVIDIA CUDA (recommended for NVIDIA GPUs):");
-    Console.WriteLine("     dotnet remove package Microsoft.ML.OnnxRuntime");
-    Console.WriteLine("     dotnet add package Microsoft.ML.OnnxRuntime.Gpu");
+    Console.WriteLine("   NVIDIA CUDA:");
+    Console.WriteLine("     dotnet add package ElBruno.Text2Image.Cuda");
     Console.WriteLine();
     Console.WriteLine("   DirectML (AMD / Intel / NVIDIA on Windows):");
-    Console.WriteLine("     dotnet remove package Microsoft.ML.OnnxRuntime");
-    Console.WriteLine("     dotnet add package Microsoft.ML.OnnxRuntime.DirectML");
+    Console.WriteLine("     dotnet add package ElBruno.Text2Image.DirectML");
+}
+else if (detected == ExecutionProvider.Cpu && providers.Contains("CUDAExecutionProvider"))
+{
+    Console.WriteLine("⚠️  CUDA provider is listed but failed to initialize.");
+    Console.WriteLine("   Install CUDA runtime libraries:");
+    Console.WriteLine("     pip install nvidia-cublas-cu12 nvidia-cudnn-cu12 nvidia-cufft-cu12 \\");
+    Console.WriteLine("       nvidia-curand-cu12 nvidia-cusolver-cu12 nvidia-cusparse-cu12 \\");
+    Console.WriteLine("       nvidia-cuda-runtime-cu12 nvidia-cuda-nvrtc-cu12");
+    Console.WriteLine("   Then add the installed DLL directories to PATH.");
+    Console.WriteLine("   See docs/gpu-acceleration.md for details.");
 }
 else if (detected != ExecutionProvider.Cpu)
 {

@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="ElBruno.HuggingFace.Downloader" Version="0.5.0" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.3.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.*" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.*" />
   </ItemGroup>

@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/ElBruno.Text2Image/ElBruno.Text2Image.csproj" />
+    <Project Path="src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj" />
+    <Project Path="src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj" />
+    <Project Path="src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj" />
     <Project Path="src/ElBruno.Text2Image.Tests/ElBruno.Text2Image.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
