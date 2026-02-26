@@ -21,6 +21,10 @@ var apiKey = config["FLUX2_API_KEY"];
 // For deployment-based endpoints (model in URL), this can be omitted.
 var modelId = config["FLUX2_MODEL_ID"];
 
+// Optional: Azure deployment name. Used when endpoint is a base URL.
+// If not set, defaults to modelId or "FLUX.2-flex".
+var deploymentName = config["FLUX2_DEPLOYMENT_NAME"];
+
 // Model name defaults to "FLUX.2-flex" — override via FLUX2_MODEL_NAME user secret
 var modelName = config["FLUX2_MODEL_NAME"] ?? "FLUX.2-flex";
 
@@ -35,8 +39,9 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("    dotnet user-secrets set FLUX2_API_KEY \"your-api-key-here\"");
     Console.WriteLine();
     Console.WriteLine("  Optional model configuration:");
-    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_NAME \"FLUX.2-flex\"  # default value");
-    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_ID \"FLUX.2-flex\"    # or \"FLUX.2-pro\"");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_NAME \"FLUX.2-flex\"       # display name (default)");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_MODEL_ID \"FLUX.2-flex\"         # or \"FLUX.2-pro\"");
+    Console.WriteLine("    dotnet user-secrets set FLUX2_DEPLOYMENT_NAME \"FLUX.2-flex\"  # Azure deployment name");
     Console.WriteLine();
     Console.WriteLine("  Option 2 - Environment Variables:");
     Console.WriteLine("    set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com/...");
@@ -59,12 +64,14 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
 
 // Create a FLUX.2 generator
 // - modelId is sent in the request body (required for model-based endpoints)
+// - deploymentName is the Azure deployment name (used to build URL from base URL)
 // - modelName is just a display label
-using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId);
+using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId, deploymentName: deploymentName);
 
 Console.WriteLine($"Model: {generator.ModelName}");
 if (generator.ModelId != null)
     Console.WriteLine($"Model ID: {generator.ModelId}");
+Console.WriteLine($"Endpoint: {generator.Endpoint}");
 Console.WriteLine("FLUX.2 cloud model ready (no download required)");
 Console.WriteLine();
 
@@ -90,4 +97,8 @@ try
 catch (HttpRequestException ex)
 {
     Console.WriteLine($"API Error: {ex.Message}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.GetType().Name}: {ex.Message}");
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,6 +12,7 @@ namespace ElBruno.Text2Image.Foundry;
 /// FLUX.2 text-to-image generator using the Microsoft Foundry REST API.
 /// Supports both FLUX.2 [pro] (photorealistic) and FLUX.2 [flex] (text-heavy design).
 /// This is a cloud API model — no local ONNX models are needed.
+/// Handles both synchronous (200) and asynchronous (202 + polling) API patterns.
 /// </summary>
 public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
@@ -22,6 +24,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     private readonly bool _ownsHttpClient;
 
     private const int MaxErrorBodyLength = 1024;
+    private const int MaxPollAttempts = 120;
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+    private const string DefaultApiVersion = "2024-06-01";
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
@@ -33,9 +38,20 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     public string? ModelId => _modelId;
 
     /// <summary>
+    /// The resolved API endpoint URL (may differ from the input if a base URL was auto-expanded).
+    /// </summary>
+    public string Endpoint => _endpoint;
+
+    /// <summary>
     /// Creates a new FLUX.2 generator targeting a Microsoft Foundry deployment.
     /// </summary>
-    /// <param name="endpoint">The full Microsoft Foundry endpoint URL for the FLUX.2 deployment.</param>
+    /// <param name="endpoint">
+    /// The endpoint URL. Can be either:
+    /// <list type="bullet">
+    /// <item><description>A base resource URL (e.g., "https://myresource.openai.azure.com") — the deployment path and API version will be appended automatically using <paramref name="deploymentName"/>.</description></item>
+    /// <item><description>A full endpoint URL (e.g., "https://myresource.openai.azure.com/openai/deployments/flux/images/generations?api-version=2024-06-01") — used as-is.</description></item>
+    /// </list>
+    /// </param>
     /// <param name="apiKey">The API key for authentication.</param>
     /// <param name="modelName">Display name for the model. Defaults to "FLUX.2-flex".</param>
     /// <param name="modelId">
@@ -43,13 +59,24 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// Required for model-based endpoints. Not needed for deployment-based endpoints where the model is
     /// embedded in the URL path.
     /// </param>
+    /// <param name="deploymentName">
+    /// The Azure deployment name. Used when <paramref name="endpoint"/> is a base URL to build:
+    /// <c>/openai/deployments/{deploymentName}/images/generations?api-version=2024-06-01</c>.
+    /// Defaults to "FLUX.2-flex" if not specified.
+    /// </param>
     /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
-    public Flux2Generator(string endpoint, string apiKey, string? modelName = null, string? modelId = null, HttpClient? httpClient = null)
+    public Flux2Generator(
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? modelId = null,
+        string? deploymentName = null,
+        HttpClient? httpClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        _endpoint = endpoint.TrimEnd('/');
+        _endpoint = BuildEndpointUrl(endpoint, deploymentName ?? modelId ?? "FLUX.2-flex");
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2-flex";
         _modelId = modelId;
@@ -64,6 +91,29 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             _httpClient = new HttpClient();
             _ownsHttpClient = true;
         }
+    }
+
+    /// <summary>
+    /// Builds the full API endpoint URL. If the user provides just a base URL
+    /// (e.g., "https://resource.openai.azure.com"), appends the standard Azure
+    /// OpenAI image generation path using the deployment name and API version.
+    /// Accepts both base URLs and full endpoint URLs.
+    /// </summary>
+    private static string BuildEndpointUrl(string endpoint, string deploymentName)
+    {
+        endpoint = endpoint.TrimEnd('/');
+
+        var uri = new Uri(endpoint);
+
+        // If the path is empty or just "/", this is a base URL — build the full path
+        if (string.IsNullOrEmpty(uri.AbsolutePath) || uri.AbsolutePath == "/")
+        {
+            var path = $"/openai/deployments/{Uri.EscapeDataString(deploymentName)}/images/generations";
+            return $"{endpoint}{path}?api-version={DefaultApiVersion}";
+        }
+
+        // If it already has a path (user provided full URL), use as-is
+        return endpoint;
     }
 
     /// <summary>
@@ -118,8 +168,47 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
                 $"FLUX.2 API returned {response.StatusCode}: {errorBody}");
         }
 
-        var result = await response.Content.ReadFromJsonAsync(Flux2JsonContext.Default.Flux2Response, cancellationToken)
-            ?? throw new InvalidOperationException("Failed to parse FLUX.2 API response");
+        // Read the response body once
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        // Handle async API pattern:
+        // - 202 Accepted with operation-location header
+        // - 200 OK with empty body and operation-location header
+        // - 200 OK with operation status JSON (id + status fields)
+        var hasOperationLocation = response.Headers.Contains("operation-location")
+            || response.Headers.Location != null;
+        var bodyIsEmpty = string.IsNullOrWhiteSpace(responseBody);
+
+        Flux2Response? result;
+        if (response.StatusCode == HttpStatusCode.Accepted || (hasOperationLocation && bodyIsEmpty))
+        {
+            result = await PollForResultAsync(response, cancellationToken);
+        }
+        else if (!bodyIsEmpty)
+        {
+            // Try to detect if this is an async operation status response
+            var maybeOperation = JsonSerializer.Deserialize(responseBody, Flux2JsonContext.Default.Flux2AsyncOperation);
+            if (maybeOperation?.Status != null && maybeOperation.Status.ToLowerInvariant() != "succeeded")
+            {
+                // This is an async operation — need to poll
+                result = await PollForResultAsync(response, cancellationToken);
+            }
+            else if (maybeOperation?.Result?.Data?.Count > 0)
+            {
+                result = maybeOperation.Result;
+            }
+            else
+            {
+                result = JsonSerializer.Deserialize(responseBody, Flux2JsonContext.Default.Flux2Response)
+                    ?? throw new InvalidOperationException(
+                        $"Failed to parse FLUX.2 API response (status {response.StatusCode}). Body: {responseBody[..Math.Min(responseBody.Length, 200)]}");
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"FLUX.2 API returned {response.StatusCode} with empty body and no operation-location header");
+        }
 
         byte[] imageBytes;
         var imageData = result.Data?.FirstOrDefault()
@@ -154,6 +243,78 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             Width = options.Width,
             Height = options.Height
         };
+    }
+
+    /// <summary>
+    /// Polls the operation-location URL until the async operation completes.
+    /// </summary>
+    private async Task<Flux2Response> PollForResultAsync(
+        HttpResponseMessage submitResponse,
+        CancellationToken cancellationToken)
+    {
+        // Get the polling URL from operation-location or location header
+        var operationUrl = submitResponse.Headers.GetValues("operation-location").FirstOrDefault()
+            ?? submitResponse.Headers.Location?.ToString()
+            ?? throw new InvalidOperationException(
+                "FLUX.2 API returned 202 Accepted but no operation-location or Location header for polling");
+
+        for (var attempt = 0; attempt < MaxPollAttempts; attempt++)
+        {
+            await Task.Delay(PollInterval, cancellationToken);
+
+            using var pollRequest = new HttpRequestMessage(HttpMethod.Get, operationUrl);
+            pollRequest.Headers.TryAddWithoutValidation("api-key", _apiKey);
+
+            var pollResponse = await _httpClient.SendAsync(pollRequest, cancellationToken);
+
+            if (!pollResponse.IsSuccessStatusCode)
+            {
+                var errorBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+                if (errorBody.Length > MaxErrorBodyLength)
+                    errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
+                throw new HttpRequestException(
+                    $"FLUX.2 polling returned {pollResponse.StatusCode}: {errorBody}");
+            }
+
+            var pollBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(pollBody))
+                continue;
+
+            // Parse the async operation status
+            var operation = JsonSerializer.Deserialize(pollBody, Flux2JsonContext.Default.Flux2AsyncOperation);
+
+            if (operation is null)
+                continue;
+
+            var status = operation.Status?.ToLowerInvariant();
+
+            if (status == "failed" || status == "canceled" || status == "cancelled")
+            {
+                var errorMsg = operation.Error?.Message ?? "Unknown error";
+                throw new InvalidOperationException(
+                    $"FLUX.2 async operation {status}: {errorMsg}");
+            }
+
+            if (status == "succeeded" || status == "complete" || status == "completed")
+            {
+                // Result may be embedded in the operation response or in a nested "result" property
+                if (operation.Result?.Data?.Count > 0)
+                    return operation.Result;
+
+                // Try parsing the entire body as a Flux2Response (some API versions embed data at top level)
+                var directResult = JsonSerializer.Deserialize(pollBody, Flux2JsonContext.Default.Flux2Response);
+                if (directResult?.Data?.Count > 0)
+                    return directResult;
+
+                throw new InvalidOperationException(
+                    "FLUX.2 operation succeeded but no image data found in response");
+            }
+
+            // Still running (status: "running", "notStarted", "inProgress", etc.) — keep polling
+        }
+
+        throw new TimeoutException(
+            $"FLUX.2 async operation did not complete within {MaxPollAttempts * PollInterval.TotalSeconds} seconds");
     }
 
     /// <summary>
@@ -217,6 +378,33 @@ internal sealed class Flux2Response
     public List<Flux2ImageData>? Data { get; set; }
 }
 
+/// <summary>
+/// Represents the status of an async image generation operation (202 polling pattern).
+/// </summary>
+internal sealed class Flux2AsyncOperation
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("result")]
+    public Flux2Response? Result { get; set; }
+
+    [JsonPropertyName("error")]
+    public Flux2OperationError? Error { get; set; }
+}
+
+internal sealed class Flux2OperationError
+{
+    [JsonPropertyName("code")]
+    public string? Code { get; set; }
+
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
+}
+
 internal sealed class Flux2ImageData
 {
     [JsonPropertyName("b64_json")]
@@ -231,6 +419,7 @@ internal sealed class Flux2ImageData
 
 [JsonSerializable(typeof(Flux2Request))]
 [JsonSerializable(typeof(Flux2Response))]
+[JsonSerializable(typeof(Flux2AsyncOperation))]
 internal sealed partial class Flux2JsonContext : JsonSerializerContext
 {
 }

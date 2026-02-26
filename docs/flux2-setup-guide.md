@@ -53,11 +53,18 @@ Use cases: brand design, product UI prototyping, social graphics, marketing coll
 ## Step 3: Get the Endpoint and API Key
 
 1. In Microsoft Foundry, go to your deployment
-2. Copy the **Endpoint URL** — it will look like:
-   ```
-   https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview
-   ```
+2. Copy the **Endpoint URL** — there are two approaches:
+   - **Base URL** (recommended): Just the resource URL, e.g.:
+     ```
+     https://your-resource.openai.azure.com
+     ```
+     The library will automatically append `/openai/deployments/{deploymentName}/images/generations?api-version=2024-06-01`
+   - **Full URL**: The complete endpoint URL from your deployment:
+     ```
+     https://your-resource.openai.azure.com/openai/deployments/FLUX.2-flex/images/generations?api-version=2024-06-01
+     ```
 3. Copy the **API key** from the **Keys and Endpoint** section
+4. Note the **deployment name** you created (e.g., `FLUX.2-flex`) — you'll need this if using a base URL
 
 ## Step 4: Configure Credentials
 
@@ -71,13 +78,18 @@ Navigate to the sample project directory and initialize secrets:
 cd src/samples/scenario-03-flux2-cloud
 
 # Required: endpoint and API key
-dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview"
+dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.openai.azure.com"
 dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
 
-# Optional: model name and ID (defaults to FLUX.2-flex)
+# Optional: model configuration (defaults to FLUX.2-flex)
 dotnet user-secrets set FLUX2_MODEL_NAME "FLUX.2-flex"
+dotnet user-secrets set FLUX2_DEPLOYMENT_NAME "FLUX.2-flex"
 dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-flex"
 ```
+
+> **Note on FLUX2_ENDPOINT:** You can provide either:
+> - A **base URL** like `https://your-resource.openai.azure.com` — the library auto-appends the deployment path using `FLUX2_DEPLOYMENT_NAME`
+> - A **full URL** like `https://your-resource.openai.azure.com/openai/deployments/FLUX.2-flex/images/generations?api-version=2024-06-01` — used as-is
 
 Secrets are stored in your user profile at:
 - **Windows:** `%APPDATA%\Microsoft\UserSecrets\elbruno-text2image-flux2\secrets.json`
@@ -93,11 +105,11 @@ dotnet user-secrets list
 
 ```bash
 # Windows
-set FLUX2_ENDPOINT=https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview
+set FLUX2_ENDPOINT=https://your-resource.openai.azure.com
 set FLUX2_API_KEY=your-api-key-here
 
 # Linux / macOS
-export FLUX2_ENDPOINT="https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview"
+export FLUX2_ENDPOINT="https://your-resource.openai.azure.com"
 export FLUX2_API_KEY="your-api-key-here"
 ```
 
@@ -107,8 +119,9 @@ Create `appsettings.json` in the sample project directory:
 
 ```json
 {
-  "FLUX2_ENDPOINT": "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
-  "FLUX2_API_KEY": "your-api-key-here"
+  "FLUX2_ENDPOINT": "https://your-resource.openai.azure.com",
+  "FLUX2_API_KEY": "your-api-key-here",
+  "FLUX2_DEPLOYMENT_NAME": "FLUX.2-flex"
 }
 ```
 
@@ -148,10 +161,12 @@ var apiKey = config["FLUX2_API_KEY"]
 // Model ID selects the variant: "FLUX.2-pro" or "FLUX.2-flex"
 // Required for model-based endpoints; optional for deployment-based endpoints (model in URL)
 var modelId = config["FLUX2_MODEL_ID"]; // e.g., "FLUX.2-pro"
+var deploymentName = config["FLUX2_DEPLOYMENT_NAME"]; // e.g., "FLUX.2-flex"
 
 using var generator = new Flux2Generator(endpoint, apiKey,
-    modelName: "FLUX.2 Pro",   // Display name (for logging/UI)
-    modelId: modelId);          // API model identifier (sent in request body)
+    modelName: "FLUX.2 Pro",              // Display name (for logging/UI)
+    modelId: modelId,                      // API model identifier (sent in request body)
+    deploymentName: deploymentName);       // Azure deployment name (for URL building)
 
 var result = await generator.GenerateAsync("a futuristic cityscape at sunset, photorealistic");
 await result.SaveAsync("flux2-output.png");
@@ -169,15 +184,16 @@ Console.WriteLine($"Generated in {result.InferenceTimeMs}ms");
 ```csharp
 // FLUX.2 Flex — text-heavy design (default)
 using var flexPipeline = new Flux2Generator(endpoint, apiKey,
-    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
+    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex", deploymentName: "FLUX.2-flex");
 
 // FLUX.2 Pro — photorealistic
 using var proPipeline = new Flux2Generator(endpoint, apiKey,
-    modelName: "FLUX.2 Pro", modelId: "FLUX.2-pro");
+    modelName: "FLUX.2 Pro", modelId: "FLUX.2-pro", deploymentName: "FLUX.2-pro");
 ```
 
-> **Note:** The `modelId` is sent as the `"model"` field in the API request body. If your endpoint
-> is deployment-based (the model is embedded in the URL path), you can omit `modelId`.
+> **Note:** The `modelId` is sent as the `"model"` field in the API request body. The `deploymentName`
+> is used to build the URL path when you provide a base resource URL. If your endpoint is already a
+> full URL (includes `/openai/deployments/...`), both `modelId` and `deploymentName` for URL building can be omitted.
 
 ### With Custom Options
 
@@ -194,15 +210,16 @@ var result = await generator.GenerateAsync(
 ### Dependency Injection
 
 ```csharp
-// Deployment-based endpoint (model in URL)
+// Using a base URL with deployment name
 services.AddFlux2Generator(
-    endpoint: "https://your-resource.services.ai.azure.com/...",
+    endpoint: "https://your-resource.openai.azure.com",
     apiKey: "your-api-key",
-    modelName: "FLUX.2 Pro");
+    modelName: "FLUX.2 Pro",
+    deploymentName: "FLUX.2-pro");
 
-// Model-based endpoint (model in request body)
+// Using a full URL
 services.AddFlux2Generator(
-    endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
+    endpoint: "https://your-resource.openai.azure.com/openai/deployments/FLUX.2-flex/images/generations?api-version=2024-06-01",
     apiKey: "your-api-key",
     modelName: "FLUX.2 Flex",
     modelId: "FLUX.2-flex");

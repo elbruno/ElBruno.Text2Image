@@ -378,6 +378,51 @@ public class Flux2GeneratorTests
         Assert.Equal("FLUX.2-flex", generator.ModelName);
         httpClient.Dispose();
     }
+
+    [Fact]
+    public void Endpoint_BaseUrl_BuildsFullPath()
+    {
+        using var generator = new Flux2Generator("https://myresource.openai.azure.com", "test-key");
+        Assert.Contains("/openai/deployments/", generator.Endpoint);
+        Assert.Contains("/images/generations", generator.Endpoint);
+        Assert.Contains("api-version=", generator.Endpoint);
+    }
+
+    [Fact]
+    public void Endpoint_BaseUrl_UsesDeploymentName()
+    {
+        using var generator = new Flux2Generator(
+            "https://myresource.openai.azure.com", "test-key",
+            deploymentName: "my-flux-deploy");
+        Assert.Contains("/openai/deployments/my-flux-deploy/images/generations", generator.Endpoint);
+    }
+
+    [Fact]
+    public void Endpoint_BaseUrl_FallsBackToModelId()
+    {
+        using var generator = new Flux2Generator(
+            "https://myresource.openai.azure.com", "test-key",
+            modelId: "FLUX.2-pro");
+        Assert.Contains("/openai/deployments/FLUX.2-pro/images/generations", generator.Endpoint);
+    }
+
+    [Fact]
+    public void Endpoint_FullUrl_UsedAsIs()
+    {
+        var fullUrl = "https://myresource.openai.azure.com/openai/deployments/custom/images/generations?api-version=2024-06-01";
+        using var generator = new Flux2Generator(fullUrl, "test-key");
+        Assert.Equal(fullUrl, generator.Endpoint);
+    }
+
+    [Fact]
+    public void Constructor_DeploymentName_DoesNotAffectModelId()
+    {
+        using var generator = new Flux2Generator(
+            "https://myresource.openai.azure.com", "test-key",
+            modelId: "FLUX.2-flex", deploymentName: "my-deploy");
+        Assert.Equal("FLUX.2-flex", generator.ModelId);
+        Assert.Contains("/openai/deployments/my-deploy/", generator.Endpoint);
+    }
 }
 
 public class MeaiInterfaceTests
