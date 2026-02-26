@@ -11,7 +11,9 @@
 [![SD 2.1 ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SD%202.1%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
 [![SDXL Turbo ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SDXL%20Turbo%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
 
-A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Runtime) and cloud APIs (Microsoft Foundry FLUX.2). Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
+> 📢 **This project started with [FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)** — a cloud-first approach to text-to-image generation with best-in-class text rendering. After wrapping that API, we thought: *"Why not bring the same developer experience to local models too?"* So we did. Now you can generate images from text prompts using cloud APIs or local Stable Diffusion models with ONNX Runtime — all through the same clean .NET interface.
+
+A .NET library for **text-to-image generation** — cloud and local. Generate images from text prompts using Microsoft Foundry FLUX.2 or Stable Diffusion (ONNX Runtime) with automatic model downloads from HuggingFace. No Python needed. Just `dotnet add package` and go. 🚀
 
 ## Features
 
@@ -67,8 +69,6 @@ Console.WriteLine($"Generated in {result.InferenceTimeMs}ms (seed: {result.Seed}
 
 ### Basic Usage — Cloud (FLUX.2 via Microsoft Foundry)
 
-> 📢 [Meet FLUX.2 Flex for text‑heavy design and UI prototyping — now on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
-
 ```csharp
 using ElBruno.Text2Image;
 using ElBruno.Text2Image.Foundry;
@@ -76,10 +76,11 @@ using ElBruno.Text2Image.Foundry;
 // Create a FLUX.2 generator using Microsoft Foundry
 // Default model is FLUX.2-flex (text-heavy design and UI prototyping)
 using var generator = new Flux2Generator(
-    endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
+    endpoint: "https://your-resource.openai.azure.com",
     apiKey: "your-api-key",
-    modelName: "FLUX.2 Flex",     // display name
-    modelId: "FLUX.2-flex");       // API model identifier
+    modelName: "FLUX.2 Flex",          // display name
+    modelId: "FLUX.2-flex",            // API model identifier
+    deploymentName: "FLUX.2-flex");    // Azure deployment name
 
 // Generate an image — same interface as local models
 var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
@@ -161,9 +162,10 @@ services.AddStableDiffusion15(options =>
 
 // Cloud model (requires ElBruno.Text2Image.Foundry package)
 services.AddFlux2Generator(
-    endpoint: "https://your-resource.services.ai.azure.com/...",
+    endpoint: "https://your-resource.openai.azure.com",
     apiKey: "your-api-key",
-    modelId: "FLUX.2-flex");
+    modelId: "FLUX.2-flex",
+    deploymentName: "FLUX.2-flex");
 
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
@@ -218,90 +220,16 @@ cd src/samples/scenario-01-simple
 dotnet run
 ```
 
-## Architecture
-
-### Package Structure
-
-Following the same pattern as Microsoft.ML.OnnxRuntime:
-
-```
-ElBruno.Text2Image              ← Core library (C# managed code, no native runtime)
-    ├── depends on: OnnxRuntime.Managed (managed API only)
-    │
-ElBruno.Text2Image.Cpu          ← Core + OnnxRuntime CPU native
-ElBruno.Text2Image.Cuda         ← Core + OnnxRuntime.Gpu CUDA native
-ElBruno.Text2Image.DirectML     ← Core + OnnxRuntime.DirectML native
-ElBruno.Text2Image.Foundry      ← Core + FLUX.2 via Microsoft Foundry cloud API
-```
-
-### Local Pipeline (Stable Diffusion)
-
-```
-Text Prompt
-    │
-    ▼
-┌─────────────────┐
-│ CLIP Tokenizer   │  Text → token IDs (77 tokens)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Text Encoder     │  text_encoder/model.onnx → embeddings [2,77,768]
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ UNet + Scheduler │  unet/model.onnx — iterative denoising loop
-│                   │  Euler Ancestral / LMS / LCM scheduler
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ VAE Decoder      │  vae_decoder/model.onnx → pixels [1,3,512,512]
-└────────┬────────┘
-         │
-         ▼
-   PNG Image (512×512)
-```
-
-### Cloud Pipeline (FLUX.2)
-
-```
-Text Prompt
-    │
-    ▼
-┌──────────────────────┐
-│ HTTP POST → Azure AI │  JSON: {prompt, size, n}
-│ Foundry Endpoint     │
-└──────────┬───────────┘
-           │
-           ▼
-   PNG Image (1024×1024)
-```
-
 ## Documentation
 
+- [docs/architecture.md](docs/architecture.md) — Package structure and pipeline diagrams
 - [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
-- [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
-- [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
+- [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
+- [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
 - [docs/security.md](docs/security.md) — Security considerations and hardening
 - [scripts/](scripts/) — Python conversion and upload scripts
-
-## Dependencies
-
-- [ElBruno.HuggingFace.Downloader](https://github.com/elbruno/ElBruno.HuggingFace.Downloader) — Model download from HuggingFace
-- [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime) — ONNX inference
-- [Microsoft.Extensions.AI.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions) — Standard AI interfaces (`IImageGenerator`)
-- [SixLabors.ImageSharp](https://www.nuget.org/packages/SixLabors.ImageSharp) — Cross-platform image processing
-
-## Building
-
-```bash
-dotnet build
-dotnet test
-```
 
 ## 👋 About the Author
 
