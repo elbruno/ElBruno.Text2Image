@@ -192,3 +192,90 @@ public class DownloadProgressTests
         Assert.Equal("Downloading...", progress.Message);
     }
 }
+
+public class SdxlTurboTests
+{
+    [Fact]
+    public void ModelName_IsCorrect()
+    {
+        using var generator = new SdxlTurbo();
+        Assert.Equal("SDXL Turbo", generator.ModelName);
+    }
+
+    [Fact]
+    public void Implements_IImageGenerator()
+    {
+        using var generator = new SdxlTurbo();
+        Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+}
+
+public class StableDiffusion21Tests
+{
+    [Fact]
+    public void ModelName_IsCorrect()
+    {
+        using var generator = new StableDiffusion21();
+        Assert.Equal("Stable Diffusion 2.1", generator.ModelName);
+    }
+
+    [Fact]
+    public void Implements_IImageGenerator()
+    {
+        using var generator = new StableDiffusion21();
+        Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+}
+
+public class Flux2GeneratorTests
+{
+    [Fact]
+    public void Constructor_SetsModelName()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", "FLUX.2 Pro");
+        Assert.Equal("FLUX.2 Pro", generator.ModelName);
+    }
+
+    [Fact]
+    public void Constructor_DefaultModelName()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        Assert.Equal("FLUX.2", generator.ModelName);
+    }
+
+    [Fact]
+    public void Implements_IImageGenerator()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullEndpoint()
+    {
+        Assert.Throws<ArgumentException>(() => new Flux2Generator("", "test-key"));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullApiKey()
+    {
+        Assert.Throws<ArgumentException>(() => new Flux2Generator("https://example.com", ""));
+    }
+
+    [Fact]
+    public async Task EnsureModelAvailable_CompletesImmediately()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        // Cloud model — EnsureModelAvailableAsync should complete without throwing
+        await generator.EnsureModelAvailableAsync();
+    }
+
+    [Fact]
+    public void Constructor_AcceptsCustomHttpClient()
+    {
+        var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient: httpClient);
+        Assert.Equal("FLUX.2", generator.ModelName);
+        httpClient.Dispose();
+    }
+}

@@ -6,5 +6,6 @@
   <Folder Name="/samples/">
     <Project Path="src/samples/scenario-01-simple/scenario-01-simple.csproj" />
     <Project Path="src/samples/scenario-02-custom-options/scenario-02-custom-options.csproj" />
+    <Project Path="src/samples/scenario-03-flux2-cloud/scenario-03-flux2-cloud.csproj" />
   </Folder>
 </Solution>

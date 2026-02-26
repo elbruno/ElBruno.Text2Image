@@ -37,5 +37,19 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IImageGenerator>(new Models.LcmDreamshaperV7(options));
         return services;
     }
+
+    /// <summary>
+    /// Adds a FLUX.2 cloud API image generator to the service collection.
+    /// Requires an Azure AI Foundry deployment endpoint and API key.
+    /// </summary>
+    public static IServiceCollection AddFlux2Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null)
+    {
+        services.AddSingleton<IImageGenerator>(new Models.Flux2Generator(endpoint, apiKey, modelName));
+        return services;
+    }
 }
 

@@ -1,15 +1,20 @@
 # ElBruno.Text2Image
 
-[![NuGet](https://img.shields.io/nuget/v/ElBruno.Text2Image.svg)](https://www.nuget.org/packages/ElBruno.Text2Image)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![NuGet](https://img.shields.io/nuget/v/ElBruno.Text2Image.svg?style=flat-square&logo=nuget)](https://www.nuget.org/packages/ElBruno.Text2Image)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.svg?style=flat-square&logo=nuget)](https://www.nuget.org/packages/ElBruno.Text2Image)
+[![Build Status](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml/badge.svg)](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/elbruno/ElBruno.Text2Image?style=social)](https://github.com/elbruno/ElBruno.Text2Image)
+[![Twitter Follow](https://img.shields.io/twitter/follow/elbruno?style=social)](https://twitter.com/elbruno)
 
-A .NET library for **local text-to-image generation** using Stable Diffusion and ONNX Runtime. Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
+A .NET library for **text-to-image generation** using Stable Diffusion (ONNX Runtime) and cloud APIs (Azure AI Foundry FLUX.2). Generate images from text prompts with automatic model download from HuggingFace — no Python dependency required.
 
 ## Features
 
-- 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion
-- 🤖 **Multiple Models** — Stable Diffusion 1.5, with LCM Dreamshaper and SDXL Turbo planned
+- 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion or FLUX.2
+- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2 (cloud)
 - ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
+- ☁️ **Cloud API** — FLUX.2 via Azure AI Foundry for high-quality text-heavy designs
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
 - 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
@@ -23,7 +28,7 @@ A .NET library for **local text-to-image generation** using Stable Diffusion and
 dotnet add package ElBruno.Text2Image
 ```
 
-### Basic Usage
+### Basic Usage — Local (Stable Diffusion 1.5)
 
 ```csharp
 using ElBruno.Text2Image;
@@ -38,6 +43,23 @@ var result = await generator.GenerateAsync("a beautiful sunset over a mountain l
 // Save the generated image
 await result.SaveAsync("output.png");
 Console.WriteLine($"Generated in {result.InferenceTimeMs}ms (seed: {result.Seed})");
+```
+
+### Basic Usage — Cloud (FLUX.2 via Azure AI Foundry)
+
+```csharp
+using ElBruno.Text2Image;
+using ElBruno.Text2Image.Models;
+
+// Create a FLUX.2 generator using Azure AI Foundry
+using var generator = new Flux2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com/images/generations:submit?api-version=2025-04-01-preview",
+    apiKey: "your-api-key",
+    modelName: "FLUX.2 Pro");
+
+// Generate an image — same interface as local models
+var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
+await result.SaveAsync("flux2-output.png");
 ```
 
 ### With Custom Options
@@ -62,11 +84,17 @@ await result.SaveAsync("cityscape.png");
 ### Dependency Injection
 
 ```csharp
+// Local model
 services.AddStableDiffusion15(options =>
 {
     options.NumInferenceSteps = 20;
     options.ModelDirectory = "/path/to/models";
 });
+
+// Cloud model
+services.AddFlux2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com/...",
+    apiKey: "your-api-key");
 
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
@@ -81,12 +109,20 @@ public class MyService(IImageGenerator generator)
 
 ## Supported Models
 
+### Local Models (ONNX Runtime)
+
 | Model | Class | ONNX Source | Steps | VRAM | Status |
 |-------|-------|------------|-------|------|--------|
 | **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Available |
 | **LCM Dreamshaper v7** | `LcmDreamshaperV7` | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | ✅ Available |
-| SDXL Turbo | *Coming soon* | Needs ONNX export | 1-4 | ~8 GB | 🔜 Planned |
-| SD 2.1 Base | *Coming soon* | Needs ONNX export | 15-50 | ~5 GB | 🔜 Planned |
+| **SDXL Turbo** | `SdxlTurbo` | Needs ONNX export | 1-4 | ~8 GB | ⚠️ Config ready |
+| **SD 2.1 Base** | `StableDiffusion21` | Needs ONNX export | 15-50 | ~5 GB | ⚠️ Config ready |
+
+### Cloud Models (REST API)
+
+| Model | Class | Provider | Quality | Status |
+|-------|-------|----------|---------|--------|
+| **FLUX.2** | `Flux2Generator` | Azure AI Foundry | Excellent | ✅ Available |
 
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
@@ -96,6 +132,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 |--------|-------------|
 | [scenario-01-simple](src/samples/scenario-01-simple/) | Basic text-to-image generation with SD 1.5 |
 | [scenario-02-custom-options](src/samples/scenario-02-custom-options/) | Custom seeds, guidance scale, and steps |
+| [scenario-03-flux2-cloud](src/samples/scenario-03-flux2-cloud/) | FLUX.2 cloud API via Azure AI Foundry |
 
 ### Run a Sample
 
@@ -105,6 +142,8 @@ dotnet run
 ```
 
 ## Architecture
+
+### Local Pipeline (Stable Diffusion)
 
 ```
 Text Prompt
@@ -122,7 +161,7 @@ Text Prompt
          ▼
 ┌─────────────────┐
 │ UNet + Scheduler │  unet/model.onnx — iterative denoising loop
-│                   │  Euler Ancestral / LMS scheduler
+│                   │  Euler Ancestral / LMS / LCM scheduler
 └────────┬────────┘
          │
          ▼
@@ -134,10 +173,27 @@ Text Prompt
    PNG Image (512×512)
 ```
 
-## ONNX Model Conversion
+### Cloud Pipeline (FLUX.2)
 
-For models not yet in ONNX format, see:
-- [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step conversion guide
+```
+Text Prompt
+    │
+    ▼
+┌──────────────────────┐
+│ HTTP POST → Azure AI │  JSON: {prompt, size, n}
+│ Foundry Endpoint     │
+└──────────┬───────────┘
+           │
+           ▼
+   PNG Image (1024×1024)
+```
+
+## Documentation
+
+- [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
+- [docs/model-support.md](docs/model-support.md) — Detailed model comparison
+- [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Azure AI Foundry FLUX.2 setup
+- [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [scripts/](scripts/) — Python conversion and upload scripts
 
 ## Dependencies
@@ -153,16 +209,27 @@ dotnet build
 dotnet test
 ```
 
+## 👋 About the Author
+
+Hi! I'm **ElBruno** 🧡, a passionate developer and content creator exploring AI, .NET, and modern development practices.
+
+**Made with ❤️ by [ElBruno](https://github.com/elbruno)**
+
+If you like this project, consider following my work across platforms:
+
+- 📻 **Podcast**: [No Tienen Nombre](https://notienenombre.com) — Spanish-language episodes on AI, development, and tech culture
+- 💻 **Blog**: [ElBruno.com](https://elbruno.com) — Deep dives on embeddings, RAG, .NET, and local AI
+- 📺 **YouTube**: [youtube.com/elbruno](https://www.youtube.com/elbruno) — Demos, tutorials, and live coding
+- 🔗 **LinkedIn**: [@elbruno](https://www.linkedin.com/in/elbruno/) — Professional updates and insights
+- 𝕏 **Twitter**: [@elbruno](https://www.x.com/in/elbruno/) — Quick tips, releases, and tech news
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Author
-
-**Bruno Capuano** — [@elbruno](https://github.com/elbruno)
 
 ## Related Projects
 
 - [ElBruno.HuggingFace.Downloader](https://github.com/elbruno/ElBruno.HuggingFace.Downloader)
 - [ElBruno.LocalEmbeddings](https://github.com/elbruno/elbruno.localembeddings)
 - [ElBruno.VibeVoiceTTS](https://github.com/elbruno/ElBruno.VibeVoiceTTS)
+- [ElBruno.QwenTTS](https://github.com/elbruno/ElBruno.QwenTTS)

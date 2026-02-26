@@ -14,6 +14,7 @@
     <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo_01_nuget.png</PackageIcon>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -32,6 +33,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />
+    <None Include="..\..\images\logo_01_nuget.png" Pack="true" PackagePath="\" Link="logo_01_nuget.png" />
   </ItemGroup>
 
 </Project>
