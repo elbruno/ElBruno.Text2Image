@@ -164,8 +164,18 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
             if (errorBody.Length > MaxErrorBodyLength)
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
+
+            var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
+                ? "\n\nHint: The endpoint URL may be incorrect. Ensure you have deployed the FLUX.2 model in Azure AI Foundry " +
+                  "and are using the correct endpoint URL from the deployment page. " +
+                  $"The resolved endpoint was: {_endpoint}\n" +
+                  "You can provide either:\n" +
+                  "  - A full endpoint URL (e.g., https://resource.openai.azure.com/openai/deployments/FLUX.2-flex/images/generations?api-version=2024-06-01)\n" +
+                  "  - A base URL (e.g., https://resource.openai.azure.com) with the correct FLUX2_DEPLOYMENT_NAME"
+                : "";
+
             throw new HttpRequestException(
-                $"FLUX.2 API returned {response.StatusCode}: {errorBody}");
+                $"FLUX.2 API returned {response.StatusCode}: {errorBody}{hint}");
         }
 
         // Read the response body once
