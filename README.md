@@ -115,8 +115,8 @@ public class MyService(IImageGenerator generator)
 |-------|-------|------------|-------|------|--------|
 | **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Available |
 | **LCM Dreamshaper v7** | `LcmDreamshaperV7` | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | ✅ Available |
-| **SDXL Turbo** | `SdxlTurbo` | Needs ONNX export | 1-4 | ~8 GB | ⚠️ Config ready |
-| **SD 2.1 Base** | `StableDiffusion21` | Needs ONNX export | 15-50 | ~5 GB | ⚠️ Config ready |
+| **SDXL Turbo** | `SdxlTurbo` | `elbruno/sdxl-turbo-ONNX` | 1-4 | ~8 GB | ✅ Available |
+| **SD 2.1 Base** | `StableDiffusion21` | `elbruno/stable-diffusion-2-1-ONNX` | 15-50 | ~5 GB | ✅ Available |
 
 ### Cloud Models (REST API)
 

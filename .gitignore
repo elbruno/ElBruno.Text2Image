@@ -77,11 +77,15 @@ artifacts/
 # VS Code
 .vscode/
 
-# Local model cache (large ONNX files)
-models/
+# Local model cache (large ONNX files downloaded at runtime)
+/models/
 *.onnx
+*.onnx_data
 *.onnx.data
 !scripts/**/*.onnx
+
+# ONNX export working directory
+onnx_exports/
 
 # Python
 __pycache__/
