@@ -1,5 +1,7 @@
 # ElBruno.Text2Image
 
+![Banner generated with FLUX.2 Pro on Microsoft Foundry](images/banner.png)
+
 [![NuGet](https://img.shields.io/nuget/v/ElBruno.Text2Image.svg?style=flat-square&logo=nuget)](https://www.nuget.org/packages/ElBruno.Text2Image)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.svg?style=flat-square&logo=nuget)](https://www.nuget.org/packages/ElBruno.Text2Image)
 [![Build Status](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml/badge.svg)](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml)
