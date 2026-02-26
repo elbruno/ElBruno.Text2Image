@@ -166,7 +166,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
             var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
-                ? "\n\nHint: The endpoint URL may be incorrect. Ensure you have deployed the FLUX.2 model in Azure AI Foundry " +
+                ? "\n\nHint: The endpoint URL may be incorrect. Ensure you have deployed the FLUX.2 model in Microsoft Foundry " +
                   "and are using the correct endpoint URL from the deployment page. " +
                   $"The resolved endpoint was: {_endpoint}\n" +
                   "You can provide either:\n" +

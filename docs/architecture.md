@@ -69,7 +69,7 @@ Text Prompt
     │
     ▼
 ┌──────────────────────┐
-│ HTTP POST → Azure AI │  JSON: {prompt, size, n}
+│ HTTP POST → Microsoft │  JSON: {prompt, size, n}
 │ Foundry Endpoint     │
 └──────────┬───────────┘
            │
