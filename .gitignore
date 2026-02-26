@@ -92,3 +92,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Generated images from samples
+*.png
+!images/*.png
