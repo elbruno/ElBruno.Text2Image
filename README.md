@@ -258,3 +258,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ElBruno.LocalEmbeddings](https://github.com/elbruno/elbruno.localembeddings)
 - [ElBruno.VibeVoiceTTS](https://github.com/elbruno/ElBruno.VibeVoiceTTS)
 - [ElBruno.QwenTTS](https://github.com/elbruno/ElBruno.QwenTTS)
+- [ElBruno.PersonaPlex](https://github.com/elbruno/ElBruno.PersonaPlex) — NVIDIA PersonaPlex-7B-v1 speech-to-speech model wrapper for C#
