@@ -1,5 +1,6 @@
 using Microsoft.ML.OnnxRuntime.Tensors;
 using ElBruno.Text2Image.Pipeline;
+using System.Numerics.Tensors;
 
 namespace ElBruno.Text2Image.Schedulers;
 
@@ -85,11 +86,9 @@ internal sealed class EulerAncestralDiscreteScheduler : IScheduler
         var sigma = _sigmas[stepIndex];
         sigma = (float)Math.Sqrt(sigma * sigma + 1);
 
-        var data = sample.Buffer.ToArray();
-        for (int i = 0; i < data.Length; i++)
-            data[i] /= sigma;
-
-        return new DenseTensor<float>(data, sample.Dimensions.ToArray());
+        var result = new float[sample.Buffer.Length];
+        TensorPrimitives.Divide(sample.Buffer.Span, sigma, result);
+        return new DenseTensor<float>(result, sample.Dimensions.ToArray());
     }
 
     public DenseTensor<float> Step(DenseTensor<float> modelOutput, int timestep, DenseTensor<float> sample, int order = 4)
