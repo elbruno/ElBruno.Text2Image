@@ -82,6 +82,10 @@ public sealed class SdxlTurbo : IImageGenerator, Microsoft.Extensions.AI.IImageG
         ImageGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt, nameof(prompt));
+        if (prompt.Length > 1000)
+            throw new ArgumentOutOfRangeException(nameof(prompt), "Prompt must be 1000 characters or fewer");
+
         options ??= _defaultOptions;
         var modelPath = options.GetModelDirectory(ModelSubfolder);
 

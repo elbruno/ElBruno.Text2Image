@@ -301,7 +301,7 @@ public class StableDiffusion15Tests
     public async Task GenerateAsync_ThrowsOnNullPrompt()
     {
         using var generator = new StableDiffusion15();
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             generator.GenerateAsync(null!));
     }
 
@@ -373,7 +373,7 @@ public class LcmDreamshaperV7Tests
     public async Task GenerateAsync_ThrowsOnNullPrompt()
     {
         using var generator = new LcmDreamshaperV7();
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             generator.GenerateAsync(null!));
     }
 
@@ -447,7 +447,7 @@ public class SdxlTurboTests
     public async Task GenerateAsync_ThrowsOnNullPrompt()
     {
         using var generator = new SdxlTurbo();
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             generator.GenerateAsync(null!));
     }
 
@@ -491,6 +491,39 @@ public class StableDiffusion21Tests
     {
         using var generator = new StableDiffusion21();
         Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 
@@ -627,6 +660,39 @@ public class Flux2GeneratorTests
         var fullUrl = "https://custom-endpoint.example.com/api/generate";
         using var generator = new Flux2Generator(fullUrl, "test-key");
         Assert.Equal(fullUrl, generator.Endpoint);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 

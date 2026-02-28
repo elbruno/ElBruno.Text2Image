@@ -19,7 +19,17 @@ public sealed class ImageGenerationOptions
     /// <summary>
     /// Number of denoising steps. More steps = better quality but slower. Default is 20.
     /// </summary>
-    public int NumInferenceSteps { get; set; } = 20;
+    public int NumInferenceSteps
+    {
+        get => _numInferenceSteps;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 150);
+            _numInferenceSteps = value;
+        }
+    }
+    private int _numInferenceSteps = 20;
 
     /// <summary>
     /// Classifier-free guidance scale. Higher values follow the prompt more closely. Default is 7.5.
@@ -27,15 +37,15 @@ public sealed class ImageGenerationOptions
     public double GuidanceScale { get; set; } = 7.5;
 
     /// <summary>
-    /// Image width in pixels. Must be a multiple of 8 and between 64 and 4096. Default is 512.
+    /// Image width in pixels. Must be a multiple of 8 and between 128 and 2048. Default is 512.
     /// </summary>
     public int Width
     {
         get => _width;
         set
         {
-            ArgumentOutOfRangeException.ThrowIfLessThan(value, 64);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 4096);
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 128);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 2048);
             if (value % 8 != 0) throw new ArgumentException("Width must be a multiple of 8.", nameof(value));
             _width = value;
         }
@@ -43,15 +53,15 @@ public sealed class ImageGenerationOptions
     private int _width = 512;
 
     /// <summary>
-    /// Image height in pixels. Must be a multiple of 8 and between 64 and 4096. Default is 512.
+    /// Image height in pixels. Must be a multiple of 8 and between 128 and 2048. Default is 512.
     /// </summary>
     public int Height
     {
         get => _height;
         set
         {
-            ArgumentOutOfRangeException.ThrowIfLessThan(value, 64);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 4096);
+            ArgumentOutOfRangeException.ThrowIfLessThan(value, 128);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 2048);
             if (value % 8 != 0) throw new ArgumentException("Height must be a multiple of 8.", nameof(value));
             _height = value;
         }
