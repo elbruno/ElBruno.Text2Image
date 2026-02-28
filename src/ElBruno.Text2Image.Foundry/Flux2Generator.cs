@@ -69,6 +69,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
+        if (!endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
+
         _endpoint = BuildEndpointUrl(endpoint, modelId ?? "FLUX.2-pro");
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2-pro";
@@ -175,7 +178,10 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         ImageGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt, nameof(prompt));
+        if (prompt.Length > 1000)
+            throw new ArgumentOutOfRangeException(nameof(prompt), "Prompt must be 1000 characters or fewer");
+
         options ??= new ImageGenerationOptions();
 
         var sw = Stopwatch.StartNew();
