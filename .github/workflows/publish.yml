@@ -32,7 +32,9 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "release" ]]; then
             VERSION="${{ github.event.release.tag_name }}"
+            # Strip leading 'v' and '.' to normalize version format
             VERSION="${VERSION#v}"
+            VERSION="${VERSION#.}"
           elif [[ -n "${{ inputs.version }}" ]]; then
             VERSION="${{ inputs.version }}"
           else
@@ -40,6 +42,15 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "📦 Publishing version: $VERSION"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: Version '$VERSION' does not match format X.Y.Z"
+            exit 1
+          fi
+          echo "✓ Version format is valid: $VERSION"
 
       - name: Restore
         run: dotnet restore

@@ -14,6 +14,7 @@
     <!-- Direct reference needed: the Cpu project has no source files (thin metapackage),
          so native assets from Microsoft.ML.OnnxRuntime don't flow transitively. -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.*" />
   </ItemGroup>
 
   <ItemGroup>

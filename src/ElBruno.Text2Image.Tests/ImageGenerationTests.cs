@@ -37,6 +37,102 @@ public class ImageGenerationOptionsTests
         Assert.Contains("Text2Image", path);
         Assert.Contains("test-model", path);
     }
+
+    [Fact]
+    public void Width_ThrowsOnTooSmall()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Width = 120);
+    }
+
+    [Fact]
+    public void Width_ThrowsOnTooLarge()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Width = 2056);
+    }
+
+    [Fact]
+    public void Width_ThrowsOnNotMultipleOf8()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentException>(() => options.Width = 513);
+    }
+
+    [Fact]
+    public void Width_AcceptsValidValue()
+    {
+        var options = new ImageGenerationOptions();
+        options.Width = 768;
+        Assert.Equal(768, options.Width);
+    }
+
+    [Fact]
+    public void Height_ThrowsOnTooSmall()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Height = 120);
+    }
+
+    [Fact]
+    public void Height_ThrowsOnTooLarge()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Height = 2056);
+    }
+
+    [Fact]
+    public void Height_ThrowsOnNotMultipleOf8()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentException>(() => options.Height = 513);
+    }
+
+    [Fact]
+    public void Height_AcceptsValidValue()
+    {
+        var options = new ImageGenerationOptions();
+        options.Height = 768;
+        Assert.Equal(768, options.Height);
+    }
+
+    [Fact]
+    public void NumInferenceSteps_ThrowsOnTooSmall()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.NumInferenceSteps = 0);
+    }
+
+    [Fact]
+    public void NumInferenceSteps_ThrowsOnTooLarge()
+    {
+        var options = new ImageGenerationOptions();
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.NumInferenceSteps = 151);
+    }
+
+    [Fact]
+    public void NumInferenceSteps_AcceptsValidValue()
+    {
+        var options = new ImageGenerationOptions();
+        options.NumInferenceSteps = 50;
+        Assert.Equal(50, options.NumInferenceSteps);
+    }
+
+    [Fact]
+    public void NumInferenceSteps_AcceptsMinValue()
+    {
+        var options = new ImageGenerationOptions();
+        options.NumInferenceSteps = 1;
+        Assert.Equal(1, options.NumInferenceSteps);
+    }
+
+    [Fact]
+    public void NumInferenceSteps_AcceptsMaxValue()
+    {
+        var options = new ImageGenerationOptions();
+        options.NumInferenceSteps = 150;
+        Assert.Equal(150, options.NumInferenceSteps);
+    }
 }
 
 public class ImageGenerationResultTests
@@ -124,11 +220,10 @@ public class ExecutionProviderTests
         Assert.Equal(ExecutionProvider.Auto, options.ExecutionProvider);
     }
 
-    [Fact]
+    [SkippableFact]
     public void DetectBestProvider_ReturnsValidProvider()
     {
-        if (!IsNativeRuntimeAvailable())
-            return; // Skip: native ONNX Runtime not available in this environment
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
 
         var provider = SessionOptionsHelper.DetectBestProvider();
         Assert.True(
@@ -137,11 +232,10 @@ public class ExecutionProviderTests
             provider == ExecutionProvider.DirectML);
     }
 
-    [Fact]
+    [SkippableFact]
     public void ResolveProvider_Auto_ReturnsConcreteProvider()
     {
-        if (!IsNativeRuntimeAvailable())
-            return;
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
 
         var resolved = SessionOptionsHelper.ResolveProvider(ExecutionProvider.Auto);
         Assert.NotEqual(ExecutionProvider.Auto, resolved);
@@ -153,21 +247,19 @@ public class ExecutionProviderTests
         Assert.Equal(ExecutionProvider.Cpu, SessionOptionsHelper.ResolveProvider(ExecutionProvider.Cpu));
     }
 
-    [Fact]
+    [SkippableFact]
     public void Create_Auto_ReturnsSessionOptions()
     {
-        if (!IsNativeRuntimeAvailable())
-            return;
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
 
         using var options = SessionOptionsHelper.Create(ExecutionProvider.Auto);
         Assert.NotNull(options);
     }
 
-    [Fact]
+    [SkippableFact]
     public void DetectBestProvider_IsCached()
     {
-        if (!IsNativeRuntimeAvailable())
-            return;
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
 
         var first = SessionOptionsHelper.DetectBestProvider();
         var second = SessionOptionsHelper.DetectBestProvider();
@@ -203,6 +295,39 @@ public class StableDiffusion15Tests
     {
         using var generator = new StableDiffusion15();
         Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new StableDiffusion15();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new StableDiffusion15();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new StableDiffusion15();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new StableDiffusion15();
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 
@@ -242,6 +367,39 @@ public class LcmDreamshaperV7Tests
         // LCM should default to low guidance (no CFG) and few steps
         using var generator = new LcmDreamshaperV7();
         Assert.Equal("LCM Dreamshaper v7", generator.ModelName);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new LcmDreamshaperV7();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new LcmDreamshaperV7();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new LcmDreamshaperV7();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new LcmDreamshaperV7();
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 
@@ -284,6 +442,39 @@ public class SdxlTurboTests
         using var generator = new SdxlTurbo();
         Assert.IsAssignableFrom<IImageGenerator>(generator);
     }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new SdxlTurbo();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new SdxlTurbo();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new SdxlTurbo();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new SdxlTurbo();
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
+    }
 }
 
 public class StableDiffusion21Tests
@@ -300,6 +491,39 @@ public class StableDiffusion21Tests
     {
         using var generator = new StableDiffusion21();
         Assert.IsAssignableFrom<IImageGenerator>(generator);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new StableDiffusion21();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new StableDiffusion21();
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 
@@ -363,6 +587,21 @@ public class Flux2GeneratorTests
     }
 
     [Fact]
+    public void Constructor_ThrowsOnHttpEndpoint()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => new Flux2Generator("http://example.com/api", "test-key"));
+        Assert.Contains("HTTPS", ex.Message);
+        Assert.Equal("endpoint", ex.ParamName);
+    }
+
+    [Fact]
+    public void Constructor_AcceptsHttpsEndpoint()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        Assert.NotNull(generator);
+    }
+
+    [Fact]
     public async Task EnsureModelAvailable_CompletesImmediately()
     {
         using var generator = new Flux2Generator("https://example.com/api", "test-key");
@@ -421,6 +660,39 @@ public class Flux2GeneratorTests
         var fullUrl = "https://custom-endpoint.example.com/api/generate";
         using var generator = new Flux2Generator(fullUrl, "test-key");
         Assert.Equal(fullUrl, generator.Endpoint);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnNullPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            generator.GenerateAsync(null!));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnEmptyPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync(""));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            generator.GenerateAsync("   "));
+    }
+
+    [Fact]
+    public async Task GenerateAsync_ThrowsOnTooLongPrompt()
+    {
+        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        var longPrompt = new string('a', 1001);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            generator.GenerateAsync(longPrompt));
     }
 }
 
