@@ -1,4 +1,5 @@
 using Microsoft.ML.OnnxRuntime.Tensors;
+using System.Numerics.Tensors;
 
 namespace ElBruno.Text2Image.Pipeline;
 
@@ -96,14 +97,20 @@ internal static class TensorHelper
     public static DenseTensor<float> ApplyGuidance(
         DenseTensor<float> noisePredUncond, DenseTensor<float> noisePredText, double guidanceScale)
     {
+        if (noisePredUncond.Dimensions.SequenceEqual(noisePredText.Dimensions) == false)
+            throw new ArgumentException("Tensor shapes must match", nameof(noisePredText));
+
         var uncond = noisePredUncond.Buffer.Span;
         var text = noisePredText.Buffer.Span;
         var result = new float[uncond.Length];
+        var resultSpan = result.AsSpan();
 
-        for (int i = 0; i < result.Length; i++)
-        {
-            result[i] = uncond[i] + (float)guidanceScale * (text[i] - uncond[i]);
-        }
+        // FMA: result = text * scale + uncond * (1 - scale)
+        // Rewritten as: result = (text - uncond) * scale + uncond
+        var diff = new float[uncond.Length];
+        TensorPrimitives.Subtract(text, uncond, diff);
+        TensorPrimitives.Multiply(diff, (float)guidanceScale, diff);
+        TensorPrimitives.Add(diff, uncond, resultSpan);
 
         return new DenseTensor<float>(result, noisePredUncond.Dimensions.ToArray());
     }
@@ -113,10 +120,9 @@ internal static class TensorHelper
     /// </summary>
     public static DenseTensor<float> MultiplyByFloat(DenseTensor<float> tensor, float value)
     {
-        var data = tensor.Buffer.ToArray();
-        for (int i = 0; i < data.Length; i++)
-            data[i] *= value;
-        return new DenseTensor<float>(data, tensor.Dimensions.ToArray());
+        var result = new float[tensor.Buffer.Length];
+        TensorPrimitives.Multiply(tensor.Buffer.Span, value, result);
+        return new DenseTensor<float>(result, tensor.Dimensions.ToArray());
     }
 
     /// <summary>
@@ -124,10 +130,9 @@ internal static class TensorHelper
     /// </summary>
     public static DenseTensor<float> DivideByFloat(DenseTensor<float> tensor, float value)
     {
-        var data = tensor.Buffer.ToArray();
-        for (int i = 0; i < data.Length; i++)
-            data[i] /= value;
-        return new DenseTensor<float>(data, tensor.Dimensions.ToArray());
+        var result = new float[tensor.Buffer.Length];
+        TensorPrimitives.Divide(tensor.Buffer.Span, value, result);
+        return new DenseTensor<float>(result, tensor.Dimensions.ToArray());
     }
 
     /// <summary>
@@ -135,11 +140,11 @@ internal static class TensorHelper
     /// </summary>
     public static DenseTensor<float> AddTensors(DenseTensor<float> a, DenseTensor<float> b)
     {
-        var dataA = a.Buffer.Span;
-        var dataB = b.Buffer.Span;
-        var result = new float[dataA.Length];
-        for (int i = 0; i < result.Length; i++)
-            result[i] = dataA[i] + dataB[i];
+        if (a.Dimensions.SequenceEqual(b.Dimensions) == false)
+            throw new ArgumentException("Tensor shapes must match", nameof(b));
+
+        var result = new float[a.Buffer.Length];
+        TensorPrimitives.Add(a.Buffer.Span, b.Buffer.Span, result);
         return new DenseTensor<float>(result, a.Dimensions.ToArray());
     }
 
@@ -148,11 +153,11 @@ internal static class TensorHelper
     /// </summary>
     public static DenseTensor<float> SubtractTensors(DenseTensor<float> a, DenseTensor<float> b)
     {
-        var dataA = a.Buffer.Span;
-        var dataB = b.Buffer.Span;
-        var result = new float[dataA.Length];
-        for (int i = 0; i < result.Length; i++)
-            result[i] = dataA[i] - dataB[i];
+        if (a.Dimensions.SequenceEqual(b.Dimensions) == false)
+            throw new ArgumentException("Tensor shapes must match", nameof(b));
+
+        var result = new float[a.Buffer.Length];
+        TensorPrimitives.Subtract(a.Buffer.Span, b.Buffer.Span, result);
         return new DenseTensor<float>(result, a.Dimensions.ToArray());
     }
 }
