@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ElBruno.Text2Image</RootNamespace>
+    <PackageId>ElBruno.Text2Image.Npu.Intel</PackageId>
+    <Version>0.1.0-preview</Version>
+    <Authors>Bruno Capuano</Authors>
+    <Description>Intel Core Ultra NPU acceleration for ElBruno.Text2Image. Uses the Intel OpenVINO execution provider to run Stable Diffusion inference on Intel AI Boost NPU. Requires OpenVINO runtime. Falls back to CPU if unavailable.</Description>
+    <PackageTags>text-to-image;stable-diffusion;image-generation;onnx;onnxruntime;npu;intel;core-ultra;openvino;ai</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo_01_nuget.png</PackageIcon>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Intel.ML.OnnxRuntime.OpenVino" Version="1.21.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />
+    <None Include="..\..\images\logo_01_nuget.png" Pack="true" PackagePath="\" Link="logo_01_nuget.png" />
+  </ItemGroup>
+</Project>

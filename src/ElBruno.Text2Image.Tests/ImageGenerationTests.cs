@@ -1,6 +1,7 @@
 using Xunit;
 using ElBruno.Text2Image.Models;
 using ElBruno.Text2Image.Foundry;
+using Microsoft.ML.OnnxRuntime;
 
 namespace ElBruno.Text2Image.Tests;
 
@@ -211,6 +212,8 @@ public class ExecutionProviderTests
         Assert.Equal(0, (int)ExecutionProvider.Cpu);
         Assert.Equal(1, (int)ExecutionProvider.Cuda);
         Assert.Equal(2, (int)ExecutionProvider.DirectML);
+        Assert.Equal(3, (int)ExecutionProvider.QualcommQnn);
+        Assert.Equal(4, (int)ExecutionProvider.IntelOpenVino);
     }
 
     [Fact]
@@ -229,7 +232,9 @@ public class ExecutionProviderTests
         Assert.True(
             provider == ExecutionProvider.Cpu ||
             provider == ExecutionProvider.Cuda ||
-            provider == ExecutionProvider.DirectML);
+            provider == ExecutionProvider.DirectML ||
+            provider == ExecutionProvider.QualcommQnn ||
+            provider == ExecutionProvider.IntelOpenVino);
     }
 
     [SkippableFact]
@@ -264,6 +269,48 @@ public class ExecutionProviderTests
         var first = SessionOptionsHelper.DetectBestProvider();
         var second = SessionOptionsHelper.DetectBestProvider();
         Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void ResolveProvider_QualcommQnn_ReturnsSame()
+    {
+        Assert.Equal(ExecutionProvider.QualcommQnn, SessionOptionsHelper.ResolveProvider(ExecutionProvider.QualcommQnn));
+    }
+
+    [Fact]
+    public void ResolveProvider_IntelOpenVino_ReturnsSame()
+    {
+        Assert.Equal(ExecutionProvider.IntelOpenVino, SessionOptionsHelper.ResolveProvider(ExecutionProvider.IntelOpenVino));
+    }
+
+    [SkippableFact]
+    public void Create_QualcommQnn_ReturnsSessionOptions()
+    {
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
+        try
+        {
+            using var options = SessionOptionsHelper.Create(ExecutionProvider.QualcommQnn);
+            Assert.NotNull(options);
+        }
+        catch (Exception ex) when (ex is OnnxRuntimeException or EntryPointNotFoundException)
+        {
+            // QNN provider not available on this hardware — expected
+        }
+    }
+
+    [SkippableFact]
+    public void Create_IntelOpenVino_ReturnsSessionOptions()
+    {
+        Skip.IfNot(IsNativeRuntimeAvailable(), "Native ONNX Runtime not available in this environment");
+        try
+        {
+            using var options = SessionOptionsHelper.Create(ExecutionProvider.IntelOpenVino);
+            Assert.NotNull(options);
+        }
+        catch (Exception ex) when (ex is OnnxRuntimeException or EntryPointNotFoundException)
+        {
+            // OpenVINO provider not available on this hardware — expected
+        }
     }
 }
 

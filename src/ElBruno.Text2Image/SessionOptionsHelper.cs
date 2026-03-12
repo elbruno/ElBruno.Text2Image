@@ -29,7 +29,7 @@ public static class SessionOptionsHelper
     }
 
     /// <summary>
-    /// Probes available execution providers in priority order: CUDA → DirectML → CPU.
+    /// Probes available execution providers in priority order: CUDA → DirectML → QNN → OpenVINO → CPU.
     /// Result is cached after first call.
     /// </summary>
     public static ExecutionProvider DetectBestProvider()
@@ -64,6 +64,34 @@ public static class SessionOptionsHelper
                 }
             }
 
+            if (available.Contains("QNNExecutionProvider"))
+            {
+                if (TryAppendProvider(() =>
+                {
+                    var o = new SessionOptions();
+                    o.AppendExecutionProvider("QNN", new Dictionary<string, string>
+                    {
+                        { "backend_path", "QnnHtp.dll" }
+                    });
+                    o.Dispose();
+                }))
+                {
+                    _cachedBestProvider = ExecutionProvider.QualcommQnn;
+                    return _cachedBestProvider.Value;
+                }
+            }
+
+            if (TryAppendProvider(() =>
+            {
+                var o = new SessionOptions();
+                o.AppendExecutionProvider_OpenVINO("NPU");
+                o.Dispose();
+            }))
+            {
+                _cachedBestProvider = ExecutionProvider.IntelOpenVino;
+                return _cachedBestProvider.Value;
+            }
+
             _cachedBestProvider = ExecutionProvider.Cpu;
             return _cachedBestProvider.Value;
         }
@@ -79,6 +107,15 @@ public static class SessionOptionsHelper
                 break;
             case ExecutionProvider.DirectML:
                 options.AppendExecutionProvider_DML();
+                break;
+            case ExecutionProvider.QualcommQnn:
+                options.AppendExecutionProvider("QNN", new Dictionary<string, string>
+                {
+                    { "backend_path", "QnnHtp.dll" }
+                });
+                break;
+            case ExecutionProvider.IntelOpenVino:
+                options.AppendExecutionProvider_OpenVINO("NPU");
                 break;
             case ExecutionProvider.Cpu:
             default:

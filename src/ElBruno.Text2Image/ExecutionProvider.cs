@@ -7,7 +7,7 @@ public enum ExecutionProvider
 {
     /// <summary>
     /// Automatically detect the best available provider.
-    /// Probes in order: CUDA → DirectML → CPU.
+    /// Probes in order: CUDA → DirectML → QNN → OpenVINO → CPU.
     /// </summary>
     Auto = -1,
 
@@ -18,5 +18,11 @@ public enum ExecutionProvider
     Cuda = 1,
 
     /// <summary>DirectML GPU acceleration (Windows, AMD/Intel/NVIDIA + Microsoft.ML.OnnxRuntime.DirectML NuGet).</summary>
-    DirectML = 2
+    DirectML = 2,
+
+    /// <summary>QNN NPU acceleration (Qualcomm Snapdragon X + Microsoft.ML.OnnxRuntime.QNN).</summary>
+    QualcommQnn = 3,
+
+    /// <summary>Intel OpenVINO NPU acceleration (Intel Core Ultra + Intel.ML.OnnxRuntime.OpenVino).</summary>
+    IntelOpenVino = 4
 }

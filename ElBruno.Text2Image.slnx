@@ -4,6 +4,8 @@
     <Project Path="src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj" />
     <Project Path="src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj" />
     <Project Path="src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj" />
+    <Project Path="src/ElBruno.Text2Image.Npu.Qualcomm/ElBruno.Text2Image.Npu.Qualcomm.csproj" />
+    <Project Path="src/ElBruno.Text2Image.Npu.Intel/ElBruno.Text2Image.Npu.Intel.csproj" />
     <Project Path="src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj" />
     <Project Path="src/ElBruno.Text2Image.Tests/ElBruno.Text2Image.Tests.csproj" />
   </Folder>
