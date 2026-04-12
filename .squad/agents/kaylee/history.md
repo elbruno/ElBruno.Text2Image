@@ -17,3 +17,5 @@
 - **M.E.AI integration:** `Text2ImagePropertyNames` in `Extensions/MeaiIntegration.cs` defines well-known keys for `AdditionalProperties` passthrough. New options should add a constant there and handle it in both `FromMeaiOptions` and the generator's explicit M.E.AI implementation.
 - **Key file paths:** `ImageGenerationOptions.cs` (shared options), `Flux2Generator.cs` (cloud API generator + JSON DTOs + `Flux2JsonContext`), `Extensions/MeaiIntegration.cs` (M.E.AI converter + property names).
 - **Build command:** `dotnet build ElBruno.Text2Image.slnx --no-restore` — verified clean (0 warnings, 0 errors).
+
+📌 Team update (2026-04-12T20:00:28Z): Issues #5 and #6 merged to main, PR #7 closed, v0.7.0 released. 260 tests passing, all agents coordinated successfully. — decided by Scribe

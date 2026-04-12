@@ -55,3 +55,4 @@
 - `Flux2RequestSerializationTests` — 5 tests (null omits, single, empty array, multiple, required fields)
 - `Flux2GeneratorReferenceImagesTests` — 9 tests (include/omit/null/multi/empty in request body, file-based, result validity)
 
+📌 Team update (2026-04-12T20:00:28Z): Issues #5 and #6 merged to main, PR #7 closed, v0.7.0 released. 260 tests passing, all agents coordinated successfully. — decided by Scribe

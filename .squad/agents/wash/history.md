@@ -16,3 +16,5 @@
 - **Source-generated JSON context:** `Flux2JsonContext` is the source-generated `JsonSerializerContext` for Foundry request/response types. Always use it for serialization (e.g., `Flux2JsonContext.Default.Flux2Request`).
 - **Key file:** `src/ElBruno.Text2Image.Foundry/Flux2Generator.cs` — FLUX.2 cloud API client (BFL Native API via Azure Foundry). Handles both sync (200) and async (202 + polling) patterns.
 - **Build/test commands:** `dotnet build --no-restore` and `dotnet test --no-build` — multi-target (net8.0 + net10.0), 87 tests per TFM.
+
+📌 Team update (2026-04-12T20:00:28Z): Issues #5 and #6 merged to main, PR #7 closed, v0.7.0 released. 260 tests passing, all agents coordinated successfully. — decided by Scribe
