@@ -22,6 +22,9 @@ public static class Text2ImagePropertyNames
 
     /// <summary>Local model directory override (string).</summary>
     public const string ModelDirectory = "model_directory";
+
+    /// <summary>Reference images for image-to-image generation (List&lt;string&gt;).</summary>
+    public const string ReferenceImages = "reference_images";
 }
 
 /// <summary>
@@ -64,6 +67,9 @@ public static class ImageGenerationOptionsConverter
 
             if (meaiOptions.AdditionalProperties.TryGetValue(Text2ImagePropertyNames.ModelDirectory, out var dir) && dir is string dirStr)
                 options.ModelDirectory = dirStr;
+
+            if (meaiOptions.AdditionalProperties.TryGetValue(Text2ImagePropertyNames.ReferenceImages, out var refImages) && refImages is List<string> refList)
+                options.ReferenceImages = refList;
         }
 
         return options;

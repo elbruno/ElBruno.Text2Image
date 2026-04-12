@@ -193,7 +193,8 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             N = 1,
             Width = options.Width,
             Height = options.Height,
-            OutputFormat = "png"
+            OutputFormat = "png",
+            ReferenceImages = options.ReferenceImages
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
@@ -304,6 +305,42 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     }
 
     /// <summary>
+    /// Generates an image using a text prompt and a reference image file.
+    /// The file is read, converted to a base64 Data URI, and passed as a reference image.
+    /// </summary>
+    /// <param name="prompt">The text description of the image to generate.</param>
+    /// <param name="referenceImagePath">Path to a reference image file (PNG, JPEG, or WebP).</param>
+    /// <param name="options">Optional generation options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The generation result containing the image data.</returns>
+    public async Task<ImageGenerationResult> GenerateAsync(
+        string prompt,
+        string referenceImagePath,
+        ImageGenerationOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(referenceImagePath, nameof(referenceImagePath));
+        if (!File.Exists(referenceImagePath))
+            throw new FileNotFoundException("Reference image file not found.", referenceImagePath);
+
+        var imageBytes = await File.ReadAllBytesAsync(referenceImagePath, cancellationToken);
+        var mimeType = Path.GetExtension(referenceImagePath).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+        var dataUri = $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
+
+        options ??= new ImageGenerationOptions();
+        options.ReferenceImages ??= [];
+        options.ReferenceImages.Add(dataUri);
+
+        return await GenerateAsync(prompt, options, cancellationToken);
+    }
+
+    /// <summary>
     /// Polls the operation-location URL until the async operation completes.
     /// </summary>
     private async Task<Flux2Response> PollForResultAsync(
@@ -390,6 +427,13 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             localOptions.Width = size.Width;
             localOptions.Height = size.Height;
         }
+
+        if (options?.AdditionalProperties?.TryGetValue(Text2ImagePropertyNames.ReferenceImages, out var refImages) == true
+            && refImages is List<string> refList)
+        {
+            localOptions.ReferenceImages = refList;
+        }
+
         var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
@@ -427,6 +471,10 @@ internal sealed class Flux2Request
 
     [JsonPropertyName("output_format")]
     public string OutputFormat { get; set; } = "png";
+
+    [JsonPropertyName("referenceImages")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? ReferenceImages { get; set; }
 }
 
 internal sealed class Flux2Response

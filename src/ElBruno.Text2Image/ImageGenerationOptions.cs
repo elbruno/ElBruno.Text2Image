@@ -74,6 +74,14 @@ public sealed class ImageGenerationOptions
     public int? Seed { get; set; }
 
     /// <summary>
+    /// Optional reference images for image-to-image generation.
+    /// Each entry can be a URL, base64-encoded string, or Data URI.
+    /// Supported by FLUX.2-pro (up to 8), FLUX.2-flex (up to 10),
+    /// and FLUX.1-kontext-pro.
+    /// </summary>
+    public List<string>? ReferenceImages { get; set; }
+
+    /// <summary>
     /// Gets the resolved model directory path.
     /// </summary>
     internal string GetModelDirectory(string modelSubfolder)
