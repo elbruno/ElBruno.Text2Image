@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ElBruno.Text2Image;
@@ -199,7 +198,12 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
         using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
         request.Headers.TryAddWithoutValidation("api-key", _apiKey);
-        request.Content = JsonContent.Create(requestBody, Flux2JsonContext.Default.Flux2Request);
+
+        // Serialize to bytes so Content-Length is set explicitly.
+        // The BFL API rejects requests without a Content-Length header.
+        var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(requestBody, Flux2JsonContext.Default.Flux2Request);
+        request.Content = new ByteArrayContent(jsonBytes);
+        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
 
