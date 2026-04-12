@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ElBruno.Text2Image.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
   </ItemGroup>
 
