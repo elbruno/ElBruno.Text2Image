@@ -27,3 +27,31 @@
 - DetectBestProvider_IsCached
 
 **Key learning:** Always verify that attribute packages are referenced when introducing new xUnit extensions like SkippableFact/SkippableTheory.
+
+### 2025-07-25: HTTP-level tests for Flux2Generator (Issues #5 & #6)
+
+**Context:** Wrote 43 new tests covering Wash's Content-Length fix (Issue #5) and Kaylee's img2img reference images feature (Issue #6). Baseline was 87 tests, now 130 — all green on net8.0 and net10.0.
+
+**Test file:** `src/ElBruno.Text2Image.Tests/Flux2GeneratorHttpTests.cs`
+
+**Key patterns established:**
+- `FakeHttpHandler` — a reusable `HttpMessageHandler` that intercepts requests, captures headers/body, and returns canned responses. Inject via `Flux2Generator(..., httpClient: httpClient)`.
+- `FakeHttpHandler.CreateSuccessResponse()` — returns a minimal `{"created":1234,"data":[{"b64_json":"..."}]}` so GenerateAsync completes successfully.
+- `InternalsVisibleTo` added to `ElBruno.Text2Image.Foundry.csproj` → allows direct `Flux2Request` / `Flux2JsonContext` serialization tests.
+
+**Edge cases discovered:**
+- `ArgumentException.ThrowIfNullOrWhiteSpace(null)` throws `ArgumentNullException` (subclass), so tests must use `Assert.ThrowsAny<ArgumentException>`, not `Assert.Throws<ArgumentException>`.
+- Non-existent file path may throw `DirectoryNotFoundException` (not `FileNotFoundException`) if the parent directory is also missing. Use `Assert.ThrowsAny<IOException>`.
+- `JsonIgnore(Condition = WhenWritingNull)` on `List<string>?` correctly omits null but preserves empty arrays — important for the API contract.
+
+**Source stubs added:**
+- `ImageGenerationOptions.ReferenceImages` (property) and `AddReferenceImageFromFile()` (convenience method) — merged with Kaylee's existing property, added file-to-DataURI helper.
+- `Flux2Request.ReferenceImages` with `[JsonIgnore(WhenWritingNull)]` — already present from Kaylee's work.
+
+**Test classes and counts:**
+- `Flux2GeneratorContentLengthTests` — 10 tests (Content-Length, valid JSON, fields, API key, POST method, error handling)
+- `ImageGenerationOptionsReferenceImagesTests` — 8 tests (default null, set, round-trip, empty, single, multi, reset to null)
+- `AddReferenceImageFromFileTests` — 11 tests (PNG/JPEG/WEBP, multiple files, append, unknown ext, null/empty/whitespace/missing file)
+- `Flux2RequestSerializationTests` — 5 tests (null omits, single, empty array, multiple, required fields)
+- `Flux2GeneratorReferenceImagesTests` — 9 tests (include/omit/null/multi/empty in request body, file-based, result validity)
+

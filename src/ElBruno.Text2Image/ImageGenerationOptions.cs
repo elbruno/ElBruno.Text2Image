@@ -74,6 +74,39 @@ public sealed class ImageGenerationOptions
     public int? Seed { get; set; }
 
     /// <summary>
+    /// Optional reference images for image-to-image generation.
+    /// Each entry can be a URL, base64-encoded string, or Data URI.
+    /// Supported by FLUX.2-pro (up to 8), FLUX.2-flex (up to 10),
+    /// and FLUX.1-kontext-pro. Defaults to null.
+    /// </summary>
+    public List<string>? ReferenceImages { get; set; }
+
+    /// <summary>
+    /// Reads an image file from disk, converts it to a base64 Data URI,
+    /// and appends it to <see cref="ReferenceImages"/>.
+    /// </summary>
+    /// <param name="filePath">Path to an image file (png, jpg, jpeg, gif, webp, bmp).</param>
+    public void AddReferenceImageFromFile(string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
+        var bytes = File.ReadAllBytes(filePath);
+        var mimeType = Path.GetExtension(filePath).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".bmp" => "image/bmp",
+            _ => "application/octet-stream"
+        };
+
+        var dataUri = $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
+        ReferenceImages ??= new List<string>();
+        ReferenceImages.Add(dataUri);
+    }
+
+    /// <summary>
     /// Gets the resolved model directory path.
     /// </summary>
     internal string GetModelDirectory(string modelSubfolder)
