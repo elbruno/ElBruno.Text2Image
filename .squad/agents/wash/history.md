@@ -18,3 +18,4 @@
 - **Build/test commands:** `dotnet build --no-restore` and `dotnet test --no-build` — multi-target (net8.0 + net10.0), 87 tests per TFM.
 
 📌 Team update (2026-04-12T20:00:28Z): Issues #5 and #6 merged to main, PR #7 closed, v0.7.0 released. 260 tests passing, all agents coordinated successfully. — decided by Scribe
+📌 Team update (2026-04-13T13:18:04Z): MAI-Image-2 scenario sample created. `scenario-13-mai-image2-cloud` demonstrates DI registration, image generation, response handling, and error recovery. Solution manifest updated. Build clean: 0 warnings, 0 errors. Branch: feature/mai-image-2-support. — decided by Scribe

@@ -56,3 +56,25 @@
 **Impact:**
 - Future HTTP behavior changes should use `FakeHttpHandler` tests
 - `InternalsVisibleTo` is test-only; no public API impact
+
+### Decision: MAI-Image-2 Cloud API Support
+
+**Author:** Kaylee (Core Dev)  
+**Date:** 2026-04-13  
+**Status:** Implemented
+
+**Context:** Added support for the MAI-Image-2 image generation model via Azure Foundry, expanding generator options beyond FLUX.2.
+
+**Decision:**
+- New `MaiImage2Generator` class in `ElBruno.Text2Image.Foundry`
+- Follows established patterns from `Flux2Generator`: `ByteArrayContent` serialization, source-generated JSON context, async polling (202 + retry)
+- Registered in `ServiceCollectionExtensions.cs` as `IImageGenerator` with keyed services
+- M.E.AI property passthrough via `AdditionalProperties` (keyed as `mai_options` internally)
+- Full HTTP-level test coverage in `MaiImage2GeneratorHttpTests.cs` (32 tests)
+- Reference sample: `scenario-13-mai-image2-cloud`
+
+**Implications:**
+- Consumers can inject `IImageGenerator` or key-select `MaiImage2Generator` directly
+- Future model additions should use the same pattern: new generator class, serialization via source-gen context, M.E.AI integration
+- Build: 0 warnings, 0 errors. Tests: 324 passing (net8.0 + net10.0)
+- Branch: `feature/mai-image-2-support`

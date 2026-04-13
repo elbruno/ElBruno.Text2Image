@@ -19,3 +19,4 @@
 - **Build command:** `dotnet build ElBruno.Text2Image.slnx --no-restore` — verified clean (0 warnings, 0 errors).
 
 📌 Team update (2026-04-12T20:00:28Z): Issues #5 and #6 merged to main, PR #7 closed, v0.7.0 released. 260 tests passing, all agents coordinated successfully. — decided by Scribe
+📌 Team update (2026-04-13T13:18:04Z): MAI-Image-2 support implemented. `MaiImage2Generator.cs` created following Flux2Generator patterns (serialization, polling, M.E.AI integration). 324 tests passing. Branch: feature/mai-image-2-support. — decided by Scribe
