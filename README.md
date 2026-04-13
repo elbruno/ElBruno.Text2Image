@@ -26,6 +26,7 @@ A .NET library for **text-to-image generation** — cloud and local. Generate im
 - 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2 (cloud)
 - ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
 - ☁️ **Cloud API** — FLUX.2 via Microsoft Foundry for high-quality text-heavy designs
+- ☁️ **MAI-Image-2** — Microsoft's MAI-Image-2 via Azure Foundry for high-quality image generation
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
@@ -89,6 +90,23 @@ using var generator = new Flux2Generator(
 // Generate an image — same interface as local models
 var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
 await result.SaveAsync("flux2-output.png");
+```
+
+### Basic Usage — Cloud (MAI-Image-2)
+
+```csharp
+using ElBruno.Text2Image;
+using ElBruno.Text2Image.Foundry;
+
+// Create an MAI-Image-2 generator using Microsoft Foundry
+using var generator = new MaiImage2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelName: "MAI-Image-2",
+    modelId: "MAI-Image-2");
+
+var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
+await result.SaveAsync("mai-image2-output.png");
 ```
 
 ### With Custom Options
@@ -170,6 +188,12 @@ services.AddFlux2Generator(
     apiKey: "your-api-key",
     modelId: "FLUX.2-pro");
 
+// MAI-Image-2 cloud model (requires ElBruno.Text2Image.Foundry package)
+services.AddMaiImage2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelId: "MAI-Image-2");
+
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
 {
@@ -198,6 +222,7 @@ public class MyService(IImageGenerator generator)
 |-------|-------|----------|---------|--------|
 | **FLUX.2 Pro** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Default |
 | **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
+| **MAI-Image-2** | `MaiImage2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
 ## Samples
@@ -215,6 +240,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-09-batch-generation](src/samples/scenario-09-batch-generation/) | Generate multiple images from a batch of prompts |
 | [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
+| [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
 
 ### Run a Sample
 
@@ -228,6 +254,7 @@ dotnet run
 - [docs/architecture.md](docs/architecture.md) — Package structure and pipeline diagrams
 - [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
+- [docs/mai-image-2-setup-guide.md](docs/mai-image-2-setup-guide.md) — Microsoft Foundry MAI-Image-2 setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)

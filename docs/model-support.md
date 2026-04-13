@@ -17,6 +17,7 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 |-------|----------|-------|----------|------------|--------|
 | **FLUX.2 Pro** | `FLUX.2-pro` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Default |
 | **FLUX.2 Flex** | `FLUX.2-flex` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
+| **MAI-Image-2** | `MAI-Image-2` | `MaiImage2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
 
 ## Model Details
 
@@ -73,6 +74,18 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 - **Announcement**: [Meet FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
 - **Setup guide**: [flux2-setup-guide.md](flux2-setup-guide.md)
 
+### MAI-Image-2 (Cloud API)
+
+- **Class**: `MaiImage2Generator`
+- **Provider**: Microsoft Foundry
+- **Default model**: `MAI-Image-2`
+- **Resolution**: 1024×1024 (default), min 768px per dimension, max 1M total pixels
+- **Synchronous API** — no polling needed (unlike FLUX.2's 202 + retry pattern)
+- **Authentication**: API key from Microsoft Foundry
+- **Prompt limit**: 32,000 characters
+- **Announcement**: [Introducing MAI-Image-2](https://microsoft.ai/news/introducing-MAI-Image-2/)
+- **Setup guide**: [mai-image-2-setup-guide.md](mai-image-2-setup-guide.md)
+
 ## Execution Providers
 
 | Provider | GPU Required | Platform | Notes |
@@ -102,3 +115,11 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 | `Width` | 1024 | Recommended: 1024 |
 | `Height` | 1024 | Recommended: 1024 |
 | Response format | `b64_json` | Also supports URL |
+
+### Cloud Models (MAI-Image-2)
+
+| Option | Default | Notes |
+|--------|---------|-------|
+| Width | 1024 | Min 768, max constrained by total pixel limit |
+| Height | 1024 | Min 768, max constrained by total pixel limit |
+| Total pixels | — | Max 1,048,576 (width × height) |
