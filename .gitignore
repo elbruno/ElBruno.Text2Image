@@ -102,3 +102,6 @@ nupkgs/
 # Prevent accidental commit of local settings with secrets
 **/appsettings.*.json
 src/samples/**/appsettings.json
+
+# Squad runtime team state (lives on dev/feature branches only)
+.squad/
