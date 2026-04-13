@@ -30,4 +30,27 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IImageGenerator>(new Flux2Generator(endpoint, apiKey, modelName, modelId));
         return services;
     }
+
+    /// <summary>
+    /// Adds a MAI-Image-2 cloud API image generator to the service collection.
+    /// Requires a Microsoft Foundry deployment endpoint and API key.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
+    /// <param name="apiKey">The API key for authentication.</param>
+    /// <param name="modelName">Optional display name (e.g., "MAI-Image-2"). Defaults to "MAI-Image-2".</param>
+    /// <param name="modelId">
+    /// The model/deployment name for the API request body (e.g., "mai-image-2").
+    /// Defaults to "mai-image-2".
+    /// </param>
+    public static IServiceCollection AddMaiImage2Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? modelId = null)
+    {
+        services.AddSingleton<IImageGenerator>(new MaiImage2Generator(endpoint, apiKey, modelName, modelId));
+        return services;
+    }
 }
