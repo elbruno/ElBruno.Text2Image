@@ -32,7 +32,8 @@ using var generator = new MaiImage2Generator(
     modelId: "MAI-Image-2");
 
 var result = await generator.GenerateAsync(
-    "a futuristic cityscape with neon lights, cyberpunk style");
+    "a simple flat icon of a paintbrush and a sparkle, purple and blue gradient, white background",
+    new ImageGenerationOptions { Width = 1024, Height = 1024 });
 
 await result.SaveAsync("mai-image2-output.png");
 Console.WriteLine($"Generated in {result.InferenceTimeMs}ms");
