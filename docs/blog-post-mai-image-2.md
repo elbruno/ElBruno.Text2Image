@@ -111,6 +111,12 @@ Same pattern as the FLUX.2 registration. Inject `IImageGenerator` and you're don
 
 ---
 
+## 🧩 Microsoft.Extensions.AI Compatible
+
+Every generator in the library — including the new `MaiImage2Generator` — implements the standard **`Microsoft.Extensions.AI.IImageGenerator`** interface from the [Microsoft.Extensions.AI.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions) package. This means you can use ElBruno.Text2Image as a drop-in provider anywhere the MEAI abstraction is expected — dependency injection, middleware pipelines, or any framework that programs against `IImageGenerator`. Cloud or local, FLUX.2 or MAI-Image-2 or Stable Diffusion — they all plug into the same standard .NET AI contract.
+
+---
+
 ## 🔗 Links
 
 - **Repository:** [github.com/elbruno/ElBruno.Text2Image](https://github.com/elbruno/ElBruno.Text2Image)
