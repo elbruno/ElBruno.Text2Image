@@ -36,5 +36,10 @@ public static class ConfigPaths
     /// <summary>
     /// Gets the config file path for the current OS.
     /// </summary>
-    public static string ConfigFilePath => Path.Combine(ConfigDirectory, "config.json");
+    public static string AppConfigFile => Path.Combine(ConfigDirectory, "config.json");
+    
+    /// <summary>
+    /// Alias for AppConfigFile.
+    /// </summary>
+    public static string ConfigFilePath => AppConfigFile;
 }

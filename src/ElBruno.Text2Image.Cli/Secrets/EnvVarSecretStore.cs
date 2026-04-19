@@ -6,27 +6,57 @@ namespace ElBruno.Text2Image.Cli.Secrets;
 /// </summary>
 internal sealed class EnvVarSecretStore : ISecretStore
 {
-    // TODO(Wash): implement environment variable reading
+    private const string Prefix = "T2I_";
+
     public string Name => "env";
     public bool IsAvailable => true;
 
     public Task<string?> GetAsync(string provider, string field, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var envVarName = BuildEnvVarName(provider, field);
+        var value = Environment.GetEnvironmentVariable(envVarName);
+        return Task.FromResult(value);
     }
 
     public Task SetAsync(string provider, string field, string value, CancellationToken ct)
     {
-        throw new NotSupportedException("Environment variables cannot be set at runtime");
+        throw new NotSupportedException("env vars are read from process environment; set them via your shell");
     }
 
     public Task DeleteAsync(string provider, string field, CancellationToken ct)
     {
-        throw new NotSupportedException("Environment variables cannot be deleted at runtime");
+        throw new NotSupportedException("env vars are read from process environment; set them via your shell");
     }
 
     public Task<IReadOnlyList<string>> ListFieldsAsync(string provider, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var providerPrefix = BuildProviderPrefix(provider);
+        var fields = new List<string>();
+
+        foreach (var key in Environment.GetEnvironmentVariables().Keys)
+        {
+            var envVarName = key.ToString();
+            if (envVarName != null && envVarName.StartsWith(providerPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var fieldSuffix = envVarName.Substring(providerPrefix.Length);
+                var normalizedField = fieldSuffix.ToLowerInvariant().Replace('_', '-');
+                fields.Add(normalizedField);
+            }
+        }
+
+        return Task.FromResult<IReadOnlyList<string>>(fields);
+    }
+
+    private static string BuildEnvVarName(string provider, string field)
+    {
+        var providerNormalized = provider.Replace("-", "_").ToUpperInvariant();
+        var fieldNormalized = field.Replace("-", "_").ToUpperInvariant();
+        return $"{Prefix}{providerNormalized}_{fieldNormalized}";
+    }
+
+    private static string BuildProviderPrefix(string provider)
+    {
+        var providerNormalized = provider.Replace("-", "_").ToUpperInvariant();
+        return $"{Prefix}{providerNormalized}_";
     }
 }
