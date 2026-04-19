@@ -47,6 +47,8 @@ jobs:
           - { os: macos-latest,   rid: osx-arm64,  asset: t2i-osx-arm64.tar.gz, archive: tar }
           - { os: macos-13,       rid: osx-x64,    asset: t2i-osx-x64.tar.gz,   archive: tar }
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
