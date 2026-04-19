@@ -14,13 +14,19 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>t2i</ToolCommandName>
     <PackageId>ElBruno.Text2Image.Cli</PackageId>
-    <Description>Cross-platform CLI for text-to-image generation using ElBruno.Text2Image. Supports local CPU/GPU inference (CUDA, DirectML) and cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2).</Description>
+    <Version>0.1.0</Version>
+    <Description>Lightweight cross-platform CLI for AI text-to-image generation. Includes cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2). For local CPU/GPU inference, see the upcoming ElBruno.Text2Image.Cli.Full package.</Description>
     <PackageTags>text-to-image;stable-diffusion;flux;mai;ai;image-generation;cli;dotnet-tool</PackageTags>
     <Authors>Bruno Capuano</Authors>
     <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
     <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Spectre.Console for TUI rendering and command parsing -->
@@ -38,11 +44,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Project references to all providers -->
+    <!-- Project references — Lite edition includes cloud providers only -->
     <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
-    <ProjectReference Include="..\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj" />
-    <ProjectReference Include="..\ElBruno.Text2Image.Cuda\ElBruno.Text2Image.Cuda.csproj" />
-    <ProjectReference Include="..\ElBruno.Text2Image.DirectML\ElBruno.Text2Image.DirectML.csproj" />
     <ProjectReference Include="..\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj" />
   </ItemGroup>
 

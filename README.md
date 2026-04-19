@@ -20,6 +20,23 @@
 
 A .NET library for **text-to-image generation** — cloud and local. Generate images from text prompts using Microsoft Foundry FLUX.2 or Stable Diffusion (ONNX Runtime) with automatic model downloads from HuggingFace. No Python needed. Just `dotnet add package` and go. 🚀
 
+## 🛠️ Command-Line Tool
+
+Install the cross-platform CLI:
+
+```bash
+dotnet tool install --global ElBruno.Text2Image.Cli
+```
+
+Then:
+
+```bash
+t2i config                          # interactive setup
+t2i "a robot painting a landscape"  # generate
+```
+
+See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
+
 ## Features
 
 - 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion or FLUX.2

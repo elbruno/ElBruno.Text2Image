@@ -2,6 +2,14 @@
 
 Cross-platform command-line tool for text-to-image generation using ElBruno.Text2Image. Supports local CPU/GPU inference and cloud providers.
 
+## Editions
+
+**🌟 Lite (this package):** Cloud providers only. ~30 MB. Ideal for CI/CD, containers, and cloud-first workflows.
+
+**🚀 Full (planned for v0.2.0):** Adds local CPU/CUDA/DirectML inference via ONNX Runtime. ~200 MB.
+
+This documentation describes the **Lite edition**.
+
 ## What is t2i?
 
 `t2i` is a .NET global tool that makes AI image generation simple and accessible from the command line. It wraps the ElBruno.Text2Image library and provides:
@@ -103,20 +111,12 @@ t2i "<prompt>" [options]
 
 ## Providers
 
+**Note:** The Lite edition includes cloud providers only. Local CPU/GPU providers (cpu, cuda, directml) will be available in the **Full edition** (v0.2.0).
+
 | Provider ID | Name | Type | Requirements |
 |-------------|------|------|--------------|
-| `cpu` | CPU (Local) | Local | None (always available) |
-| `cuda` | CUDA (Local GPU) | Local | NVIDIA GPU with CUDA support |
-| `directml` | DirectML (Local GPU) | Local | Windows + DirectX 12 GPU |
 | `foundry-flux2` | FLUX.2 Pro (Cloud) | Cloud | Microsoft Foundry endpoint + API key |
 | `foundry-mai2` | MAI-Image-2 (Cloud) | Cloud | Microsoft Foundry endpoint + API key |
-
-### Local Providers
-
-Local providers run inference on your machine. First-time use downloads ONNX models (~2-5 GB) to your user directory:
-
-- **Windows**: `%USERPROFILE%\.cache\huggingface\hub\`
-- **Linux/macOS**: `~/.cache/huggingface/hub/`
 
 ### Cloud Providers
 
@@ -186,11 +186,10 @@ t2i config path
 
 When you run `t2i config` for the first time, an interactive wizard guides you through setup:
 
-1. **Provider Detection**: Scans for available local providers (CPU always available, GPU detected if present)
-2. **Default Provider**: Choose your preferred provider
-3. **Cloud Setup** (optional): Enter endpoint and API key for cloud providers
-4. **Secret Storage**: Choose where to store secrets (DPAPI on Windows, file elsewhere)
-5. **Test**: Validates configuration with a quick health check
+1. **Provider Selection**: Choose your preferred cloud provider (foundry-flux2 or foundry-mai2)
+2. **Cloud Setup**: Enter endpoint and API key for your selected provider
+3. **Secret Storage**: Choose where to store secrets (DPAPI on Windows, file elsewhere)
+4. **Test**: Validates configuration with a quick health check
 
 The wizard is non-destructive — you can re-run it to update settings.
 
@@ -203,11 +202,9 @@ t2i doctor
 ```
 
 Checks:
-- GPU availability (CUDA, DirectML)
 - Config file validity
 - Secret store accessibility
 - Provider connectivity (cloud)
-- Model availability (local)
 
 ## Examples
 
@@ -218,7 +215,7 @@ Checks:
 t2i "a cat"
 
 # Specify provider
-t2i "a dog" --provider cuda
+t2i "a dog" --provider foundry-flux2
 
 # Custom dimensions
 t2i "a landscape" --width 768 --height 512
@@ -247,7 +244,7 @@ t2i "a technical diagram" \
 
 ```bash
 # Set default provider
-t2i config set default-provider cuda
+t2i config set default-provider foundry-flux2
 
 # View config path
 t2i config path

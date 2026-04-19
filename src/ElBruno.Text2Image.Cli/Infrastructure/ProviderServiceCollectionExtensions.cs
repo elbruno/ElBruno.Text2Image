@@ -15,9 +15,6 @@ public static class ProviderServiceCollectionExtensions
     {
         services.AddHttpClient();
         
-        services.AddSingleton<IProviderAdapter, LocalCpuAdapter>();
-        services.AddSingleton<IProviderAdapter, LocalCudaAdapter>();
-        services.AddSingleton<IProviderAdapter, LocalDirectMlAdapter>();
         services.AddSingleton<IProviderAdapter, FoundryFlux2Adapter>();
         services.AddSingleton<IProviderAdapter, FoundryMaiImage2Adapter>();
         

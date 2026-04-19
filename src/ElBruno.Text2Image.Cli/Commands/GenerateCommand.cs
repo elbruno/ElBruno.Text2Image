@@ -11,7 +11,7 @@ namespace ElBruno.Text2Image.Cli.Commands;
 
 /// <summary>
 /// Main image generation command.
-/// Usage: t2i "a cat" [--provider cpu] [--out output.png] [--width 512] [--height 512] [--steps 20]
+/// Usage: t2i "a cat" [--provider foundry-flux2] [--out output.png] [--width 512] [--height 512]
 /// </summary>
 internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
 {
@@ -33,7 +33,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         public string Prompt { get; init; } = string.Empty;
 
         [CommandOption("--provider")]
-        [Description("Provider to use (cpu, cuda, directml, foundry-flux2, foundry-mai2)")]
+        [Description("Provider to use (foundry-flux2, foundry-mai2)")]
         public string? Provider { get; init; }
 
         [CommandOption("--out|-o")]
