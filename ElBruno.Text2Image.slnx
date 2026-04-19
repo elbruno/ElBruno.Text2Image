@@ -20,5 +20,6 @@
     <Project Path="src/samples/scenario-10-progress-reporting/scenario-10-progress-reporting.csproj" />
     <Project Path="src/samples/scenario-11-gpu-diagnostics/scenario-11-gpu-diagnostics.csproj" />
     <Project Path="src/samples/scenario-13-mai-image2-cloud/scenario-13-mai-image2-cloud.csproj" />
+    <Project Path="src/samples/scenario-14-gpu-stress-test/scenario-14-gpu-stress-test.csproj" />
   </Folder>
 </Solution>
