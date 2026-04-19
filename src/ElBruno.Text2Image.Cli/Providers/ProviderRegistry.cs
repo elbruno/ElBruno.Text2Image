@@ -5,14 +5,11 @@ namespace ElBruno.Text2Image.Cli.Providers;
 /// </summary>
 public sealed class ProviderRegistry
 {
-    private readonly Dictionary<string, IProviderAdapter> _providers = new();
+    private readonly Dictionary<string, IProviderAdapter> _providers;
 
     public ProviderRegistry(IEnumerable<IProviderAdapter> adapters)
     {
-        foreach (var adapter in adapters)
-        {
-            _providers[adapter.Id] = adapter;
-        }
+        _providers = adapters.ToDictionary(a => a.Id, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -21,7 +18,7 @@ public sealed class ProviderRegistry
     public IEnumerable<IProviderAdapter> All => _providers.Values;
 
     /// <summary>
-    /// Gets a provider by ID, or null if not found.
+    /// Gets a provider by ID (case-insensitive), or null if not found.
     /// </summary>
     public IProviderAdapter? Get(string id) => _providers.GetValueOrDefault(id);
 }

@@ -8,45 +8,25 @@ using ElBruno.Text2Image.Cli.Secrets;
 
 var services = new ServiceCollection();
 
-// Register core services
-services.AddSingleton<ConfigStore>();
-services.AddSingleton<SecretResolver>();
+// Register CLI infrastructure (config, secrets)
+services.AddCliInfrastructure();
 
 // Register all provider adapters
-services.AddSingleton<IProviderAdapter, LocalCpuAdapter>();
-services.AddSingleton<IProviderAdapter, LocalCudaAdapter>();
-services.AddSingleton<IProviderAdapter, LocalDirectMlAdapter>();
-services.AddSingleton<IProviderAdapter, FoundryFlux2Adapter>();
-services.AddSingleton<IProviderAdapter, FoundryMaiImage2Adapter>();
-
-// Register provider registry (depends on all IProviderAdapter instances)
-services.AddSingleton(sp => new ProviderRegistry(sp.GetServices<IProviderAdapter>()));
-
-// Register secret stores
-services.AddSingleton<ISecretStore, EnvVarSecretStore>();
-services.AddSingleton<ISecretStore, DpapiSecretStore>();
-services.AddSingleton<ISecretStore, PlainFileSecretStore>();
+services.AddCliProviders();
 
 // Create the Spectre.Console.Cli app with DI integration
 var registrar = new TypeRegistrar(services);
-var app = new CommandApp(registrar);
+var app = new CommandApp<GenerateCommand>(registrar);
 
 app.Configure(config =>
 {
     config.SetApplicationName("t2i");
 
-    // Default command (prompt positional arg)
-    config.AddCommand<GenerateCommand>("generate")
-        .WithAlias("gen")
-        .WithDescription("Generate an image from a text prompt")
-        .WithExample(new[] { "generate", "\"a cat\"" })
-        .WithExample(new[] { "generate", "\"a mountain landscape\"", "--provider", "foundry-flux2", "--width", "1024", "--height", "1024" });
-
     // Config commands
     config.AddCommand<ConfigCommand>("config")
         .WithDescription("Manage configuration")
         .WithExample(new[] { "config", "show" })
-        .WithExample(new[] { "config", "set", "default-provider", "cpu" })
+        .WithExample(new[] { "config", "set", "foundry-flux2.endpoint", "https://..." })
         .WithExample(new[] { "config", "path" });
 
     // Secrets commands
