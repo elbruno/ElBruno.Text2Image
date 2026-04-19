@@ -11,11 +11,15 @@ internal sealed class VersionCommand : Command
 {
     public override int Execute(CommandContext context)
     {
-        var version = Assembly.GetExecutingAssembly()
-            .GetName()
-            .Version?.ToString() ?? "unknown";
+        var assembly = Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version?.ToString() ?? "unknown";
+        
+        // Try to get informational version (includes build SHA if available)
+        var infoVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion ?? version;
 
-        AnsiConsole.MarkupLine($"[bold]t2i[/] version [cyan]{version}[/]");
+        AnsiConsole.MarkupLineInterpolated($"[bold]t2i[/] version [cyan]{Markup.Escape(infoVersion)}[/]");
         return 0;
     }
 }

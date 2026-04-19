@@ -1,5 +1,10 @@
 using System.ComponentModel;
+using Spectre.Console;
 using Spectre.Console.Cli;
+using ElBruno.Text2Image.Cli.Config;
+using ElBruno.Text2Image.Cli.Providers;
+using ElBruno.Text2Image.Cli.Secrets;
+using ElBruno.Text2Image.Cli.Tui;
 
 namespace ElBruno.Text2Image.Cli.Commands;
 
@@ -8,6 +13,17 @@ namespace ElBruno.Text2Image.Cli.Commands;
 /// </summary>
 internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
 {
+    private readonly ProviderRegistry _providerRegistry;
+    private readonly SecretResolver _secretResolver;
+    private readonly ConfigStore _configStore;
+
+    public ConfigCommand(ProviderRegistry providerRegistry, SecretResolver secretResolver, ConfigStore configStore)
+    {
+        _providerRegistry = providerRegistry;
+        _secretResolver = secretResolver;
+        _configStore = configStore;
+    }
+
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "[action]")]
@@ -23,9 +39,179 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
         public string? Value { get; init; }
     }
 
-    // TODO(Kaylee): implement config show/set/remove/path logic
-    public override Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        throw new NotImplementedException("ConfigCommand not yet implemented");
+        var ct = CancellationToken.None;
+
+        // No action → launch wizard
+        if (string.IsNullOrWhiteSpace(settings.Action))
+        {
+            await SetupWizard.RunAsync(_providerRegistry, _secretResolver, _configStore, ct);
+            return 0;
+        }
+
+        return settings.Action.ToLowerInvariant() switch
+        {
+            "show" => await ShowAsync(ct),
+            "set" => await SetAsync(settings.Key, settings.Value, ct),
+            "remove" => await RemoveAsync(settings.Key, ct),
+            "path" => ShowPath(),
+            _ => InvalidAction(settings.Action)
+        };
+    }
+
+    private async Task<int> ShowAsync(CancellationToken ct)
+    {
+        var config = await _configStore.LoadAsync(ct);
+        
+        var table = new Table().Border(TableBorder.Rounded);
+        table.AddColumn("Provider");
+        table.AddColumn("Field");
+        table.AddColumn("Source");
+        table.AddColumn("Value");
+
+        // Default provider
+        if (config.DefaultProvider != null)
+        {
+            table.AddRow(
+                "[bold](default)[/]",
+                "provider",
+                "config",
+                Markup.Escape(config.DefaultProvider));
+        }
+
+        // Per-provider config
+        foreach (var (providerId, providerCfg) in config.Providers)
+        {
+            if (providerCfg.Endpoint != null)
+            {
+                table.AddRow(Markup.Escape(providerId), "endpoint", "config", Markup.Escape(providerCfg.Endpoint));
+            }
+            if (providerCfg.Model != null)
+            {
+                table.AddRow(Markup.Escape(providerId), "model", "config", Markup.Escape(providerCfg.Model));
+            }
+        }
+
+        // Secrets (using InspectAsync)
+        foreach (var provider in _providerRegistry.All)
+        {
+            foreach (var field in provider.RequiredSecrets)
+            {
+                var value = await _secretResolver.ResolveAsync(provider.Id, field, null, ct);
+                if (value != null)
+                {
+                    var masked = ConsoleHelpers.Mask(value);
+                    table.AddRow(Markup.Escape(provider.Id), Markup.Escape(field), "secret", Markup.Escape(masked));
+                }
+            }
+        }
+
+        AnsiConsole.Write(table);
+        return 0;
+    }
+
+    private async Task<int> SetAsync(string? key, string? value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
+        {
+            ConsoleHelpers.PrintError("Usage: t2i config set <provider>.<field> <value>");
+            return 1;
+        }
+
+        var parts = key.Split('.', 2);
+        if (parts.Length != 2)
+        {
+            ConsoleHelpers.PrintError("Key must be in format: <provider>.<field>");
+            return 1;
+        }
+
+        var providerId = parts[0];
+        var field = parts[1];
+
+        var config = await _configStore.LoadAsync(ct);
+
+        // Check if it's a secret field
+        var provider = _providerRegistry.Get(providerId);
+        if (provider != null && provider.RequiredSecrets.Contains(field, StringComparer.OrdinalIgnoreCase))
+        {
+            await _secretResolver.SetAsync(providerId, field, value, ct);
+            ConsoleHelpers.PrintSuccess($"Secret '{field}' set for provider '{providerId}'");
+        }
+        else
+        {
+            // Non-secret config field (endpoint, model, etc.)
+            if (!config.Providers.ContainsKey(providerId))
+            {
+                config.Providers[providerId] = new ProviderConfig();
+            }
+
+            var providerCfg = config.Providers[providerId];
+            
+            if (field.Equals("endpoint", StringComparison.OrdinalIgnoreCase))
+            {
+                providerCfg.Endpoint = value;
+            }
+            else if (field.Equals("model", StringComparison.OrdinalIgnoreCase))
+            {
+                providerCfg.Model = value;
+            }
+            else
+            {
+                providerCfg.Extras[field] = value;
+            }
+
+            await _configStore.SaveAsync(config, ct);
+            ConsoleHelpers.PrintSuccess($"Config '{field}' set for provider '{providerId}'");
+        }
+
+        return 0;
+    }
+
+    private async Task<int> RemoveAsync(string? key, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            ConsoleHelpers.PrintError("Usage: t2i config remove <provider>");
+            return 1;
+        }
+
+        var providerId = key;
+
+        if (!AnsiConsole.Confirm($"Remove all config and secrets for provider '{providerId}'?", defaultValue: false))
+        {
+            ConsoleHelpers.PrintInfo("Cancelled.");
+            return 0;
+        }
+
+        var config = await _configStore.LoadAsync(ct);
+        config.Providers.Remove(providerId);
+        await _configStore.SaveAsync(config, ct);
+
+        // Also remove secrets
+        var provider = _providerRegistry.Get(providerId);
+        if (provider != null)
+        {
+            foreach (var field in provider.RequiredSecrets)
+            {
+                await _secretResolver.DeleteAsync(providerId, field, ct);
+            }
+        }
+
+        ConsoleHelpers.PrintSuccess($"Removed config and secrets for provider '{providerId}'");
+        return 0;
+    }
+
+    private int ShowPath()
+    {
+        AnsiConsole.MarkupLineInterpolated($"[cyan]{Markup.Escape(ConfigPaths.ConfigFilePath)}[/]");
+        return 0;
+    }
+
+    private int InvalidAction(string action)
+    {
+        ConsoleHelpers.PrintError($"Unknown action: {action}");
+        AnsiConsole.MarkupLine("Valid actions: [cyan]show[/], [cyan]set[/], [cyan]remove[/], [cyan]path[/]");
+        return 1;
     }
 }
