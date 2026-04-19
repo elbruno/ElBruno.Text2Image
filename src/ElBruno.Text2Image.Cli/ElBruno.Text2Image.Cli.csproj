@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks></TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>ElBruno.Text2Image.Cli</RootNamespace>
+    <RollForward>LatestMajor</RollForward>
+
+    <!-- Tool packaging -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>t2i</ToolCommandName>
+    <PackageId>ElBruno.Text2Image.Cli</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Lightweight cross-platform CLI for AI text-to-image generation. Includes cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2). For local CPU/GPU inference, see the upcoming ElBruno.Text2Image.Cli.Full package.</Description>
+    <PackageTags>text-to-image;stable-diffusion;flux;mai;ai;image-generation;cli;dotnet-tool</PackageTags>
+    <Authors>Bruno Capuano</Authors>
+    <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Spectre.Console for TUI rendering and command parsing -->
+    <PackageReference Include="Spectre.Console" Version="0.49.1" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
+    
+    <!-- Hosting and configuration -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    
+    <!-- DPAPI for secret encryption (Windows only) -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project references — Lite edition includes cloud providers only -->
+    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj" />
+  </ItemGroup>
+
+</Project>

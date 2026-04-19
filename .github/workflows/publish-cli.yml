@@ -1,0 +1,101 @@
+name: Publish CLI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "CLI version (e.g. 0.1.0)"
+        required: true
+        type: string
+
+jobs:
+  determine-version:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'cli-')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: v
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            # cli-v0.1.0 -> 0.1.0
+            VERSION="${TAG#cli-v}"
+            VERSION="${VERSION#cli-}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "ERROR: Version '$VERSION' is not semver"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 CLI version: $VERSION"
+
+  pack-and-push-nuget:
+    needs: determine-version
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet restore src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj
+      - run: dotnet pack src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj -c Release -o artifacts -p:Version=${{ needs.determine-version.outputs.version }}
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-nupkg-${{ needs.determine-version.outputs.version }}
+          path: artifacts/*.nupkg
+
+  publish-binaries:
+    needs: determine-version
+    if: github.event_name == 'release'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64,    asset: t2i-win-x64.zip,    archive: zip }
+          - { os: ubuntu-latest,  rid: linux-x64,  asset: t2i-linux-x64.tar.gz, archive: tar }
+          - { os: macos-latest,   rid: osx-arm64,  asset: t2i-osx-arm64.tar.gz, archive: tar }
+          - { os: macos-13,       rid: osx-x64,    asset: t2i-osx-x64.tar.gz,   archive: tar }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Publish self-contained
+        run: |
+          dotnet publish src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj \
+            -c Release -r ${{ matrix.rid }} --self-contained true \
+            -p:PublishSingleFile=true -p:PublishReadyToRun=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:Version=${{ needs.determine-version.outputs.version }} \
+            -o ./publish
+      - name: Package (zip)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/t2i.exe -DestinationPath ${{ matrix.asset }}
+      - name: Package (tar.gz)
+        if: matrix.archive == 'tar'
+        run: |
+          cd publish && tar czf ../${{ matrix.asset }} t2i
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}
+          tag_name: ${{ github.event.release.tag_name }}

@@ -1,0 +1,25 @@
+PackageIdentifier: ElBruno.Text2Image
+PackageVersion: 0.1.0
+PackageName: t2i
+Publisher: Bruno Capuano
+License: MIT
+LicenseUrl: https://github.com/elbruno/ElBruno.Text2Image/blob/main/LICENSE
+ShortDescription: Cross-platform CLI for AI text-to-image generation (Foundry cloud).
+PackageUrl: https://github.com/elbruno/ElBruno.Text2Image
+Tags:
+  - ai
+  - image-generation
+  - cli
+  - dotnet
+Moniker: t2i
+InstallerType: zip
+NestedInstallerType: portable
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/elbruno/ElBruno.Text2Image/releases/download/cli-v0.1.0/t2i-win-x64.zip
+    InstallerSha256: PLACEHOLDER_FILL_AFTER_RELEASE
+    NestedInstallerFiles:
+      - RelativeFilePath: t2i.exe
+        PortableCommandAlias: t2i
+ManifestType: singleton
+ManifestVersion: 1.6.0
