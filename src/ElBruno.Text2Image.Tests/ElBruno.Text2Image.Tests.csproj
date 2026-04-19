@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj" />
     <ProjectReference Include="..\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj" />
+    <!-- CLI project is net10.0-only, so conditionally reference only for net10.0 target -->
+    <ProjectReference Include="..\ElBruno.Text2Image.Cli\ElBruno.Text2Image.Cli.csproj" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
 </Project>
