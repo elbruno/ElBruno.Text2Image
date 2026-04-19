@@ -75,6 +75,7 @@ internal sealed class DpapiSecretStore : ISecretStore
         }
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task DeleteAsync(string provider, string field, CancellationToken ct)
     {
         ThrowIfNotWindows();
@@ -99,6 +100,7 @@ internal sealed class DpapiSecretStore : ISecretStore
         }
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task<IReadOnlyList<string>> ListFieldsAsync(string provider, CancellationToken ct)
     {
         ThrowIfNotWindows();
