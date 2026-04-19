@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>ElBruno.Text2Image.Cli</RootNamespace>
+    <AssemblyName>t2i</AssemblyName>
     <RollForward>LatestMajor</RollForward>
 
     <!-- Tool packaging -->

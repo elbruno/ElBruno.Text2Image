@@ -35,31 +35,6 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "📦 CLI version: $VERSION"
 
-  pack-and-push-nuget:
-    needs: determine-version
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "10.0.x"
-      - run: dotnet restore src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj
-      - run: dotnet pack src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj -c Release -o artifacts -p:Version=${{ needs.determine-version.outputs.version }}
-      - name: NuGet login (OIDC)
-        uses: NuGet/login@v1
-        id: login
-        with:
-          user: ${{ secrets.NUGET_USER }}
-      - run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cli-nupkg-${{ needs.determine-version.outputs.version }}
-          path: artifacts/*.nupkg
-
   publish-binaries:
     needs: determine-version
     if: github.event_name == 'release'
@@ -78,6 +53,7 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - name: Publish self-contained
+        shell: bash
         run: |
           dotnet publish src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj \
             -c Release -r ${{ matrix.rid }} --self-contained true \

@@ -87,3 +87,51 @@ jobs:
         with:
           name: nupkg-${{ steps.version.outputs.version }}
           path: artifacts/*.nupkg
+
+  publish-cli:
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'cli-')
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Determine CLI version
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#cli-v}"
+          VERSION="${VERSION#cli-}"
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "ERROR: Version '$VERSION' is not semver"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 CLI version: $VERSION"
+
+      - name: Restore
+        run: dotnet restore src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj
+
+      - name: Pack
+        run: dotnet pack src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj -c Release -o artifacts -p:Version=${{ steps.version.outputs.version }}
+
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-nupkg-${{ steps.version.outputs.version }}
+          path: artifacts/*.nupkg
