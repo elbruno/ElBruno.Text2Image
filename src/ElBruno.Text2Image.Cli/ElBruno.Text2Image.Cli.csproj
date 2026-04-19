@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>ElBruno.Text2Image.Cli</RootNamespace>
+    <RollForward>LatestMajor</RollForward>
+
+    <!-- Tool packaging -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>t2i</ToolCommandName>
+    <PackageId>ElBruno.Text2Image.Cli</PackageId>
+    <Description>Cross-platform CLI for text-to-image generation using ElBruno.Text2Image. Supports local CPU/GPU inference (CUDA, DirectML) and cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2).</Description>
+    <PackageTags>text-to-image;stable-diffusion;flux;mai;ai;image-generation;cli;dotnet-tool</PackageTags>
+    <Authors>Bruno Capuano</Authors>
+    <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Spectre.Console for TUI rendering and command parsing -->
+    <PackageReference Include="Spectre.Console" Version="0.49.1" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
+    
+    <!-- Hosting and configuration -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Project references to all providers -->
+    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.Cuda\ElBruno.Text2Image.Cuda.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.DirectML\ElBruno.Text2Image.DirectML.csproj" />
+    <ProjectReference Include="..\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj" />
+  </ItemGroup>
+
+</Project>
