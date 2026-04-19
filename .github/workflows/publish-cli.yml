@@ -45,7 +45,6 @@ jobs:
           - { os: windows-latest, rid: win-x64,    asset: t2i-win-x64.zip,    archive: zip }
           - { os: ubuntu-latest,  rid: linux-x64,  asset: t2i-linux-x64.tar.gz, archive: tar }
           - { os: macos-latest,   rid: osx-arm64,  asset: t2i-osx-arm64.tar.gz, archive: tar }
-          - { os: macos-13,       rid: osx-x64,    asset: t2i-osx-x64.tar.gz,   archive: tar }
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
