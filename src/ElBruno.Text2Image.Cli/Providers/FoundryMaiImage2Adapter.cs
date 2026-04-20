@@ -105,10 +105,18 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         var width = req.Width > 0 ? req.Width : 1024;
         var height = req.Height > 0 ? req.Height : 1024;
 
+        // MAI-Image-2 requires both dimensions ≥ 768px. The CLI's generic default is
+        // 512 (suitable for SD/FLUX), so silently bump to MAI's preferred 1024 when
+        // the request is below the minimum, surfacing a note via the progress channel.
         if (width < MinDimension || height < MinDimension)
         {
-            throw new ArgumentException(
-                $"MAI-Image-2 requires both dimensions to be at least {MinDimension}px");
+            var originalWidth = width;
+            var originalHeight = height;
+            width = Math.Max(width, 1024);
+            height = Math.Max(height, 1024);
+            progress?.Report(new GenerationProgress(
+                0, 1,
+                $"Adjusted size from {originalWidth}x{originalHeight} to {width}x{height} (MAI-Image-2 minimum is {MinDimension}px)"));
         }
 
         if (width * height > MaxTotalPixels)

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.1] - 2026-04-20
+
+### Fixed
+- **MAI-Image-2 default dimensions** — `t2i "..."` with no `--width`/`--height` flags
+  no longer fails with `MAI-Image-2 requires both dimensions to be at least 768px`.
+  The CLI's generic 512px default is now silently bumped to MAI's preferred 1024px
+  when the selected provider is `foundry-mai2`, with a note shown in the progress
+  output. Users can still pass explicit dimensions ≥ 768px.
+
 ## [0.10.0] - 2025-04-20
 
 ### Added
