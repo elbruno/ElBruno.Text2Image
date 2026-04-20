@@ -2,6 +2,10 @@
 
 _Updated 2026-04-20: clarified secret-storage guidance for security, fixed v0.10.0 model configuration._
 
+![t2i CLI hero — a terminal emitting a ribbon of AI-generated imagery, generated with t2i itself using MAI-Image-2](../../images/20260420-introducing-t2i-cli-hero.png)
+
+> _This hero image was generated with `t2i` itself — see [the prompt companion doc](./20260420-introducing-t2i-cli-image-prompt.md) for the exact prompt, command, and parameters._
+
 ⚠️ _This blog post was created with the help of AI tools. Yes, I used a bit of magic from language models to organize my thoughts and automate the boring parts, but the CLI geeking and all the 🖼️ generation are 100% mine._
 
 Hi!
@@ -271,6 +275,7 @@ t2i "watercolor painting of the Madrid skyline at dusk, golden hour" --output ma
 - 📦 **NuGet:** [ElBruno.Text2Image.Cli/0.10.0](https://www.nuget.org/packages/ElBruno.Text2Image.Cli/0.10.0)
 - 📂 **Release:** [github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.10.0](https://github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.10.0)
 - 📖 **Full Docs:** [docs/cli-tool.md](https://github.com/elbruno/ElBruno.Text2Image/blob/main/docs/cli-tool.md)
+- 🖼️ **Hero image prompt:** [docs/blogs/20260420-introducing-t2i-cli-image-prompt.md](https://github.com/elbruno/ElBruno.Text2Image/blob/main/docs/blogs/20260420-introducing-t2i-cli-image-prompt.md)
 - 🐛 **Issues:** [github.com/elbruno/ElBruno.Text2Image/issues](https://github.com/elbruno/ElBruno.Text2Image/issues)
 
 Happy generating! 🖼️

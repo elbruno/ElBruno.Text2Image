@@ -1,6 +1,6 @@
 # 🖼️ MAI-Image-2 Just Dropped — And .NET Support Is Already Here
 
-![MAI-Image-2 generated sample](../mai_image2_output.png)
+![MAI-Image-2 generated sample](../../mai_image2_output.png)
 
 ⚠️ _This blog post was created with the help of AI tools. Yes, I used a bit of magic from language models to organize my thoughts and automate the boring parts, but the geeky fun and the 🖼️ in C# are 100% mine._
 

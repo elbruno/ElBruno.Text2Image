@@ -1,6 +1,6 @@
 # 🎨 Text-to-Image in .NET — From FLUX.2 Pro in the Cloud to Stable Diffusion on Your Machine
 
-![Banner generated with FLUX.2 Pro on Microsoft Foundry](../images/banner.png)
+![Banner generated with FLUX.2 Pro on Microsoft Foundry](../../images/banner.png)
 
 ⚠️ _This blog post was created with the help of AI tools. Yes, I used a bit of magic from language models to organize my thoughts and automate the boring parts, but the geeky fun and the 🎨 in C# are 100% mine._
 
@@ -96,7 +96,7 @@ await result.SaveAsync("local-output.png");
 ```
 
 <!-- TODO: Replace with actual generated image from scenario-01 -->
-![Image generated locally with Stable Diffusion 1.5](../images/scenario01_sample_output.png)
+![Image generated locally with Stable Diffusion 1.5](../../images/scenario01_sample_output.png)
 
 ### GPU acceleration
 

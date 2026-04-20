@@ -32,7 +32,7 @@
 ### Documentation
 - Added "Choosing a model" section in README with CLI examples
 - Updated library samples to show custom model parameter usage
-- Added "Switching models" section to CLI blog post (docs/20260420-introducing-t2i-cli.md)
+- Added "Switching models" section to CLI blog post (docs/blogs/20260420-introducing-t2i-cli.md)
 - Added "Using a different model" section to MAI-Image-2 setup guide
 - Added "Choosing a FLUX.2 model" section to FLUX.2 setup guide
 
