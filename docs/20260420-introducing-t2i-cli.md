@@ -136,7 +136,22 @@ t2i generate --help
 t2i init
 ```
 
----
+## 🔄 Switching Models (v0.10.0+)
+
+Both providers support multiple model variants. By default, `foundry-mai2` uses `MAI-Image-2` and `foundry-flux2` uses `FLUX.2-pro`. To switch models:
+
+```bash
+# Use MAI-Image-2e
+t2i config set foundry-mai2.model MAI-Image-2e
+
+# Use FLUX.2 Flex for text-heavy design and logos
+t2i config set foundry-flux2.model FLUX.2-flex
+
+# View your configuration
+t2i config show
+```
+
+The `config show` command displays your endpoint and model in plain text, with only the API key masked. This makes it easy to verify your setup without revealing sensitive credentials.
 
 ## 🤖 Teach Your AI Agent — `t2i init`
 
