@@ -18,7 +18,8 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
     public string Id => "foundry-flux2";
     public string DisplayName => "FLUX.2 Pro (Cloud)";
     public ProviderKind Kind => ProviderKind.Cloud;
-    public IReadOnlyList<string> RequiredSecrets => new[] { "endpoint", "apiKey" };
+    public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
+    public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
 
     public FoundryFlux2Adapter(
         IHttpClientFactory httpClientFactory,
@@ -32,14 +33,23 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
 
     public async Task<ProviderHealth> CheckAsync(CancellationToken ct)
     {
-        var endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        var config = await _configStore.LoadAsync(ct);
+        var providerCfg = config.Providers.GetValueOrDefault(Id);
+        
+        // Check endpoint from config first, fallback to secrets for backward compat
+        var endpoint = providerCfg?.Endpoint;
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        }
+
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);
 
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
         {
             return new ProviderHealth(
                 Ok: false,
-                Reason: "Missing endpoint/apiKey — run: t2i secrets set foundry-flux2");
+                Reason: "Missing endpoint/apiKey — run: t2i config");
         }
 
         try
@@ -67,13 +77,26 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
         IProgress<GenerationProgress>? progress,
         CancellationToken ct)
     {
-        var endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        var config = await _configStore.LoadAsync(ct);
+        var providerCfg = config.Providers.GetValueOrDefault(Id);
+        
+        // Read endpoint from config first, fallback to secrets for backward compat
+        var endpoint = providerCfg?.Endpoint;
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        }
+        
+        // Read model from config, fallback to default
+        var modelName = providerCfg?.Model ?? "FLUX.2-pro";
+        var modelId = modelName;
+        
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);
 
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "Missing endpoint/apiKey — run: t2i secrets set foundry-flux2");
+                "Missing endpoint/apiKey — run: t2i config");
         }
 
         var sw = Stopwatch.StartNew();
@@ -82,8 +105,8 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
         using var generator = new Flux2Generator(
             endpoint,
             apiKey,
-            modelName: "FLUX.2-pro",
-            modelId: "FLUX.2-pro",
+            modelName: modelName,
+            modelId: modelId,
             httpClient: httpClient);
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
@@ -105,7 +128,7 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
             ActualHeight: result.Height,
             Metadata: new Dictionary<string, string>
             {
-                ["model"] = "FLUX.2-pro",
+                ["model"] = modelName,
                 ["provider"] = "foundry-flux2",
                 ["endpoint"] = endpoint
             });

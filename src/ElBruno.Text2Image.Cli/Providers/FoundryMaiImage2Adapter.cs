@@ -21,7 +21,8 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
     public string Id => "foundry-mai2";
     public string DisplayName => "MAI-Image-2 (Cloud)";
     public ProviderKind Kind => ProviderKind.Cloud;
-    public IReadOnlyList<string> RequiredSecrets => new[] { "endpoint", "apiKey" };
+    public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
+    public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
 
     public FoundryMaiImage2Adapter(
         IHttpClientFactory httpClientFactory,
@@ -35,14 +36,23 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
 
     public async Task<ProviderHealth> CheckAsync(CancellationToken ct)
     {
-        var endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        var config = await _configStore.LoadAsync(ct);
+        var providerCfg = config.Providers.GetValueOrDefault(Id);
+        
+        // Check endpoint from config first, fallback to secrets for backward compat
+        var endpoint = providerCfg?.Endpoint;
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        }
+
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);
 
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
         {
             return new ProviderHealth(
                 Ok: false,
-                Reason: "Missing endpoint/apiKey — run: t2i secrets set foundry-mai2");
+                Reason: "Missing endpoint/apiKey — run: t2i config");
         }
 
         try
@@ -70,13 +80,26 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         IProgress<GenerationProgress>? progress,
         CancellationToken ct)
     {
-        var endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        var config = await _configStore.LoadAsync(ct);
+        var providerCfg = config.Providers.GetValueOrDefault(Id);
+        
+        // Read endpoint from config first, fallback to secrets for backward compat
+        var endpoint = providerCfg?.Endpoint;
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);
+        }
+        
+        // Read model from config, fallback to default
+        var modelName = providerCfg?.Model ?? "MAI-Image-2";
+        var modelId = modelName;  // For MAI, deployment name matches model name
+        
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);
 
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "Missing endpoint/apiKey — run: t2i secrets set foundry-mai2");
+                "Missing endpoint/apiKey — run: t2i config");
         }
 
         var width = req.Width > 0 ? req.Width : 1024;
@@ -100,8 +123,8 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         using var generator = new MaiImage2Generator(
             endpoint,
             apiKey,
-            modelName: "MAI-Image-2",
-            modelId: "mai-image-2",
+            modelName: modelName,
+            modelId: modelId,
             httpClient: httpClient);
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
@@ -122,7 +145,7 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
             ActualHeight: result.Height,
             Metadata: new Dictionary<string, string>
             {
-                ["model"] = "MAI-Image-2",
+                ["model"] = modelName,
                 ["provider"] = "foundry-mai2",
                 ["endpoint"] = endpoint
             });

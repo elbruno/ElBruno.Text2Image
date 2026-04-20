@@ -422,6 +422,42 @@ public class MaiImage2GeneratorModelDefaultsTests
 }
 
 // ============================================================
+// HTTP body — model name flows through
+// ============================================================
+
+public class MaiImage2GeneratorModelHttpTests
+{
+    [Fact]
+    public async Task GenerateAsync_CustomModelMAIImage2e_AppearsInRequestBody()
+    {
+        var handler = new FakeHttpHandler(_ => MaiImage2FakeResponses.CreateMaiImage2SuccessResponse());
+        using var httpClient = new HttpClient(handler);
+        using var generator = new MaiImage2Generator(
+            "https://example.services.ai.azure.com", "test-key",
+            modelId: "MAI-Image-2e", httpClient: httpClient);
+
+        await generator.GenerateAsync("test prompt");
+
+        var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        Assert.Equal("MAI-Image-2e", doc.RootElement.GetProperty("model").GetString());
+    }
+
+    [Fact]
+    public async Task GenerateAsync_DefaultModel_AppearsInRequestBody()
+    {
+        var handler = new FakeHttpHandler(_ => MaiImage2FakeResponses.CreateMaiImage2SuccessResponse());
+        using var httpClient = new HttpClient(handler);
+        using var generator = new MaiImage2Generator(
+            "https://example.services.ai.azure.com", "test-key", httpClient: httpClient);
+
+        await generator.GenerateAsync("test prompt");
+
+        var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        Assert.Equal("mai-image-2", doc.RootElement.GetProperty("model").GetString());
+    }
+}
+
+// ============================================================
 // JSON serialization of internal request type
 // ============================================================
 

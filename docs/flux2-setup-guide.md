@@ -302,6 +302,41 @@ IImageGenerator generator = new Flux2Generator(endpoint, apiKey);
 var result = await generator.GenerateAsync("a beautiful landscape");
 ```
 
+## Choosing a FLUX.2 Model
+
+FLUX.2 has multiple variants optimized for different workflows. By default, the CLI and library use `FLUX.2-pro` for photorealistic output. To use a different variant:
+
+### Via CLI (t2i)
+
+```bash
+# Use FLUX.2 Flex for text-heavy design and UI prototyping
+t2i config set foundry-flux2.model FLUX.2-flex
+
+# Verify your configuration
+t2i config show
+
+# Generate using the new model
+t2i "a product landing page mockup with text 'Hero Section'"
+```
+
+### In Your Application
+
+```csharp
+// FLUX.2 Flex — best for text-heavy design, logos, UI prototyping
+using var flexGenerator = new Flux2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelName: "FLUX.2 Flex",
+    modelId: "FLUX.2-flex");
+
+var result = await flexGenerator.GenerateAsync("a brand logo with the text 'TechCorp'");
+await result.SaveAsync("logo.png");
+```
+
+**Model variants:**
+- `FLUX.2-pro` (default) — Photorealistic, cinematic-quality image generation
+- `FLUX.2-flex` — Text-heavy design, logos, UI prototyping with excellent typography
+
 ## Pricing
 
 FLUX.2 on Microsoft Foundry is a pay-per-use service. Pricing depends on:

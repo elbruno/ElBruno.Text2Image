@@ -51,20 +51,56 @@ internal static class SetupWizard
                         .Secret('*')
                         .Validate(s => !string.IsNullOrWhiteSpace(s), $"{field} cannot be empty"));
 
-                // Validate URL if field is "endpoint"
-                if (field.Equals("endpoint", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != "https")
-                    {
-                        ConsoleHelpers.PrintError("Endpoint must be a valid HTTPS URL.");
-                        return null;
-                    }
-                }
-
                 await secretResolver.SetAsync(selectedProviderId, field, value, ct);
             }
+        }
 
-            // Step 3: Test connection
+        // Step 3: If cloud provider, configure required fields
+        if (selectedProvider.Kind == ProviderKind.Cloud && selectedProvider.RequiredFields.Count > 0)
+        {
+            var config = await configStore.LoadAsync(ct);
+            if (!config.Providers.ContainsKey(selectedProviderId))
+            {
+                config.Providers[selectedProviderId] = new ProviderConfig();
+            }
+            var providerCfg = config.Providers[selectedProviderId];
+
+            foreach (var field in selectedProvider.RequiredFields)
+            {
+                if (field.Equals("endpoint", StringComparison.OrdinalIgnoreCase))
+                {
+                    var defaultEndpoint = "https://<your-resource>.services.ai.azure.com";
+                    var endpoint = AnsiConsole.Prompt(
+                        new TextPrompt<string>($"  Endpoint (default: {defaultEndpoint}):")
+                            .AllowEmpty()
+                            .Validate(s => string.IsNullOrWhiteSpace(s) || Uri.TryCreate(s, UriKind.Absolute, out _), 
+                                     "Endpoint must be a valid URL"));
+
+                    providerCfg.Endpoint = string.IsNullOrWhiteSpace(endpoint) ? defaultEndpoint : endpoint;
+                }
+                else if (field.Equals("model", StringComparison.OrdinalIgnoreCase))
+                {
+                    var defaultModel = selectedProviderId switch
+                    {
+                        "foundry-mai2" => "MAI-Image-2",
+                        "foundry-flux2" => "FLUX.2-pro",
+                        _ => ""
+                    };
+
+                    var model = AnsiConsole.Prompt(
+                        new TextPrompt<string>($"  Model name (default: {defaultModel}):")
+                            .AllowEmpty());
+
+                    providerCfg.Model = string.IsNullOrWhiteSpace(model) ? defaultModel : model;
+                }
+            }
+
+            await configStore.SaveAsync(config, ct);
+        }
+
+        // Step 4: Test connection
+        if (selectedProvider.Kind == ProviderKind.Cloud)
+        {
             if (AnsiConsole.Confirm("\n[bold]Test connection?[/]", defaultValue: true))
             {
                 await AnsiConsole.Status()
@@ -84,7 +120,7 @@ internal static class SetupWizard
             }
         }
 
-        // Step 4: Set as default
+        // Step 5: Set as default
         var setDefault = AnsiConsole.Confirm("\n[bold]Set as default provider?[/]", defaultValue: true);
         if (setDefault)
         {

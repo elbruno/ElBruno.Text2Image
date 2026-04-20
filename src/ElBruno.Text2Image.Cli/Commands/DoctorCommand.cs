@@ -89,39 +89,67 @@ internal sealed class DoctorCommand : AsyncCommand
         AnsiConsole.Write(configPanel);
         AnsiConsole.WriteLine();
 
-        // 4. Secrets
-        AnsiConsole.MarkupLine("[bold]Secrets[/]");
-        var secretsTable = new Table().Border(TableBorder.Rounded);
-        secretsTable.AddColumn("Provider");
-        secretsTable.AddColumn("Field");
-        secretsTable.AddColumn("Status");
+        // 4. Secrets and Fields
+        AnsiConsole.MarkupLine("[bold]Configuration Status[/]");
+        var configTable = new Table().Border(TableBorder.Rounded);
+        configTable.AddColumn("Provider");
+        configTable.AddColumn("Field");
+        configTable.AddColumn("Type");
+        configTable.AddColumn("Status");
 
-        var hasSecrets = false;
+        var hasConfigItems = false;
+        
+        // Check RequiredFields
+        var currentConfig = await _configStore.LoadAsync(ct);
+        foreach (var provider in _providerRegistry.All.Where(p => p.RequiredFields.Count > 0))
+        {
+            var providerCfg = currentConfig.Providers.GetValueOrDefault(provider.Id);
+            foreach (var field in provider.RequiredFields)
+            {
+                hasConfigItems = true;
+                var value = field.Equals("endpoint", StringComparison.OrdinalIgnoreCase) ? providerCfg?.Endpoint
+                          : field.Equals("model", StringComparison.OrdinalIgnoreCase) ? providerCfg?.Model
+                          : null;
+                var status = value != null ? "[green]✓ Configured[/]" : "[red]✗ Missing[/]";
+                
+                if (value == null)
+                    allGreen = false;
+
+                configTable.AddRow(
+                    Markup.Escape(provider.Id),
+                    Markup.Escape(field),
+                    "config",
+                    status);
+            }
+        }
+        
+        // Check RequiredSecrets
         foreach (var provider in _providerRegistry.All.Where(p => p.RequiredSecrets.Count > 0))
         {
             foreach (var field in provider.RequiredSecrets)
             {
-                hasSecrets = true;
+                hasConfigItems = true;
                 var value = await _secretResolver.ResolveAsync(provider.Id, field, null, ct);
                 var status = value != null ? "[green]✓ Configured[/]" : "[red]✗ Missing[/]";
                 
                 if (value == null)
                     allGreen = false;
 
-                secretsTable.AddRow(
+                configTable.AddRow(
                     Markup.Escape(provider.Id),
                     Markup.Escape(field),
+                    "secret",
                     status);
             }
         }
 
-        if (hasSecrets)
+        if (hasConfigItems)
         {
-            AnsiConsole.Write(secretsTable);
+            AnsiConsole.Write(configTable);
         }
         else
         {
-            ConsoleHelpers.PrintInfo("No cloud providers require secrets.");
+            ConsoleHelpers.PrintInfo("No cloud providers require configuration.");
         }
 
         AnsiConsole.WriteLine();

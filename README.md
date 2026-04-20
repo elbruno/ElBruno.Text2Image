@@ -28,6 +28,12 @@ Install the cross-platform CLI:
 dotnet tool install --global ElBruno.Text2Image.Cli
 ```
 
+Update to the latest version:
+
+```bash
+dotnet tool update --global ElBruno.Text2Image.Cli
+```
+
 Then:
 
 ```bash
@@ -36,6 +42,25 @@ t2i "a robot painting a landscape"  # generate
 ```
 
 See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
+
+### Choosing a Model
+
+By default, the CLI uses `MAI-Image-2` for the `foundry-mai2` provider and `FLUX.2-pro` for the `foundry-flux2` provider. To use a different model variant, configure it:
+
+```bash
+# Use MAI-Image-2e variant
+t2i config set foundry-mai2.model MAI-Image-2e
+
+# Use FLUX.2 Flex for text-heavy design
+t2i config set foundry-flux2.model FLUX.2-flex
+
+# View your configuration (endpoint and model shown, apiKey masked)
+t2i config show
+```
+
+**Defaults:**
+- `foundry-mai2`: `MAI-Image-2`
+- `foundry-flux2`: `FLUX.2-pro`
 
 ## Features
 
@@ -107,6 +132,10 @@ using var generator = new Flux2Generator(
 // Generate an image — same interface as local models
 var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
 await result.SaveAsync("flux2-output.png");
+
+// Or use FLUX.2 Flex for text-heavy design:
+using var flexGenerator = new Flux2Generator(endpoint, apiKey,
+    modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
 ```
 
 ### Basic Usage — Cloud (MAI-Image-2)
@@ -116,6 +145,7 @@ using ElBruno.Text2Image;
 using ElBruno.Text2Image.Foundry;
 
 // Create an MAI-Image-2 generator using Microsoft Foundry
+// Default model is MAI-Image-2
 using var generator = new MaiImage2Generator(
     endpoint: "https://your-resource.services.ai.azure.com",
     apiKey: "your-api-key",
@@ -124,6 +154,10 @@ using var generator = new MaiImage2Generator(
 
 var result = await generator.GenerateAsync("a futuristic cityscape with neon lights, cyberpunk style");
 await result.SaveAsync("mai-image2-output.png");
+
+// Or use MAI-Image-2e for alternative model:
+using var maiE = new MaiImage2Generator(endpoint, apiKey,
+    modelName: "MAI-Image-2e", modelId: "MAI-Image-2e");
 ```
 
 ### With Custom Options

@@ -247,6 +247,37 @@ The `MaiImage2Generator` sends HTTP POST requests to the Microsoft Foundry endpo
 
 > 💡 **Note:** Unlike FLUX.2, MAI-Image-2 uses a **synchronous API** — the response contains the generated image directly, with no 202 polling required.
 
+## Using a Different Model
+
+MAI-Image-2 has variants like `MAI-Image-2e`. You can configure which model to use:
+
+### In Your Application
+
+```csharp
+// Use MAI-Image-2e instead of the default MAI-Image-2
+using var generator = new MaiImage2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelName: "MAI-Image-2e",
+    modelId: "MAI-Image-2e");
+
+var result = await generator.GenerateAsync("a detailed architectural rendering");
+await result.SaveAsync("output.png");
+```
+
+### Via CLI (t2i)
+
+```bash
+# Set the model for the MAI provider
+t2i config set foundry-mai2.model MAI-Image-2e
+
+# Verify the configuration
+t2i config show
+
+# Generate with the new model
+t2i "an architectural rendering with fine details"
+```
+
 ## Same Interface as Local Models
 
 `MaiImage2Generator` implements the same `IImageGenerator` interface as `StableDiffusion15`, `LcmDreamshaperV7`, and `Flux2Generator`. This means you can swap between local and cloud models without changing your application code:
