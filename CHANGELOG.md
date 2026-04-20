@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.2] - 2026-04-20
+
+### Fixed
+- **`-h` short option collision** — `t2i -h` now correctly shows help instead of
+  failing with `Option 'height' is defined but no value has been provided`. The
+  `--height` option no longer registers `-h` as a short alias (it conflicted with
+  the built-in `-h, --help`). `--width` still accepts `-w`; height must be passed
+  via the long form `--height <pixels>`.
+
 ## [0.10.1] - 2026-04-20
 
 ### Fixed
