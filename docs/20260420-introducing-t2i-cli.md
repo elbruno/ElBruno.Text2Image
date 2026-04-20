@@ -64,7 +64,7 @@ The CLI stores credentials across multiple secure backends. Here's the resolutio
 
 **Windows: DPAPI Encryption** ✅ Recommended
 
-Secrets stored at `%APPDATA%\t2i\secrets.dpapi` are encrypted using Windows Data Protection API and keyed to your Windows login. Only your user can decrypt them — no shell history leakage, no accidental dotfile commits.
+Secrets stored at `%LOCALAPPDATA%\t2i\secrets.dpapi` are encrypted using Windows Data Protection API and keyed to your Windows login. Only your user can decrypt them — no shell history leakage, no accidental dotfile commits.
 
 ```bash
 t2i config    # Interactive setup — credentials stored encrypted
@@ -114,7 +114,7 @@ t2i "your prompt" --api-key "key-here"
 The CLI checks in this order:
 1. CLI flag (`--api-key`) — highest priority, ephemeral
 2. Environment variable (`T2I_FOUNDRY_FLUX2_APIKEY`)
-3. DPAPI store (Windows: `%APPDATA%\t2i\secrets.dpapi`)
+3. DPAPI store (Windows: `%LOCALAPPDATA%\t2i\secrets.dpapi`)
 4. Plaintext file (Unix: `~/.config/t2i/secrets.json`)
 5. Not found
 
