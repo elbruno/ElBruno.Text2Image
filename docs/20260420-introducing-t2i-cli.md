@@ -1,5 +1,7 @@
 # 🚀 Meet t2i — The ElBruno.Text2Image CLI
 
+_Updated 2026-04-20: clarified secret-storage guidance for security, fixed v0.10.0 model configuration._
+
 ⚠️ _This blog post was created with the help of AI tools. Yes, I used a bit of magic from language models to organize my thoughts and automate the boring parts, but the CLI geeking and all the 🖼️ generation are 100% mine._
 
 Hi!
@@ -24,7 +26,7 @@ Then use `t2i` from anywhere on your machine.
 
 ### Option 2: Self-Contained Binaries
 
-No .NET? Download pre-built binaries from the [release page](https://github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.1.0). Currently available for:
+No .NET? Download pre-built binaries from the [release page](https://github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.10.0). Currently available for:
 
 - **Windows x64**
 - **Linux x64**
@@ -56,32 +58,74 @@ That's it. The image appears in your current directory.
 
 ## 🔐 Where Do My Secrets Live?
 
-The CLI stores credentials in three layers (in priority order):
+The CLI stores credentials across multiple secure backends. Here's the resolution chain (highest priority first), plus guidance on which to use:
 
-### 1. **Environment Variables** — Best for CI/CD
+### 1. **Local Development** — OS-Native Encrypted Storage (DPAPI/File)
+
+**Windows: DPAPI Encryption** ✅ Recommended
+
+Secrets stored at `%APPDATA%\t2i\secrets.dpapi` are encrypted using Windows Data Protection API and keyed to your Windows login. Only your user can decrypt them — no shell history leakage, no accidental dotfile commits.
 
 ```bash
-export T2I_FOUNDRY_FLUX2_API_KEY="your-key-here"
+t2i config    # Interactive setup — credentials stored encrypted
 t2i "your prompt"
 ```
 
-Perfect for GitHub Actions, Azure Pipelines, or containerized environments.
+**macOS/Linux: File with Restricted Permissions** ✅ Recommended
 
-### 2. **Windows DPAPI** — Encrypted on Windows
+Secrets live in `~/.config/t2i/secrets.json` with Unix `0600` permissions (readable only by you). No encryption, but OS-level access control prevents shell history and sibling process leakage.
 
-Secrets stored at `%LOCALAPPDATA%\t2i\secrets.dpapi` are encrypted using Windows Data Protection API. Only your user can decrypt them. Secure and convenient.
+```bash
+t2i config    # Interactive setup — credentials stored with 0600 permissions
+t2i "your prompt"
+```
 
-### 3. **Plaintext File Fallback** — Cross-Platform
+### 2. **CI/CD Pipelines** — Environment Variables (With Caution)
 
-On macOS and Linux, secrets live in `~/.t2i/secrets.json` with `0600` permissions (readable only by you). No encryption, but restricted access.
+Environment variables are appropriate **only** for ephemeral, isolated environments:
 
-### 4. **CLI Override** — One-Off Tests
+```bash
+export T2I_FOUNDRY_FLUX2_APIKEY="your-key-here"
+t2i "your prompt"
+```
+
+⚠️ **Environment Variable Security Risks (Local Development):**
+- Process visibility: Shell history captures env var assignments (`~/.bash_history`, PowerShell logs)
+- Process tree leakage: Child processes inherit all env vars; developers inherit vars from build tools, CI runners, etc.
+- Accidental exposure: Debug output (`env`, `printenv`, `set`) reveals all environment variables
+- Dotfile commits: Developers often add env vars to `.bashrc`, `.zshrc`, `.profile` — then accidentally commit to personal dotfiles repos
+- **DO NOT use env vars for local development.** Use the OS-native storage above instead.
+
+✅ **When env vars ARE appropriate:**
+- GitHub Actions / Azure Pipelines: Secrets injected from vault, process lifetime is ephemeral (minutes), environment is isolated (container, fresh VM)
+- Docker: Use orchestrator secret injection (Docker secrets, Kubernetes), NOT `ENV` directives in Dockerfile
+- Server/container deployments: 12-factor app pattern, dedicated service account, no interactive shell
+
+### 3. **CLI Override** — For One-Off Tests Only
 
 ```bash
 t2i "your prompt" --api-key "key-here"
 ```
 
-Handy for quick testing without touching stored credentials.
+⚠️ Secrets passed via CLI flags appear in your shell history. Only use for quick testing; prefer stored config for regular use.
+
+### 4. **How Resolution Works**
+
+The CLI checks in this order:
+1. CLI flag (`--api-key`) — highest priority, ephemeral
+2. Environment variable (`T2I_FOUNDRY_FLUX2_APIKEY`)
+3. DPAPI store (Windows: `%APPDATA%\t2i\secrets.dpapi`)
+4. Plaintext file (Unix: `~/.config/t2i/secrets.json`)
+5. Not found
+
+### 5. **Security Best Practices**
+
+| Do ✅ | Don't ❌ |
+|------|---------|
+| Use `t2i config` for local setup (stores encrypted/restricted) | Add `export T2I_*=...` to `.bashrc` or `.zshrc` — commits to dotfiles repo |
+| Use env vars in CI/CD from a vault (GitHub Secrets, Azure Key Vault) | Use `ENV` directives in Dockerfiles — secrets baked into image layers |
+| Use `--api-key` for one-time testing | Leave API keys in shell history or error logs |
+| Rotate API keys regularly | Share credentials via chat, email, or code comments |
 
 ---
 
@@ -184,7 +228,7 @@ The canonical version of this skill also lives in this repo at `.github/skills/t
 
 ### winget
 
-The manifest stub is already in the repo (`winget/manifests/E/ElBruno/Text2Image/0.1.0/`). First submission to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) is queued. Automation will come in v0.2.0.
+The manifest stub is already in the repo (`winget/manifests/E/ElBruno/Text2Image/0.10.0/`). First submission to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) is queued. Automation will come in v0.2.0.
 
 ### Homebrew
 
@@ -224,8 +268,8 @@ t2i "watercolor painting of the Madrid skyline at dusk, golden hour" --output ma
 
 **Links:**
 
-- 📦 **NuGet:** [ElBruno.Text2Image.Cli/0.1.0](https://www.nuget.org/packages/ElBruno.Text2Image.Cli/0.1.0)
-- 📂 **Release:** [github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.1.0](https://github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.1.0)
+- 📦 **NuGet:** [ElBruno.Text2Image.Cli/0.10.0](https://www.nuget.org/packages/ElBruno.Text2Image.Cli/0.10.0)
+- 📂 **Release:** [github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.10.0](https://github.com/elbruno/ElBruno.Text2Image/releases/tag/cli-v0.10.0)
 - 📖 **Full Docs:** [docs/cli-tool.md](https://github.com/elbruno/ElBruno.Text2Image/blob/main/docs/cli-tool.md)
 - 🐛 **Issues:** [github.com/elbruno/ElBruno.Text2Image/issues](https://github.com/elbruno/ElBruno.Text2Image/issues)
 
