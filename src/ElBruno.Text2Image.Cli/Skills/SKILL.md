@@ -1,3 +1,8 @@
+---
+name: t2i
+description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry providers (FLUX.2, MAI-Image-2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+---
+
 # t2i — Text-to-Image CLI Skill
 
 This skill teaches AI agents (GitHub Copilot, Claude Code, and MCP-aware assistants) how to use the **t2i** command-line tool for image generation. Learn the commands, workflows, and best practices for automating text-to-image tasks in scripts and terminal environments.
