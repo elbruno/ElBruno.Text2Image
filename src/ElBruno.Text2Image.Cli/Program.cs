@@ -50,6 +50,13 @@ app.Configure(config =>
     config.AddCommand<VersionCommand>("version")
         .WithDescription("Display version information")
         .WithExample(new[] { "version" });
+
+    // Init command
+    config.AddCommand<InitCommand>("init")
+        .WithDescription("Initialize the current folder with a t2i skill file for AI coding agents")
+        .WithExample(new[] { "init" })
+        .WithExample(new[] { "init", "--target", "github" })
+        .WithExample(new[] { "init", "--force" });
 });
 
 return await app.RunAsync(args);

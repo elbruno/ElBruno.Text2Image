@@ -131,7 +131,37 @@ t2i "my prompt" \
 # Show help
 t2i --help
 t2i generate --help
+
+# Teach your AI agent
+t2i init
 ```
+
+---
+
+## 🤖 Teach Your AI Agent — `t2i init`
+
+Inspired by [Aspire's agent init pattern](https://aspire.dev/get-started/ai-coding-agents/), t2i now ships with a skill file your AI coding agent can read. Run this in any repo:
+
+```bash
+t2i init
+```
+
+That writes a `SKILL.md` to both `.github/skills/t2i/` and `.claude/skills/t2i/`. From that point on, GitHub Copilot, Claude Code, and any MCP-aware agent know:
+
+- Which `t2i` commands exist and when to use each one
+- How to set up secrets safely (env vars first, never commit keys)
+- The full provider list and which one to default to
+- Common workflows: first-time setup, single image, batch loops
+
+Want only one target?
+
+```bash
+t2i init --target github   # only .github/skills/t2i/
+t2i init --target claude   # only .claude/skills/t2i/
+t2i init --force           # overwrite existing skill files
+```
+
+The canonical version of this skill also lives in this repo at `.github/skills/t2i/SKILL.md` — that means if you open the ElBruno.Text2Image source itself in Copilot or Claude Code, your agent already knows how to drive the CLI.
 
 ---
 

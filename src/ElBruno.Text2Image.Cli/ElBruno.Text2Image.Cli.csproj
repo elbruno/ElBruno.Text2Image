@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Skills\SKILL.md" LogicalName="ElBruno.Text2Image.Cli.Skills.SKILL.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Spectre.Console for TUI rendering and command parsing -->
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
