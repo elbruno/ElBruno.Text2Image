@@ -755,3 +755,39 @@ public class Flux2GeneratorReferenceImagesTests
         Assert.Equal("test prompt", result.Prompt);
     }
 }
+
+// ============================================================
+// HTTP body — model name flows through
+// ============================================================
+
+public class Flux2GeneratorModelHttpTests
+{
+    [Fact]
+    public async Task GenerateAsync_CustomModelFLUX2Flex_AppearsInRequestBody()
+    {
+        var handler = new FakeHttpHandler(_ => FakeHttpHandler.CreateSuccessResponse());
+        using var httpClient = new HttpClient(handler);
+        using var generator = new Flux2Generator(
+            "https://example.com/api", "test-key",
+            modelId: "FLUX.2-flex", httpClient: httpClient);
+
+        await generator.GenerateAsync("test prompt");
+
+        var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        Assert.Equal("FLUX.2-flex", doc.RootElement.GetProperty("model").GetString());
+    }
+
+    [Fact]
+    public async Task GenerateAsync_DefaultModel_AppearsInRequestBody()
+    {
+        var handler = new FakeHttpHandler(_ => FakeHttpHandler.CreateSuccessResponse());
+        using var httpClient = new HttpClient(handler);
+        using var generator = new Flux2Generator(
+            "https://example.com/api", "test-key", httpClient: httpClient);
+
+        await generator.GenerateAsync("test prompt");
+
+        var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        Assert.Equal("FLUX.2-pro", doc.RootElement.GetProperty("model").GetString());
+    }
+}

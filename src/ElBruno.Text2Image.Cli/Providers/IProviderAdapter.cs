@@ -22,10 +22,16 @@ public interface IProviderAdapter
     ProviderKind Kind { get; }
 
     /// <summary>
-    /// List of required secret field names (e.g., ["endpoint", "apiKey"]).
+    /// List of required secret field names (e.g., ["apiKey"]).
     /// Empty for local providers.
     /// </summary>
     IReadOnlyList<string> RequiredSecrets { get; }
+
+    /// <summary>
+    /// List of required config field names (e.g., ["endpoint", "model"]).
+    /// Empty for local providers. Default implementation returns empty array.
+    /// </summary>
+    IReadOnlyList<string> RequiredFields => Array.Empty<string>();
 
     /// <summary>
     /// Checks if the provider is ready to use (e.g., GPU available, API reachable).

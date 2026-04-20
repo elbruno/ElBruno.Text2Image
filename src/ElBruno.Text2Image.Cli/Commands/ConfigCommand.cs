@@ -93,6 +93,23 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
             }
         }
 
+        // Required fields (not in config) — show as "[grey](not set)[/]"
+        foreach (var provider in _providerRegistry.All)
+        {
+            var providerCfg = config.Providers.GetValueOrDefault(provider.Id);
+            foreach (var field in provider.RequiredFields)
+            {
+                var hasValue = field.Equals("endpoint", StringComparison.OrdinalIgnoreCase) ? providerCfg?.Endpoint != null
+                             : field.Equals("model", StringComparison.OrdinalIgnoreCase) ? providerCfg?.Model != null
+                             : false;
+                
+                if (!hasValue)
+                {
+                    table.AddRow(Markup.Escape(provider.Id), Markup.Escape(field), "config", "[grey](not set)[/]");
+                }
+            }
+        }
+
         // Secrets (using InspectAsync)
         foreach (var provider in _providerRegistry.All)
         {
@@ -103,6 +120,10 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
                 {
                     var masked = ConsoleHelpers.Mask(value);
                     table.AddRow(Markup.Escape(provider.Id), Markup.Escape(field), "secret", Markup.Escape(masked));
+                }
+                else
+                {
+                    table.AddRow(Markup.Escape(provider.Id), Markup.Escape(field), "secret", "[grey](not set)[/]");
                 }
             }
         }
@@ -138,9 +159,31 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
             await _secretResolver.SetAsync(providerId, field, value, ct);
             ConsoleHelpers.PrintSuccess($"Secret '{field}' set for provider '{providerId}'");
         }
+        else if (provider != null && provider.RequiredFields.Contains(field, StringComparer.OrdinalIgnoreCase))
+        {
+            // RequiredFields (endpoint, model) go to ProviderConfig
+            if (!config.Providers.ContainsKey(providerId))
+            {
+                config.Providers[providerId] = new ProviderConfig();
+            }
+
+            var providerCfg = config.Providers[providerId];
+            
+            if (field.Equals("endpoint", StringComparison.OrdinalIgnoreCase))
+            {
+                providerCfg.Endpoint = value;
+            }
+            else if (field.Equals("model", StringComparison.OrdinalIgnoreCase))
+            {
+                providerCfg.Model = value;
+            }
+
+            await _configStore.SaveAsync(config, ct);
+            ConsoleHelpers.PrintSuccess($"Config '{field}' set for provider '{providerId}'");
+        }
         else
         {
-            // Non-secret config field (endpoint, model, etc.)
+            // Non-secret, non-required config field (endpoint, model, etc.)
             if (!config.Providers.ContainsKey(providerId))
             {
                 config.Providers[providerId] = new ProviderConfig();
