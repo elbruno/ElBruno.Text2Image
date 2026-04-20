@@ -45,7 +45,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         [DefaultValue(512)]
         public int Width { get; init; } = 512;
 
-        [CommandOption("--height|-h")]
+        [CommandOption("--height")]
         [Description("Image height in pixels (default: 512)")]
         [DefaultValue(512)]
         public int Height { get; init; } = 512;

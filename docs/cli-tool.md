@@ -104,7 +104,7 @@ t2i "<prompt>" [options]
 | `--provider` | Provider ID (cpu, cuda, directml, foundry-flux2, foundry-mai2) | Config default |
 | `--out`, `-o` | Output file path | `output.png` |
 | `--width`, `-w` | Image width in pixels | 512 (local), 1024 (cloud) |
-| `--height`, `-h` | Image height in pixels | 512 (local), 1024 (cloud) |
+| `--height` | Image height in pixels | 512 (local), 1024 (cloud) |
 | `--steps`, `-s` | Inference steps (local only) | 20 |
 | `--endpoint` | Cloud endpoint URL (override config) | From config |
 | `--api-key` | Cloud API key (override secrets) | From secrets |
