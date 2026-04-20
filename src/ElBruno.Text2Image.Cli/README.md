@@ -93,6 +93,14 @@ Run diagnostics:
 t2i doctor
 ```
 
+Initialize AI agent skill file:
+
+```bash
+t2i init
+```
+
+This creates `.github/skills/t2i/SKILL.md` and `.claude/skills/t2i/SKILL.md` in your repository so AI coding agents (GitHub Copilot, Claude Code) automatically know how to use the t2i CLI.
+
 ## Documentation
 
 Full documentation: [docs/cli-tool.md](https://github.com/elbruno/ElBruno.Text2Image/blob/main/docs/cli-tool.md)
