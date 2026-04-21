@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
   </ItemGroup>
 
