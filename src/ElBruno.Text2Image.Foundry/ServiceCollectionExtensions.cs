@@ -53,4 +53,27 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IImageGenerator>(new MaiImage2Generator(endpoint, apiKey, modelName, modelId));
         return services;
     }
+
+    /// <summary>
+    /// Adds a GPT-Image-1.5 cloud API image generator to the service collection.
+    /// Requires an Azure OpenAI deployment endpoint and API key.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="endpoint">The Azure OpenAI endpoint URL (e.g., "https://your-resource.openai.azure.com/").</param>
+    /// <param name="apiKey">The API key for authentication.</param>
+    /// <param name="modelName">Optional display name (e.g., "GPT-Image-1.5"). Defaults to "GPT-Image-1.5".</param>
+    /// <param name="deploymentName">
+    /// The deployment name on Azure OpenAI (e.g., "gpt-image-1.5", "dalle-3-prod").
+    /// Defaults to "gpt-image-1.5".
+    /// </param>
+    public static IServiceCollection AddGptImage1p5Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? deploymentName = null)
+    {
+        services.AddSingleton<IImageGenerator>(new GptImage1p5Generator(endpoint, apiKey, modelName, deploymentName));
+        return services;
+    }
 }

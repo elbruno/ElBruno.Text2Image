@@ -160,6 +160,28 @@ using var maiE = new MaiImage2Generator(endpoint, apiKey,
     modelName: "MAI-Image-2e", modelId: "MAI-Image-2e");
 ```
 
+### Basic Usage — Cloud (GPT-Image-1.5 via Azure OpenAI)
+
+```csharp
+using ElBruno.Text2Image;
+using ElBruno.Text2Image.Foundry;
+
+// Create a GPT-Image-1.5 (DALL-E 3) generator using Azure OpenAI
+using var generator = new GptImage1p5Generator(
+    endpoint: "https://your-resource.openai.azure.com/",
+    apiKey: "your-api-key",
+    deploymentName: "gpt-image-15");
+
+// Generate an image — same interface as other providers
+var result = await generator.GenerateAsync("a serene mountain landscape at sunset, oil painting style");
+await result.SaveAsync("gpt-image-1p5-output.png");
+
+// Request specific size (1024×1024, 1792×1024, or 1024×1792)
+var landscape = await generator.GenerateAsync(
+    "a panoramic view of a futuristic cityscape",
+    new ImageGenerationOptions { Width = 1792, Height = 1024 });
+```
+
 ### With Custom Options
 
 ```csharp
@@ -274,6 +296,7 @@ public class MyService(IImageGenerator generator)
 | **FLUX.2 Pro** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Default |
 | **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2** | `MaiImage2Generator` | Microsoft Foundry | Excellent | ✅ Available |
+| **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI (DALL-E 3) | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
 ## Samples
@@ -292,6 +315,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 | [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
+| [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 (DALL-E 3) cloud API via Azure OpenAI |
 
 ### Run a Sample
 
@@ -306,6 +330,7 @@ dotnet run
 - [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/mai-image-2-setup-guide.md](docs/mai-image-2-setup-guide.md) — Microsoft Foundry MAI-Image-2 setup
+- [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 (DALL-E 3) setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
