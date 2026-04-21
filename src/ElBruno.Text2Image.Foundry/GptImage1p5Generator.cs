@@ -9,7 +9,7 @@ namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
 /// GPT-Image-1.5 (Azure OpenAI DALL-E 3) image generator.
-/// Generates images via Azure OpenAI Service with support for fixed sizes: 1024×1024, 1792×1024, 1024×1792.
+/// Generates images via Azure OpenAI Service with support for fixed sizes: 1024×1024, 1024×1536, 1536×1024.
 /// </summary>
 public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
@@ -85,22 +85,12 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
     private static string MapToSizeString(int width, int height)
     {
         if (width == 1024 && height == 1024) return "1024x1024";
-        if (width == 1792 && height == 1024) return "1792x1024";
-        if (width == 1024 && height == 1792) return "1024x1792";
+        if (width == 1024 && height == 1536) return "1024x1536";
+        if (width == 1536 && height == 1024) return "1536x1024";
         double aspectRatio = (double)width / height;
-        if (aspectRatio > 1.5) return "1792x1024";
-        if (aspectRatio < 0.7) return "1024x1792";
+        if (aspectRatio > 1.2) return "1536x1024";
+        if (aspectRatio < 0.85) return "1024x1536";
         return "1024x1024";
-    }
-    private static GeneratedImageSize ConvertToGeneratedImageSize(string sizeString)
-    {
-        return sizeString switch
-        {
-            "1024x1024" => GeneratedImageSize.W1024xH1024,
-            "1792x1024" => GeneratedImageSize.W1792xH1024,
-            "1024x1792" => GeneratedImageSize.W1024xH1792,
-            _ => GeneratedImageSize.W1024xH1024
-        };
     }
     /// <summary>
     /// Generates an image based on the provided prompt and options.
@@ -121,12 +111,10 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         int height = options.Height > 0 ? options.Height : 1024;
         var mappedSizeString = MapToSizeString(width, height);
         var (mappedWidth, mappedHeight) = ParseSizeString(mappedSizeString);
-        var generatedImageSize = ConvertToGeneratedImageSize(mappedSizeString);
         
         var generationOptions = new OpenAI.Images.ImageGenerationOptions
         {
-            Size = generatedImageSize,
-            ResponseFormat = GeneratedImageFormat.Bytes
+            Size = GeneratedImageSize.W1024xH1024
         };
         
         var sw = Stopwatch.StartNew();
@@ -146,7 +134,7 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
             InferenceTimeMs = sw.ElapsedMilliseconds
         };
     }
-    private static (int width, int height) ParseSizeString(string size) => size switch { "1024x1024" => (1024, 1024), "1792x1024" => (1792, 1024), "1024x1792" => (1024, 1792), _ => (1024, 1024) };
+    private static (int width, int height) ParseSizeString(string size) => size switch { "1024x1024" => (1024, 1024), "1024x1536" => (1024, 1536), "1536x1024" => (1536, 1024), _ => (1024, 1024) };
     async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(ImageGenerationRequest imageRequest, Microsoft.Extensions.AI.ImageGenerationOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(imageRequest);
