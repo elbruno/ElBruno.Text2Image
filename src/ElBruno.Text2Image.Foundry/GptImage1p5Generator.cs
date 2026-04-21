@@ -7,6 +7,10 @@ using Microsoft.Extensions.AI;
 
 namespace ElBruno.Text2Image.Foundry;
 
+/// <summary>
+/// GPT-Image-1.5 (Azure OpenAI DALL-E 3) image generator.
+/// Generates images via Azure OpenAI Service with support for fixed sizes: 1024×1024, 1792×1024, 1024×1792.
+/// </summary>
 public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private readonly ImageClient _imageClient;
@@ -17,9 +21,31 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
     private readonly string _deploymentName;
     private readonly bool _ownsHttpClient;
     private const int MaxPromptLength = 4000;
+    
+    /// <summary>
+    /// Gets the model display name (e.g., "GPT-Image-1.5").
+    /// </summary>
     public string ModelName => _modelDisplayName;
+    
+    /// <summary>
+    /// Gets the Azure OpenAI deployment name.
+    /// </summary>
     public string DeploymentName => _deploymentName;
+    
+    /// <summary>
+    /// Gets the Azure OpenAI endpoint URL.
+    /// </summary>
     public string Endpoint => _endpoint;
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GptImage1p5Generator"/> class.
+    /// </summary>
+    /// <param name="endpoint">The Azure OpenAI Service endpoint URL (must be HTTPS).</param>
+    /// <param name="apiKey">The Azure OpenAI Service API key.</param>
+    /// <param name="modelName">Optional model display name. Defaults to "GPT-Image-1.5".</param>
+    /// <param name="deploymentName">Optional deployment name. Defaults to "gpt-image-1.5".</param>
+    /// <param name="httpClient">Optional custom HTTP client. If not provided, a new instance is created and managed.</param>
+    /// <exception cref="ArgumentException">Thrown when endpoint is null/empty or doesn't use HTTPS, or when apiKey is null/empty.</exception>
     public GptImage1p5Generator(string endpoint, string apiKey, string? modelName = null, string? deploymentName = null, HttpClient? httpClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
@@ -45,6 +71,12 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         var client = new AzureOpenAIClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         _imageClient = client.GetImageClient(_deploymentName);
     }
+    /// <summary>
+    /// Ensures the cloud model is available. For cloud-based models, this is a no-op and returns a completed task.
+    /// </summary>
+    /// <param name="progress">Optional progress reporter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public Task EnsureModelAvailableAsync(IProgress<DownloadProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         progress?.Report(new DownloadProgress { Stage = DownloadStage.Complete, PercentComplete = 100, Message = "Cloud model" });
@@ -70,6 +102,15 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
             _ => GeneratedImageSize.W1024xH1024
         };
     }
+    /// <summary>
+    /// Generates an image based on the provided prompt and options.
+    /// </summary>
+    /// <param name="prompt">The text prompt for image generation. Maximum 4000 characters.</param>
+    /// <param name="options">Optional generation options (width, height, seed).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An <see cref="ImageGenerationResult"/> containing the generated image and metadata.</returns>
+    /// <exception cref="ArgumentException">Thrown when prompt is null or empty.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when prompt exceeds 4000 characters.</exception>
     public async Task<ImageGenerationResult> GenerateAsync(string prompt, ImageGenerationOptions? options = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt, nameof(prompt));
@@ -115,6 +156,9 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
     object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey) => serviceType == GetType() ? this : null;
+    /// <summary>
+    /// Releases all resources used by the generator.
+    /// </summary>
     public void Dispose()
     {
         if (_ownsHttpClient)
