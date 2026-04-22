@@ -179,6 +179,148 @@ public class InitCommandTests : IDisposable
         Assert.True(File.Exists(claudePath));
     }
 
+    [Fact]
+    public void Init_ReturnsError_WhenInvalidTarget()
+    {
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = "invalid-target", Force = false };
+        var context = CreateContext();
+
+        var exitCode = command.Execute(context, settings);
+
+        Assert.Equal(1, exitCode);
+        
+        // Files should not be created
+        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var claudePath = Path.Combine(_testDir, ".claude", "skills", "t2i", "SKILL.md");
+        
+        Assert.False(File.Exists(githubPath));
+        Assert.False(File.Exists(claudePath));
+    }
+
+    [Fact]
+    public void Init_IsIdempotent_MultipleCallsSameResult()
+    {
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var context = CreateContext();
+
+        // First call - creates files
+        var exitCode1 = command.Execute(context, settings);
+        Assert.Equal(0, exitCode1);
+        
+        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var claudePath = Path.Combine(_testDir, ".claude", "skills", "t2i", "SKILL.md");
+        
+        var firstGithubContent = File.ReadAllText(githubPath);
+        var firstClaudeContent = File.ReadAllText(claudePath);
+        
+        // Second call - skips existing files
+        var exitCode2 = command.Execute(context, settings);
+        Assert.Equal(0, exitCode2);
+        
+        var secondGithubContent = File.ReadAllText(githubPath);
+        var secondClaudeContent = File.ReadAllText(claudePath);
+        
+        // Content should be unchanged
+        Assert.Equal(firstGithubContent, secondGithubContent);
+        Assert.Equal(firstClaudeContent, secondClaudeContent);
+    }
+
+    [Fact]
+    public void Init_WithForce_OverwritesAllExistingFiles()
+    {
+        const string sentinel = "OLD CONTENT";
+        
+        // Pre-create both files with sentinel content
+        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var claudePath = Path.Combine(_testDir, ".claude", "skills", "t2i", "SKILL.md");
+        
+        Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(claudePath)!);
+        
+        File.WriteAllText(githubPath, sentinel);
+        File.WriteAllText(claudePath, sentinel);
+        
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = "all", Force = true };
+        var context = CreateContext();
+
+        var exitCode = command.Execute(context, settings);
+
+        Assert.Equal(0, exitCode);
+        
+        var githubContent = File.ReadAllText(githubPath);
+        var claudeContent = File.ReadAllText(claudePath);
+        
+        // Both should be overwritten
+        Assert.DoesNotContain(sentinel, githubContent);
+        Assert.DoesNotContain(sentinel, claudeContent);
+        Assert.Contains("# t2i", githubContent);
+        Assert.Contains("# t2i", claudeContent);
+    }
+
+    [Fact]
+    public void Init_DefaultTargetIsAll()
+    {
+        var settings = new InitCommand.Settings();
+        Assert.Equal("all", settings.Target);
+    }
+
+    [Fact]
+    public void Init_DefaultForceIsFalse()
+    {
+        var settings = new InitCommand.Settings();
+        Assert.False(settings.Force);
+    }
+
+    [Theory]
+    [InlineData("github")]
+    [InlineData("claude")]
+    [InlineData("all")]
+    [InlineData("GITHUB")]
+    [InlineData("CLAUDE")]
+    [InlineData("ALL")]
+    [InlineData("GitHub")]
+    [InlineData("Claude")]
+    [InlineData("All")]
+    public void Init_AcceptsCaseInsensitiveTargets(string target)
+    {
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = target, Force = false };
+        var context = CreateContext();
+
+        var exitCode = command.Execute(context, settings);
+
+        // Should succeed with any valid case variation
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void Init_FilesContainExpectedContent()
+    {
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var context = CreateContext();
+
+        var exitCode = command.Execute(context, settings);
+
+        Assert.Equal(0, exitCode);
+        
+        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var claudePath = Path.Combine(_testDir, ".claude", "skills", "t2i", "SKILL.md");
+        
+        var githubContent = File.ReadAllText(githubPath);
+        var claudeContent = File.ReadAllText(claudePath);
+        
+        // Verify content is identical (both come from same embedded resource)
+        Assert.Equal(githubContent, claudeContent);
+        
+        // Verify content contains expected markers from SKILL.md
+        Assert.Contains("# t2i", githubContent);
+        Assert.Contains("text-to-image", githubContent, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static CommandContext CreateContext()
     {
         var remaining = new FakeRemainingArguments();

@@ -34,47 +34,70 @@ Update to the latest version:
 dotnet tool update --global ElBruno.Text2Image.Cli
 ```
 
-Then:
+### CLI Examples
 
+**Local Models (Stable Diffusion):**
 ```bash
-t2i config                          # interactive setup
-t2i "a robot painting a landscape"  # generate
+t2i config                                           # interactive setup
+t2i "a robot painting a landscape"                  # generate with default local model
+t2i --provider stable-diffusion-15 "sunset over mountains, oil painting style"
+```
+
+**Cloud Models (Microsoft Foundry & Azure OpenAI):**
+```bash
+# FLUX.2 Pro (photorealistic)
+t2i --provider foundry-flux2 "a futuristic cityscape with neon lights"
+
+# FLUX.2 Flex (optimized for text-heavy design)
+t2i config set foundry-flux2.model FLUX.2-flex
+t2i "a business card design with modern minimalist style"
+
+# MAI-Image-2 (high-quality generation)
+t2i --provider foundry-mai2 "a serene mountain landscape at sunrise"
+
+# GPT-Image-1.5 (DALL-E 3 via Azure OpenAI)
+t2i --provider azure-openai-gpt-image-15 "an impressionist painting of a garden"
+
+# GPT-Image-2 (next-gen model)
+t2i --provider gpt-image-2 "a sci-fi space station in orbit"
+```
+
+**Model Configuration:**
+```bash
+# View current configuration
+t2i config show
+
+# Set default provider for cloud generation
+t2i config set provider foundry-flux2
+
+# Set model variant
+t2i config set foundry-mai2.model MAI-Image-2e
+t2i config set foundry-flux2.model FLUX.2-flex
+
+# Provide credentials
+t2i config set foundry-flux2.endpoint "https://your-resource.services.ai.azure.com"
+t2i config set foundry-flux2.apiKey "your-api-key"
 ```
 
 See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 
-### Choosing a Model
-
-By default, the CLI uses `MAI-Image-2` for the `foundry-mai2` provider and `FLUX.2-pro` for the `foundry-flux2` provider. To use a different model variant, configure it:
-
-```bash
-# Use MAI-Image-2e variant
-t2i config set foundry-mai2.model MAI-Image-2e
-
-# Use FLUX.2 Flex for text-heavy design
-t2i config set foundry-flux2.model FLUX.2-flex
-
-# View your configuration (endpoint and model shown, apiKey masked)
-t2i config show
-```
-
-**Defaults:**
-- `foundry-mai2`: `MAI-Image-2`
-- `foundry-flux2`: `FLUX.2-pro`
-
 ## Features
 
-- 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion or FLUX.2
-- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2 (cloud)
-- ⬇️ **Auto-Download** — ONNX models are automatically downloaded from HuggingFace on first use
-- ☁️ **Cloud API** — FLUX.2 via Microsoft Foundry for high-quality text-heavy designs
-- ☁️ **MAI-Image-2** — Microsoft's MAI-Image-2 via Azure Foundry for high-quality image generation
+- 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion, FLUX.2, GPT-Image-1.5, and more
+- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2, MAI-Image-2, GPT-Image-1.5, GPT-Image-2
+- ☁️ **Cloud APIs** — FLUX.2, MAI-Image-2 (Microsoft Foundry), GPT-Image-1.5, GPT-Image-2 (Azure OpenAI)
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
 - 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
 - 🔌 **Microsoft.Extensions.AI** — All generators implement `IImageGenerator` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions)
 - 🌱 **Reproducible** — Seed-based generation for reproducible results
+
+## 🤖 AI Agent Integration
+
+The `t2i` CLI is now discoverable by GitHub Copilot and Claude Code as a native skill, enabling AI agents to generate images directly within your development workflow. Run `t2i init` to configure skill integration, which adds the necessary metadata to `.github/skills/t2i/` or `.claude/skills/t2i/` directories in your workspace. Once integrated, AI agents can autonomously invoke `t2i` for image generation tasks without manual configuration.
+
+See [docs/skill-integration.md](docs/skill-integration.md) for the complete setup guide.
 
 ## Quick Start
 
