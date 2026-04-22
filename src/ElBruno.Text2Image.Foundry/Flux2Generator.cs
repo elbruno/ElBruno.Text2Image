@@ -25,6 +25,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
     private const int MaxErrorBodyLength = 1024;
     private const int MaxPollAttempts = 120;
+    private const long MaxResponseSizeBytes = 50 * 1024 * 1024; // 50MB limit for image responses
     private static readonly TimeSpan InitialPollDelay = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan MaxPollDelay = TimeSpan.FromSeconds(5);
     private const double PollBackoffMultiplier = 1.5;
@@ -230,6 +231,14 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
         var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
+        // Validate response size before reading content
+        if (response.Content.Headers.ContentLength.HasValue &&
+            response.Content.Headers.ContentLength.Value > MaxResponseSizeBytes)
+        {
+            throw new InvalidOperationException(
+                $"Response size ({response.Content.Headers.ContentLength.Value} bytes) exceeds maximum allowed ({MaxResponseSizeBytes} bytes)");
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -298,7 +307,16 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         {
             // Use a separate request WITHOUT the API key to avoid credential leakage (SSRF mitigation)
             using var imageRequest = new HttpRequestMessage(HttpMethod.Get, imageData.Url);
-            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken).ConfigureAwait(false);
+            var imageResponse = await _httpClient.SendAsync(imageRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            
+            // Validate image response size before downloading
+            if (imageResponse.Content.Headers.ContentLength.HasValue &&
+                imageResponse.Content.Headers.ContentLength.Value > MaxResponseSizeBytes)
+            {
+                throw new InvalidOperationException(
+                    $"Image response size ({imageResponse.Content.Headers.ContentLength.Value} bytes) exceeds maximum allowed ({MaxResponseSizeBytes} bytes)");
+            }
+            
             imageResponse.EnsureSuccessStatusCode();
             imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
