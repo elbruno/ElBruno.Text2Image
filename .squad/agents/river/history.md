@@ -33,3 +33,22 @@
 📌 Team update (2026-04-20T11:31:33Z): CLI now ships `t2i init` command for AI agent skill discovery. Kaylee implemented InitCommand with embedded SKILL.md resource. Mal authored canonical SKILL.md (3 copies) and updated blog. Jayne verified with 6 tests. Branch: feature/cli-init-skill, PR #11 (not merged per user). — decided by Kaylee
 📌 Team update (2026-04-20T14:50:59Z): MAI-Image-2 adapter now silently auto-bumps dimensions <768px to 1024px with progress note. No breaking changes; generic 512×512 default works transparently with MAI. Coordinator merged PRs #14, #15; released cli-v0.10.1.
 📌 Team update (2026-04-20T15:26:24Z): Blog post hero image generated (dogfooding t2i). Convention established: repo blog images at `images/{YYYYMMDD}-{slug}.png` + companion prompt doc. Azure MAI deployment named `MAI-Image-2e` (not `MAI-Image-2`). Kaylee reorganized 4 blog docs to `docs/blogs/`, fixed 8 links. Files staged for Bruno's review. — decided by River & Kaylee
+
+### 2026-04-22: Multi-Concept Image Prompting for Marketing Assets
+
+**Prompt Engineering for Complex Narratives:**
+Designed hero image prompt for GPT-Image models + t2i skill announcement (`docs/blogs/20260422-gpt-images-and-skills-image-prompt.md`). Challenge: communicate three distinct concepts in one cohesive image: (1) AI agent integration in developer workflow, (2) multiple model pathways/choice, (3) skill as unifying mechanism.
+
+**Composition Strategies:**
+- **Spatial metaphors:** Left-to-right flow (IDE → agent → streams → integration) follows natural reading direction. Streams branching upward/outward = expansion, growth, capability increase.
+- **Color coding:** Three streams with distinct colors (golden, electric blue, magenta) visually encodes "multiple options" without requiring text labels. Each color carries semantic weight (warmth, speed, creativity).
+- **Symbolic anchors:** Puzzle piece icon for integration concept universally understood in tech UX. Placed at stream convergence = skill is the unifying layer.
+- **Avoid text rendering:** Explicit "no readable text" + describing UI elements by glow/shape rather than pixel-accurate mockups. Diffusion models still struggle with legible glyphs; better to suggest silhouettes.
+
+**16:9 Hero Image Constraints:**
+- Call out aspect ratio both in prompt text ("16:9 framing") and in CLI args (`--width 1280 --height 768`) to guide model composition.
+- Leave ~2/3 of canvas for "the magic happening" (right side) so the image works as a blog header crop without cutting off key elements.
+- Deep backgrounds (space blue gradient, subtle patterns) + holographic/neon accents ensure readability on both light and dark blog themes.
+
+**Prompt Remixability:**
+Documented remix patterns in companion doc: change stream count for different feature scopes, swap integration icon for different concepts (lightning = speed, shield = security), adjust art direction keywords (holographic → watercolor → low-poly) to shift aesthetic without rewriting entire prompt structure.
