@@ -38,11 +38,18 @@ internal sealed class TextEncoder : IDisposable
     /// <summary>
     /// Encodes both conditional and unconditional text embeddings for classifier-free guidance.
     /// Returns a tensor of shape [2, 77, embeddingDim] with uncond at [0] and cond at [1].
+    /// Conditional and unconditional encoding run in parallel for improved performance.
     /// </summary>
     public DenseTensor<float> EncodeWithGuidance(int[] condTokens, int[] uncondTokens, int embeddingDim = 768)
     {
-        var condEmbedding = Encode(condTokens, embeddingDim).Buffer.ToArray();
-        var uncondEmbedding = Encode(uncondTokens, embeddingDim).Buffer.ToArray();
+        // Encode both embeddings in parallel - they are independent operations
+        var condTask = Task.Run(() => Encode(condTokens, embeddingDim).Buffer.ToArray());
+        var uncondTask = Task.Run(() => Encode(uncondTokens, embeddingDim).Buffer.ToArray());
+        
+        Task.WaitAll(condTask, uncondTask);
+        
+        var condEmbedding = condTask.Result;
+        var uncondEmbedding = uncondTask.Result;
 
         var combined = new DenseTensor<float>(new int[] { 2, 77, embeddingDim });
         for (int i = 0; i < uncondEmbedding.Length; i++)
