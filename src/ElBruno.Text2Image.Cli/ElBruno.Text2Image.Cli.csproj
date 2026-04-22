@@ -16,8 +16,8 @@
     <ToolCommandName>t2i</ToolCommandName>
     <PackageId>ElBruno.Text2Image.Cli</PackageId>
     <Version>0.16.0</Version>
-    <Description>Lightweight cross-platform CLI for AI text-to-image generation. Includes cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2). For local CPU/GPU inference, see the upcoming ElBruno.Text2Image.Cli.Full package.</Description>
-    <PackageTags>text-to-image;stable-diffusion;flux;mai;ai;image-generation;cli;dotnet-tool</PackageTags>
+    <Description>Cross-platform CLI for AI text-to-image generation. Supports FLUX.2, MAI-Image-2 (Microsoft Foundry), GPT-Image-1.5, and GPT-Image-2 (Azure OpenAI). Lightweight cloud-first design (~30 MB). For local CPU/GPU inference, see ElBruno.Text2Image.Cli.Full.</Description>
+    <PackageTags>text-to-image;stable-diffusion;flux;mai;gpt-image;dalle;ai;image-generation;cli;dotnet-tool;azure-openai</PackageTags>
     <Authors>Bruno Capuano</Authors>
     <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
     <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
