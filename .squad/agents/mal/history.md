@@ -114,3 +114,47 @@ The blog post (`docs/20260420-introducing-t2i-cli.md`) presents secrets storage 
 - **"Why?" drives architecture decisions** — understanding that GPT-Image-2 uses Azure OpenAI (not Foundry MAI) explains why it matches GPT-Image-1.5 pattern
 
 **Decision:** Created comprehensive architecture document at `.squad/decisions/inbox/mal-gpt-image-2-architecture.md` covering implementation status, comparison matrix, size constraints, integration points, and completion tasks.
+
+### 2026-04-21 — CLI Version Sync & Model Documentation Issue
+
+**Context:** Bruno reported CLI package on NuGet is v0.11.0 while codebase is v0.16.0, and CLI doesn't advertise GPT-Image-1.5 or GPT-Image-2 support.
+
+**Investigation:**
+1. **Version Audit:** All packages at 0.16.0 in code; NuGet shows:
+   - Main: 0.16.0 ✓
+   - Foundry: 0.16.0 ✓
+   - CPU/CUDA/DirectML: 0.16.0 ✓
+   - CLI: **0.11.0** ✗ (missing 0.12.0–0.16.0)
+
+2. **Root Cause — Workflow Architecture:**
+   - Two publish workflows exist: `publish.yml` (main packages) and `publish-cli.yml` (CLI only)
+   - `publish.yml` excludes tags starting with `cli-*` (line 15)
+   - `publish-cli.yml` requires tags starting with `cli-*` to trigger
+   - Versions 0.12.0 used `cli-v0.12.0` tag → CLI published ✓
+   - Versions 0.13.0–0.16.0 used generic `v0.X.Y` tags → CLI never published ❌
+
+3. **Model Documentation Audit:**
+   - ✓ GPT-Image-1.5 and GPT-Image-2 generators exist and registered in CLI
+   - ✓ Adapter classes (`FoundryGptImage1p5Adapter`, `FoundryGptImage2Adapter`) present
+   - ✗ CLI package description mentions only FLUX.2, MAI-Image-2
+   - ✗ SKILL.md omits GPT models from provider table
+   - ✗ No configuration examples for Azure OpenAI endpoints
+
+**Two-Part Fix:**
+
+**Part A — Restore CLI to v0.16.0:**
+- Create releases with tags `cli-v0.13.0`, `cli-v0.14.0`, `cli-v0.15.0`, `cli-v0.16.0`
+- Each triggers `publish-cli.yml` automatically
+- Coordinate with Kaylee to execute
+
+**Part B — Document GPT Models:**
+- Update `.csproj` description to mention GPT-Image-1.5 and GPT-Image-2
+- Add GPT providers to SKILL.md table
+- Add Azure OpenAI configuration section to SKILL.md
+
+**Key Insight:**
+The two-workflow design is correct — it allows independent CLI and main package release cadences. The issue was **tag naming discipline:** v0.13–0.16 should have had both `v0.X.Y` (for main packages) and `cli-v0.X.Y` (for CLI) tags.
+
+**Decision:** Created detailed diagnosis and fix plan at `.squad/decisions/inbox/mal-cli-version-sync.md`. Routed Part A (publish missing CLI versions) to Kaylee via squad routing. Bruno to approve Part B documentation updates.
+
+📌 Team update (2026-04-22T10:28:06Z): CLI version sync decision merged. Mal diagnosed missing cli-v0.13.0–0.16.0 releases; Kaylee updated NuGet package metadata with GPT models. Awaiting release publication. — decided by Scribe
