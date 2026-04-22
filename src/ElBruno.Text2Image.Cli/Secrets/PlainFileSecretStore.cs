@@ -14,6 +14,7 @@ internal sealed class PlainFileSecretStore : ISecretStore
     private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly string _filePath;
     private bool _hasWarnedOnce;
+    private bool _hasWarnedOnStartup;
 
     public PlainFileSecretStore()
     {
@@ -31,6 +32,7 @@ internal sealed class PlainFileSecretStore : ISecretStore
             if (!File.Exists(_filePath))
                 return null;
 
+            WarnOnStartup();
             var store = await LoadStoreAsync(ct);
             var key = BuildKey(provider, field);
 
@@ -44,7 +46,7 @@ internal sealed class PlainFileSecretStore : ISecretStore
 
     public async Task SetAsync(string provider, string field, string value, CancellationToken ct)
     {
-        WarnOnFirstUse();
+        WarnOnWrite();
 
         await _fileLock.WaitAsync(ct);
         try
@@ -116,14 +118,24 @@ internal sealed class PlainFileSecretStore : ISecretStore
 
     private async Task SaveStoreAsync(Dictionary<string, string> store, CancellationToken ct)
     {
-        var dir = Path.GetDirectoryName(_filePath);
+        // Prevent directory traversal when saving secrets
+        var fullPath = Path.GetFullPath(_filePath);
+        var configDir = Path.GetFullPath(ConfigPaths.ConfigDirectory);
+        
+        if (!fullPath.StartsWith(configDir, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException(
+                $"Secret store path traversal detected: '{_filePath}' is outside the config directory.");
+        }
+
+        var dir = Path.GetDirectoryName(fullPath);
         if (dir != null && !Directory.Exists(dir))
         {
             Directory.CreateDirectory(dir);
         }
 
         var json = JsonSerializer.Serialize(store, PlainFileStoreJsonContext.Default.DictionaryStringString);
-        var tempPath = _filePath + ".tmp";
+        var tempPath = fullPath + ".tmp";
 
         await File.WriteAllTextAsync(tempPath, json, ct);
 
@@ -135,23 +147,52 @@ internal sealed class PlainFileSecretStore : ISecretStore
             }
         }
 
-        if (File.Exists(_filePath))
+        if (File.Exists(fullPath))
         {
-            File.Replace(tempPath, _filePath, null);
+            File.Replace(tempPath, fullPath, null);
         }
         else
         {
-            File.Move(tempPath, _filePath);
+            File.Move(tempPath, fullPath);
         }
     }
 
     private static string BuildKey(string provider, string field) => $"{provider}::{field}";
 
-    private void WarnOnFirstUse()
+    private void WarnOnStartup()
+    {
+        if (!_hasWarnedOnStartup && File.Exists(_filePath))
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("╔══════════════════════════════════════════════════════════════╗");
+            Console.Error.WriteLine("║                 ⚠ SECURITY WARNING ⚠                        ║");
+            Console.Error.WriteLine("║                                                              ║");
+            Console.Error.WriteLine("║  Secrets are stored in PLAINTEXT on disk                     ║");
+            Console.Error.WriteLine("║  Location: ~/.config/t2i/secrets.json                        ║");
+            Console.Error.WriteLine("║                                                              ║");
+            Console.Error.WriteLine("║  Recommended: Use DPAPI on Windows for encrypted storage     ║");
+            Console.Error.WriteLine("║  Command: t2i secrets set <provider> --store dpapi           ║");
+            Console.Error.WriteLine("║                                                              ║");
+            Console.Error.WriteLine("║  Or use environment variables for CI/CD:                     ║");
+            Console.Error.WriteLine("║  T2I_<PROVIDER>_APIKEY=your-key                              ║");
+            Console.Error.WriteLine("╚══════════════════════════════════════════════════════════════╝");
+            Console.Error.WriteLine();
+            _hasWarnedOnStartup = true;
+        }
+    }
+
+    private void WarnOnWrite()
     {
         if (!_hasWarnedOnce)
         {
-            Console.Error.WriteLine("⚠ Plaintext secrets store — consider using DPAPI on Windows");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("⚠ WARNING: Saving secret in PLAINTEXT to disk");
+            Console.Error.WriteLine("  Location: " + _filePath);
+            Console.Error.WriteLine("  This file is NOT encrypted and may be readable by other users.");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("  For better security on Windows, use:");
+            Console.Error.WriteLine("    t2i secrets set <provider> --store dpapi");
+            Console.Error.WriteLine();
             _hasWarnedOnce = true;
         }
     }
