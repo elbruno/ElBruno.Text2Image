@@ -25,7 +25,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
     private const int MaxErrorBodyLength = 1024;
     private const int MaxPollAttempts = 120;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan InitialPollDelay = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan MaxPollDelay = TimeSpan.FromSeconds(5);
+    private const double PollBackoffMultiplier = 1.5;
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
@@ -368,9 +370,11 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             ?? throw new InvalidOperationException(
                 "FLUX.2 API returned 202 Accepted but no operation-location or Location header for polling");
 
+        var currentDelay = InitialPollDelay;
+        
         for (var attempt = 0; attempt < MaxPollAttempts; attempt++)
         {
-            await Task.Delay(PollInterval, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(currentDelay, cancellationToken).ConfigureAwait(false);
 
             using var pollRequest = new HttpRequestMessage(HttpMethod.Get, operationUrl);
             pollRequest.Headers.TryAddWithoutValidation("api-key", _apiKey);
@@ -421,10 +425,17 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             }
 
             // Still running (status: "running", "notStarted", "inProgress", etc.) — keep polling
+            // Apply exponential backoff for next attempt
+            currentDelay = TimeSpan.FromMilliseconds(
+                Math.Min(currentDelay.TotalMilliseconds * PollBackoffMultiplier, MaxPollDelay.TotalMilliseconds));
         }
 
+        // Calculate approximate total wait time (sum of geometric series)
+        var totalWaitSeconds = InitialPollDelay.TotalSeconds * 
+            (1 - Math.Pow(PollBackoffMultiplier, MaxPollAttempts)) / 
+            (1 - PollBackoffMultiplier);
         throw new TimeoutException(
-            $"FLUX.2 async operation did not complete within {MaxPollAttempts * PollInterval.TotalSeconds} seconds");
+            $"FLUX.2 async operation did not complete within approximately {totalWaitSeconds:F0} seconds ({MaxPollAttempts} poll attempts)");
     }
 
     /// <summary>
