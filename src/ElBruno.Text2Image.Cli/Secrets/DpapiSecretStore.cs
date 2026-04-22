@@ -138,24 +138,38 @@ internal sealed class DpapiSecretStore : ISecretStore
     [SupportedOSPlatform("windows")]
     private async Task SaveStoreAsync(Dictionary<string, byte[]> store, CancellationToken ct)
     {
-        var dir = Path.GetDirectoryName(_filePath);
+        // Prevent directory traversal when saving secrets
+        var fullPath = Path.GetFullPath(_filePath);
+        var dir = Path.GetDirectoryName(fullPath);
+        
+        // Validate path is in expected location
+        var expectedDir = Path.GetFullPath(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+            "t2i"));
+        
+        if (dir != null && !fullPath.StartsWith(expectedDir, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException(
+                $"DPAPI secret store path traversal detected: '{_filePath}' is outside the expected directory.");
+        }
+
         if (dir != null && !Directory.Exists(dir))
         {
             Directory.CreateDirectory(dir);
         }
 
         var json = JsonSerializer.Serialize(store, DpapiStoreJsonContext.Default.DictionaryStringByteArray);
-        var tempPath = _filePath + ".tmp";
+        var tempPath = fullPath + ".tmp";
 
         await File.WriteAllTextAsync(tempPath, json, ct);
 
-        if (File.Exists(_filePath))
+        if (File.Exists(fullPath))
         {
-            File.Replace(tempPath, _filePath, null);
+            File.Replace(tempPath, fullPath, null);
         }
         else
         {
-            File.Move(tempPath, _filePath);
+            File.Move(tempPath, fullPath);
         }
     }
 

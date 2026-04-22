@@ -46,9 +46,20 @@ public sealed class ImageGenerationResult
     /// <param name="filePath">The path to save the image to.</param>
     public async Task SaveAsync(string filePath)
     {
-        var directory = Path.GetDirectoryName(filePath);
+        // Prevent directory traversal attacks
+        var fullPath = Path.GetFullPath(filePath);
+        var currentDirectory = Path.GetFullPath(Environment.CurrentDirectory);
+        
+        // Allow absolute paths, but validate they don't escape via symlinks or ../ tricks
+        if (!fullPath.StartsWith(currentDirectory, StringComparison.OrdinalIgnoreCase) && !Path.IsPathRooted(filePath))
+        {
+            throw new UnauthorizedAccessException(
+                $"Path traversal detected: '{filePath}' resolves to '{fullPath}', which is outside the current directory.");
+        }
+
+        var directory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
-        await File.WriteAllBytesAsync(filePath, ImageBytes).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(fullPath, ImageBytes).ConfigureAwait(false);
     }
 }

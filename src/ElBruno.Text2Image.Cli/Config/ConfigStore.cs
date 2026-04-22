@@ -38,27 +38,37 @@ public sealed class ConfigStore
 
     public async Task SaveAsync(AppConfig config, CancellationToken ct)
     {
+        // Prevent directory traversal when saving config
+        var fullPath = Path.GetFullPath(_filePath);
+        var configDir = Path.GetFullPath(ConfigPaths.ConfigDirectory);
+        
+        if (!fullPath.StartsWith(configDir, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException(
+                $"Config path traversal detected: '{_filePath}' is outside the config directory.");
+        }
+
         await _fileLock.WaitAsync(ct);
         try
         {
-            var dir = Path.GetDirectoryName(_filePath);
+            var dir = Path.GetDirectoryName(fullPath);
             if (dir != null && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
 
             var json = JsonSerializer.Serialize(config, AppConfigJsonContext.Default.AppConfig);
-            var tempPath = _filePath + ".tmp";
+            var tempPath = fullPath + ".tmp";
 
             await File.WriteAllTextAsync(tempPath, json, ct);
 
-            if (File.Exists(_filePath))
+            if (File.Exists(fullPath))
             {
-                File.Replace(tempPath, _filePath, null);
+                File.Replace(tempPath, fullPath, null);
             }
             else
             {
-                File.Move(tempPath, _filePath);
+                File.Move(tempPath, fullPath);
             }
         }
         finally

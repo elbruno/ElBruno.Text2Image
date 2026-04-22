@@ -44,7 +44,15 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         foreach (var target in targets)
         {
             var relativePath = GetRelativePath(target);
-            var fullPath = Path.Combine(cwd, relativePath);
+            var fullPath = Path.GetFullPath(Path.Combine(cwd, relativePath));
+            
+            // Prevent directory traversal: ensure resolved path is under cwd
+            if (!fullPath.StartsWith(Path.GetFullPath(cwd), StringComparison.OrdinalIgnoreCase))
+            {
+                results.Add((relativePath, "error: path traversal"));
+                continue;
+            }
+            
             var (status, written) = WriteSkillFile(fullPath, skillContent, settings.Force);
             results.Add((relativePath, status));
         }
