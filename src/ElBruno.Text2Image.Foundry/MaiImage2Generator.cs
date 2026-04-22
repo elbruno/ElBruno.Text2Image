@@ -55,16 +55,17 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
     /// The model/deployment name sent in the API request body.
     /// This matches the deployment name you created in Microsoft Foundry. Defaults to "mai-image-2".
     /// </param>
-    /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
+    /// <param name="httpClient">HttpClient instance for making HTTP requests. Use IHttpClientFactory for production to enable connection pooling.</param>
     public MaiImage2Generator(
         string endpoint,
         string apiKey,
+        HttpClient httpClient,
         string? modelName = null,
-        string? modelId = null,
-        HttpClient? httpClient = null)
+        string? modelId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (!endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
@@ -73,17 +74,8 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "MAI-Image-2";
         _modelId = modelId ?? "mai-image-2";
-
-        if (httpClient != null)
-        {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-        else
-        {
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            _ownsHttpClient = true;
-        }
+        _httpClient = httpClient;
+        _ownsHttpClient = false;
     }
 
     /// <summary>
@@ -131,6 +123,33 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
             return endpoint.Replace(".openai.azure.com", ".services.ai.azure.com", StringComparison.OrdinalIgnoreCase);
         }
         return endpoint;
+    }
+
+    /// <summary>
+    /// Builds error hint for 404 responses.
+    /// In production (default), provides generic guidance.
+    /// Set T2I_DETAILED_ERRORS=1 environment variable to include full endpoint URL (for debugging only).
+    /// </summary>
+    private string BuildErrorHint()
+    {
+        var detailedErrors = Environment.GetEnvironmentVariable("T2I_DETAILED_ERRORS");
+        var includeEndpoint = detailedErrors == "1" || detailedErrors == "true";
+
+        if (includeEndpoint)
+        {
+            // Debug mode: include full endpoint details for troubleshooting
+            return "\n\nHint: The endpoint URL may be incorrect. MAI-Image-2 uses the MAI API at /mai/v1/images/generations.\n" +
+                   $"The resolved endpoint was: {_endpoint}\n" +
+                   "Ensure you provide either:\n" +
+                   "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
+                   "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
+                   "  - A full MAI API URL (e.g., https://your-resource.services.ai.azure.com/mai/v1/images/generations)";
+        }
+
+        // Production mode: generic error without exposing infrastructure details
+        return "\n\nHint: Failed to connect to image generation service. " +
+               "Verify your endpoint configuration is correct. " +
+               "Set T2I_DETAILED_ERRORS=1 for more diagnostic information.";
     }
 
     /// <summary>
@@ -193,12 +212,7 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
             var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
-                ? "\n\nHint: The endpoint URL may be incorrect. MAI-Image-2 uses the MAI API at /mai/v1/images/generations.\n" +
-                  $"The resolved endpoint was: {_endpoint}\n" +
-                  "Ensure you provide either:\n" +
-                  "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
-                  "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
-                  "  - A full MAI API URL (e.g., https://your-resource.services.ai.azure.com/mai/v1/images/generations)"
+                ? BuildErrorHint()
                 : "";
 
             throw new HttpRequestException(

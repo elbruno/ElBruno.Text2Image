@@ -57,16 +57,17 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     /// The model/deployment name sent in the API request body (e.g., "FLUX.2-pro", "FLUX.2-flex").
     /// This matches the deployment name you created in Microsoft Foundry. Defaults to "FLUX.2-pro".
     /// </param>
-    /// <param name="httpClient">Optional HttpClient instance. The API key is sent per-request, not added to DefaultRequestHeaders.</param>
+    /// <param name="httpClient">HttpClient instance for making HTTP requests. Use IHttpClientFactory for production to enable connection pooling.</param>
     public Flux2Generator(
         string endpoint,
         string apiKey,
+        HttpClient httpClient,
         string? modelName = null,
-        string? modelId = null,
-        HttpClient? httpClient = null)
+        string? modelId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+        ArgumentNullException.ThrowIfNull(httpClient);
 
         if (!endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
@@ -75,17 +76,8 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "FLUX.2-pro";
         _modelId = modelId ?? "FLUX.2-pro";
-
-        if (httpClient != null)
-        {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-        else
-        {
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            _ownsHttpClient = true;
-        }
+        _httpClient = httpClient;
+        _ownsHttpClient = false;
     }
 
     /// <summary>
@@ -156,6 +148,33 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
     }
 
     /// <summary>
+    /// Builds error hint for 404 responses.
+    /// In production (default), provides generic guidance.
+    /// Set T2I_DETAILED_ERRORS=1 environment variable to include full endpoint URL (for debugging only).
+    /// </summary>
+    private string BuildErrorHint()
+    {
+        var detailedErrors = Environment.GetEnvironmentVariable("T2I_DETAILED_ERRORS");
+        var includeEndpoint = detailedErrors == "1" || detailedErrors == "true";
+
+        if (includeEndpoint)
+        {
+            // Debug mode: include full endpoint details for troubleshooting
+            return "\n\nHint: The endpoint URL may be incorrect. FLUX.2 models use the BFL Native API, not the OpenAI-compatible API.\n" +
+                   $"The resolved endpoint was: {_endpoint}\n" +
+                   "Ensure you provide either:\n" +
+                   "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
+                   "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
+                   "  - A full BFL API URL (e.g., https://your-resource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview)";
+        }
+
+        // Production mode: generic error without exposing infrastructure details
+        return "\n\nHint: Failed to connect to image generation service. " +
+               "Verify your endpoint configuration is correct. " +
+               "Set T2I_DETAILED_ERRORS=1 for more diagnostic information.";
+    }
+
+    /// <summary>
     /// No-op for cloud models. The model is always available on the server.
     /// </summary>
     public Task EnsureModelAvailableAsync(
@@ -215,12 +234,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
             var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
-                ? "\n\nHint: The endpoint URL may be incorrect. FLUX.2 models use the BFL Native API, not the OpenAI-compatible API.\n" +
-                  $"The resolved endpoint was: {_endpoint}\n" +
-                  "Ensure you provide either:\n" +
-                  "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
-                  "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
-                  "  - A full BFL API URL (e.g., https://your-resource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview)"
+                ? BuildErrorHint()
                 : "";
 
             throw new HttpRequestException(
