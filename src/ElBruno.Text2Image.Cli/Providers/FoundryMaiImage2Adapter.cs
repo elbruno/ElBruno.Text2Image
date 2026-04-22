@@ -55,6 +55,17 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
                 Reason: "Missing endpoint/apiKey — run: t2i config");
         }
 
+        // Security: Health checks no longer send credentials over the network.
+        // Configuration presence is validated locally. Set T2I_DETAILED_HEALTH_CHECKS=1
+        // to enable network connectivity tests (for debugging only).
+        var detailedChecks = Environment.GetEnvironmentVariable("T2I_DETAILED_HEALTH_CHECKS");
+        if (detailedChecks != "1" && detailedChecks != "true")
+        {
+            // Configuration is present - consider provider healthy
+            return new ProviderHealth(Ok: true, Reason: null);
+        }
+
+        // Detailed health check mode (opt-in): Test actual endpoint connectivity
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
@@ -131,9 +142,9 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         using var generator = new MaiImage2Generator(
             endpoint,
             apiKey,
+            httpClient,
             modelName: modelName,
-            modelId: modelId,
-            httpClient: httpClient);
+            modelId: modelId);
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
 
