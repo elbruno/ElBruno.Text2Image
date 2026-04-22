@@ -208,35 +208,35 @@ public class MaiImage2GeneratorValidationTests
     public void Constructor_NullEndpoint_Throws()
     {
         Assert.ThrowsAny<ArgumentException>(() =>
-            new MaiImage2Generator(null!, "test-key"));
+            new MaiImage2Generator(null!, "test-key", new HttpClient()));
     }
 
     [Fact]
     public void Constructor_EmptyEndpoint_Throws()
     {
         Assert.ThrowsAny<ArgumentException>(() =>
-            new MaiImage2Generator("", "test-key"));
+            new MaiImage2Generator("", "test-key", new HttpClient()));
     }
 
     [Fact]
     public void Constructor_NullApiKey_Throws()
     {
         Assert.ThrowsAny<ArgumentException>(() =>
-            new MaiImage2Generator("https://example.services.ai.azure.com", null!));
+            new MaiImage2Generator("https://example.services.ai.azure.com", null!, new HttpClient()));
     }
 
     [Fact]
     public void Constructor_EmptyApiKey_Throws()
     {
         Assert.ThrowsAny<ArgumentException>(() =>
-            new MaiImage2Generator("https://example.services.ai.azure.com", ""));
+            new MaiImage2Generator("https://example.services.ai.azure.com", "", new HttpClient()));
     }
 
     [Fact]
     public void Constructor_HttpEndpoint_Throws()
     {
         Assert.ThrowsAny<ArgumentException>(() =>
-            new MaiImage2Generator("http://example.services.ai.azure.com", "test-key"));
+            new MaiImage2Generator("http://example.services.ai.azure.com", "test-key", new HttpClient()));
     }
 
     [Fact]
@@ -283,8 +283,9 @@ public class MaiImage2GeneratorEndpointTests
     [Fact]
     public void Constructor_BaseUrl_AppendsApiPath()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://myresource.services.ai.azure.com", "test-key");
+            "https://myresource.services.ai.azure.com", "test-key", httpClient);
 
         Assert.Contains("/mai/v1/images/generations", generator.Endpoint);
     }
@@ -292,8 +293,9 @@ public class MaiImage2GeneratorEndpointTests
     [Fact]
     public void Constructor_FullUrl_UsesAsIs()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://myresource.services.ai.azure.com/mai/v1/images/generations", "test-key");
+            "https://myresource.services.ai.azure.com/mai/v1/images/generations", "test-key", httpClient);
 
         Assert.Equal("https://myresource.services.ai.azure.com/mai/v1/images/generations", generator.Endpoint);
     }
@@ -301,8 +303,9 @@ public class MaiImage2GeneratorEndpointTests
     [Fact]
     public void Constructor_OpenAiUrl_ConvertsToServicesUrl()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://myresource.openai.azure.com", "test-key");
+            "https://myresource.openai.azure.com", "test-key", httpClient);
 
         Assert.Contains(".services.ai.azure.com", generator.Endpoint);
         Assert.DoesNotContain(".openai.azure.com", generator.Endpoint);
@@ -311,8 +314,9 @@ public class MaiImage2GeneratorEndpointTests
     [Fact]
     public void Constructor_TrailingSlash_HandlesCorrectly()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://myresource.services.ai.azure.com/", "test-key");
+            "https://myresource.services.ai.azure.com/", "test-key", httpClient);
 
         // Trailing slash should not cause double slashes or path issues
         Assert.DoesNotContain("//mai", generator.Endpoint);
@@ -385,8 +389,9 @@ public class MaiImage2GeneratorModelDefaultsTests
     [Fact]
     public void Constructor_DefaultModelName()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://example.services.ai.azure.com", "test-key");
+            "https://example.services.ai.azure.com", "test-key", httpClient);
 
         Assert.Equal("MAI-Image-2", generator.ModelName);
     }
@@ -394,8 +399,9 @@ public class MaiImage2GeneratorModelDefaultsTests
     [Fact]
     public void Constructor_DefaultModelId()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://example.services.ai.azure.com", "test-key");
+            "https://example.services.ai.azure.com", "test-key", httpClient);
 
         Assert.Equal("mai-image-2", generator.ModelId);
     }
@@ -403,8 +409,9 @@ public class MaiImage2GeneratorModelDefaultsTests
     [Fact]
     public void Constructor_CustomModelName()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://example.services.ai.azure.com", "test-key",
+            "https://example.services.ai.azure.com", "test-key", httpClient,
             modelName: "Custom-MAI-Image");
 
         Assert.Equal("Custom-MAI-Image", generator.ModelName);
@@ -413,8 +420,9 @@ public class MaiImage2GeneratorModelDefaultsTests
     [Fact]
     public void Constructor_CustomModelId()
     {
+        using var httpClient = new HttpClient();
         using var generator = new MaiImage2Generator(
-            "https://example.services.ai.azure.com", "test-key",
+            "https://example.services.ai.azure.com", "test-key", httpClient,
             modelId: "custom-mai-image-2");
 
         Assert.Equal("custom-mai-image-2", generator.ModelId);

@@ -66,6 +66,6 @@ internal sealed class ModelManager
             RequiredFiles = requiredFiles,
             OptionalFiles = optionalFiles ?? [],
             Progress = packageProgress
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
     }
 }

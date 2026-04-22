@@ -49,6 +49,6 @@ public sealed class ImageGenerationResult
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
-        await File.WriteAllBytesAsync(filePath, ImageBytes);
+        await File.WriteAllBytesAsync(filePath, ImageBytes).ConfigureAwait(false);
     }
 }

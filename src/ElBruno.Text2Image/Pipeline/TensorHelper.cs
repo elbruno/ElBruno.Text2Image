@@ -63,12 +63,18 @@ internal static class TensorHelper
 
     /// <summary>
     /// Duplicates tensor data for classifier-free guidance (batch of 2).
+    /// Avoids array allocation by working directly with tensor buffer.
     /// </summary>
-    public static DenseTensor<float> Duplicate(float[] data, int[] dimensions)
+    public static DenseTensor<float> Duplicate(DenseTensor<float> source, int[] dimensions)
     {
+        var data = source.Buffer.Span;
         var doubled = new float[data.Length * 2];
-        Array.Copy(data, 0, doubled, 0, data.Length);
-        Array.Copy(data, 0, doubled, data.Length, data.Length);
+        var doubledSpan = doubled.AsSpan();
+        
+        // Copy source data twice without intermediate allocation
+        data.CopyTo(doubledSpan.Slice(0, data.Length));
+        data.CopyTo(doubledSpan.Slice(data.Length, data.Length));
+        
         return new DenseTensor<float>(doubled, dimensions);
     }
 

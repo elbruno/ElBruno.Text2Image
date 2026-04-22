@@ -169,8 +169,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         }
 
         // Production mode: generic error without exposing infrastructure details
-        return "\n\nHint: Failed to connect to image generation service. " +
-               "Verify your endpoint configuration is correct. " +
+        return "\n\nHint: Failed to connect to FLUX.2 API. " +
+               "FLUX.2 models use the BFL Native API endpoint, not the OpenAI-compatible API. " +
+               "Verify your endpoint configuration. " +
                "Set T2I_DETAILED_ERRORS=1 for more diagnostic information.";
     }
 
@@ -225,11 +226,11 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         request.Content = new ByteArrayContent(jsonBytes);
         request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (errorBody.Length > MaxErrorBodyLength)
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
@@ -242,7 +243,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         }
 
         // Read the response body once
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
         // Handle async API pattern:
         // - 202 Accepted with operation-location header
@@ -255,7 +256,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         Flux2Response? result;
         if (response.StatusCode == HttpStatusCode.Accepted || (hasOperationLocation && bodyIsEmpty))
         {
-            result = await PollForResultAsync(response, cancellationToken);
+            result = await PollForResultAsync(response, cancellationToken).ConfigureAwait(false);
         }
         else if (!bodyIsEmpty)
         {
@@ -264,7 +265,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             if (maybeOperation?.Status != null && maybeOperation.Status.ToLowerInvariant() != "succeeded")
             {
                 // This is an async operation — need to poll
-                result = await PollForResultAsync(response, cancellationToken);
+                result = await PollForResultAsync(response, cancellationToken).ConfigureAwait(false);
             }
             else if (maybeOperation?.Result?.Data?.Count > 0)
             {
@@ -295,9 +296,9 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         {
             // Use a separate request WITHOUT the API key to avoid credential leakage (SSRF mitigation)
             using var imageRequest = new HttpRequestMessage(HttpMethod.Get, imageData.Url);
-            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken);
+            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken).ConfigureAwait(false);
             imageResponse.EnsureSuccessStatusCode();
-            imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
+            imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -337,7 +338,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         if (!File.Exists(referenceImagePath))
             throw new FileNotFoundException("Reference image file not found.", referenceImagePath);
 
-        var imageBytes = await File.ReadAllBytesAsync(referenceImagePath, cancellationToken);
+        var imageBytes = await File.ReadAllBytesAsync(referenceImagePath, cancellationToken).ConfigureAwait(false);
         var mimeType = Path.GetExtension(referenceImagePath).ToLowerInvariant() switch
         {
             ".png" => "image/png",
@@ -351,7 +352,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
         options.ReferenceImages ??= [];
         options.ReferenceImages.Add(dataUri);
 
-        return await GenerateAsync(prompt, options, cancellationToken);
+        return await GenerateAsync(prompt, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -369,23 +370,23 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
 
         for (var attempt = 0; attempt < MaxPollAttempts; attempt++)
         {
-            await Task.Delay(PollInterval, cancellationToken);
+            await Task.Delay(PollInterval, cancellationToken).ConfigureAwait(false);
 
             using var pollRequest = new HttpRequestMessage(HttpMethod.Get, operationUrl);
             pollRequest.Headers.TryAddWithoutValidation("api-key", _apiKey);
 
-            var pollResponse = await _httpClient.SendAsync(pollRequest, cancellationToken);
+            var pollResponse = await _httpClient.SendAsync(pollRequest, cancellationToken).ConfigureAwait(false);
 
             if (!pollResponse.IsSuccessStatusCode)
             {
-                var errorBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+                var errorBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 if (errorBody.Length > MaxErrorBodyLength)
                     errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
                 throw new HttpRequestException(
                     $"FLUX.2 polling returned {pollResponse.StatusCode}: {errorBody}");
             }
 
-            var pollBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken);
+            var pollBody = await pollResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(pollBody))
                 continue;
 
@@ -448,7 +449,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             localOptions.ReferenceImages = refList;
         }
 
-        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken);
+        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
 

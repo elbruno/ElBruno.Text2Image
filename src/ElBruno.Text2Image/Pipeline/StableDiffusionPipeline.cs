@@ -94,7 +94,7 @@ internal sealed class StableDiffusionPipeline : IDisposable
             {
                 // Duplicate latents for CFG: [2, 4, H/8, W/8]
                 var latentModelInput = TensorHelper.Duplicate(
-                    latents.Buffer.ToArray(),
+                    latents,
                     new int[] { 2, 4, height / 8, width / 8 });
 
                 // Scale input

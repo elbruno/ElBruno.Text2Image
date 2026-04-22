@@ -203,11 +203,11 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
         request.Content = new ByteArrayContent(jsonBytes);
         request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (errorBody.Length > MaxErrorBodyLength)
                 errorBody = errorBody[..MaxErrorBodyLength] + "... (truncated)";
 
@@ -220,7 +220,7 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
         }
 
         // MAI-Image-2 responds synchronously — parse the response directly
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
         var result = JsonSerializer.Deserialize(responseBody, MaiImage2JsonContext.Default.MaiImage2Response)
             ?? throw new InvalidOperationException(
@@ -238,9 +238,9 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
         {
             // Use a separate request WITHOUT the API key to avoid credential leakage (SSRF mitigation)
             using var imageRequest = new HttpRequestMessage(HttpMethod.Get, imageData.Url);
-            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken);
+            var imageResponse = await _httpClient.SendAsync(imageRequest, cancellationToken).ConfigureAwait(false);
             imageResponse.EnsureSuccessStatusCode();
-            imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
+            imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -277,7 +277,7 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
             localOptions.Height = size.Height;
         }
 
-        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken);
+        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
 

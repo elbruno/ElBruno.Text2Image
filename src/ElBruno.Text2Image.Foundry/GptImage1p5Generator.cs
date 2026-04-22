@@ -44,29 +44,22 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
     /// <param name="apiKey">The Azure OpenAI Service API key.</param>
     /// <param name="modelName">Optional model display name. Defaults to "GPT-Image-1.5".</param>
     /// <param name="deploymentName">Optional deployment name. Defaults to "gpt-image-1.5".</param>
-    /// <param name="httpClient">Optional custom HTTP client. If not provided, a new instance is created and managed.</param>
+    /// <param name="httpClient">HttpClient instance for making HTTP requests. Use IHttpClientFactory for production to enable connection pooling.</param>
     /// <exception cref="ArgumentException">Thrown when endpoint is null/empty or doesn't use HTTPS, or when apiKey is null/empty.</exception>
-    public GptImage1p5Generator(string endpoint, string apiKey, string? modelName = null, string? deploymentName = null, HttpClient? httpClient = null)
+    /// <exception cref="ArgumentNullException">Thrown when httpClient is null.</exception>
+    public GptImage1p5Generator(string endpoint, string apiKey, HttpClient httpClient, string? modelName = null, string? deploymentName = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey, nameof(apiKey));
+        ArgumentNullException.ThrowIfNull(httpClient);
         if (!endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
         _endpoint = endpoint.TrimEnd('/');
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "GPT-Image-1.5";
         _deploymentName = deploymentName ?? "gpt-image-1.5";
-        
-        if (httpClient != null)
-        {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-        else
-        {
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            _ownsHttpClient = true;
-        }
+        _httpClient = httpClient;
+        _ownsHttpClient = false;
         
         var client = new AzureOpenAIClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         _imageClient = client.GetImageClient(_deploymentName);
@@ -118,7 +111,7 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         };
         
         var sw = Stopwatch.StartNew();
-        var response = await _imageClient.GenerateImageAsync(prompt, generationOptions, cancellationToken);
+        var response = await _imageClient.GenerateImageAsync(prompt, generationOptions, cancellationToken).ConfigureAwait(false);
         sw.Stop();
         
         byte[] imageBytes = response.Value.ImageBytes.ToArray();
@@ -140,7 +133,7 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         ArgumentNullException.ThrowIfNull(imageRequest);
         var localOptions = new ImageGenerationOptions();
         if (options?.ImageSize.HasValue == true) { localOptions.Width = options.ImageSize.Value.Width; localOptions.Height = options.ImageSize.Value.Height; }
-        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken);
+        var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
     object? Microsoft.Extensions.AI.IImageGenerator.GetService(Type serviceType, object? serviceKey) => serviceType == GetType() ? this : null;

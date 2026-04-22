@@ -38,9 +38,11 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_endpoint != null && _apiKey != null,
             "GPT-Image-1.5 credentials not configured (set GPT_IMAGE_1P5_ENDPOINT, GPT_IMAGE_1P5_API_KEY)");
 
+        using var httpClient = new HttpClient();
         using var generator = new GptImage1p5Generator(
             endpoint: _endpoint!,
             apiKey: _apiKey!,
+            httpClient: httpClient,
             deploymentName: _model ?? "gpt-image-15");
 
         var result = await generator.GenerateAsync("a serene mountain landscape");
@@ -57,7 +59,8 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_endpoint != null && _apiKey != null,
             "GPT-Image-1.5 credentials not configured");
 
-        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, _model ?? "gpt-image-15");
+        using var httpClient = new HttpClient();
+        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, httpClient, _model ?? "gpt-image-15");
 
         var options = new ImageGenerationOptions { Width = 1792, Height = 1024 };
         var result = await generator.GenerateAsync("a cityscape at night", options);
@@ -73,7 +76,8 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_endpoint != null && _apiKey != null,
             "GPT-Image-1.5 credentials not configured");
 
-        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, _model ?? "gpt-image-15");
+        using var httpClient = new HttpClient();
+        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, httpClient, _model ?? "gpt-image-15");
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -90,9 +94,11 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_apiKey != null,
             "GPT_IMAGE_1P5_API_KEY not configured");
 
+        using var httpClient = new HttpClient();
         using var generator = new GptImage1p5Generator(
             endpoint: "https://invalid-resource.services.ai.azure.com",
             apiKey: _apiKey!,
+            httpClient: httpClient,
             deploymentName: _model ?? "gpt-image-15");
 
         var ex = await Assert.ThrowsAnyAsync<Exception>(
@@ -107,9 +113,11 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_endpoint != null,
             "GPT_IMAGE_1P5_ENDPOINT not configured");
 
+        using var httpClient = new HttpClient();
         using var generator = new GptImage1p5Generator(
             endpoint: _endpoint!,
             apiKey: "invalid-key-12345",
+            httpClient: httpClient,
             deploymentName: _model ?? "gpt-image-15");
 
         var ex = await Assert.ThrowsAnyAsync<Exception>(
@@ -124,7 +132,8 @@ public class GptImage1p5GeneratorIntegrationTests : IDisposable
         Skip.IfNot(_endpoint != null && _apiKey != null,
             "GPT-Image-1.5 credentials not configured");
 
-        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, _model ?? "gpt-image-15");
+        using var httpClient = new HttpClient();
+        using var generator = new GptImage1p5Generator(_endpoint!, _apiKey!, httpClient, _model ?? "gpt-image-15");
         var outputPath = Path.Combine(Path.GetTempPath(), $"gpt-image-1p5-test-{Guid.NewGuid()}.png");
         _generatedFiles.Add(outputPath);
 

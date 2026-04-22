@@ -532,36 +532,41 @@ public class Flux2GeneratorTests
     [Fact]
     public void Constructor_SetsModelName()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key", "FLUX.2 Pro");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient, "FLUX.2 Pro");
         Assert.Equal("FLUX.2 Pro", generator.ModelName);
     }
 
     [Fact]
     public void Constructor_DefaultModelName()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         Assert.Equal("FLUX.2-pro", generator.ModelName);
     }
 
     [Fact]
     public void Constructor_SetsModelId()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key", modelId: "FLUX.2-flex");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient, modelId: "FLUX.2-flex");
         Assert.Equal("FLUX.2-flex", generator.ModelId);
     }
 
     [Fact]
     public void Constructor_DefaultModelId()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         Assert.Equal("FLUX.2-pro", generator.ModelId);
     }
 
     [Fact]
     public void Constructor_AllParameters()
     {
+        using var httpClient = new HttpClient();
         using var generator = new Flux2Generator(
-            "https://example.com/api", "test-key",
+            "https://example.com/api", "test-key", httpClient,
             modelName: "FLUX.2 Flex", modelId: "FLUX.2-flex");
         Assert.Equal("FLUX.2 Flex", generator.ModelName);
         Assert.Equal("FLUX.2-flex", generator.ModelId);
@@ -570,26 +575,30 @@ public class Flux2GeneratorTests
     [Fact]
     public void Implements_IImageGenerator()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         Assert.IsAssignableFrom<IImageGenerator>(generator);
     }
 
     [Fact]
     public void Constructor_ThrowsOnNullEndpoint()
     {
-        Assert.Throws<ArgumentException>(() => new Flux2Generator("", "test-key"));
+        using var httpClient = new HttpClient();
+        Assert.Throws<ArgumentException>(() => new Flux2Generator("", "test-key", httpClient));
     }
 
     [Fact]
     public void Constructor_ThrowsOnNullApiKey()
     {
-        Assert.Throws<ArgumentException>(() => new Flux2Generator("https://example.com", ""));
+        using var httpClient = new HttpClient();
+        Assert.Throws<ArgumentException>(() => new Flux2Generator("https://example.com", "", httpClient));
     }
 
     [Fact]
     public void Constructor_ThrowsOnHttpEndpoint()
     {
-        var ex = Assert.Throws<ArgumentException>(() => new Flux2Generator("http://example.com/api", "test-key"));
+        using var httpClient = new HttpClient();
+        var ex = Assert.Throws<ArgumentException>(() => new Flux2Generator("http://example.com/api", "test-key", httpClient));
         Assert.Contains("HTTPS", ex.Message);
         Assert.Equal("endpoint", ex.ParamName);
     }
@@ -597,14 +606,16 @@ public class Flux2GeneratorTests
     [Fact]
     public void Constructor_AcceptsHttpsEndpoint()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         Assert.NotNull(generator);
     }
 
     [Fact]
     public async Task EnsureModelAvailable_CompletesImmediately()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         // Cloud model — EnsureModelAvailableAsync should complete without throwing
         await generator.EnsureModelAvailableAsync();
     }
@@ -621,51 +632,58 @@ public class Flux2GeneratorTests
     [Fact]
     public void Endpoint_ServicesBaseUrl_BuildsBflNativePath()
     {
-        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key", httpClient);
         Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
     public void Endpoint_OpenAiBaseUrl_ConvertsToServicesBflPath()
     {
-        using var generator = new Flux2Generator("https://myresource.openai.azure.com", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://myresource.openai.azure.com", "test-key", httpClient);
         Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
     public void Endpoint_OpenAiWithPath_ConvertsToServicesBflPath()
     {
-        using var generator = new Flux2Generator("https://myresource.openai.azure.com/openai/v1/", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://myresource.openai.azure.com/openai/v1/", "test-key", httpClient);
         Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
     public void Endpoint_FlexModel_UsesBflFlexPath()
     {
-        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key", modelId: "FLUX.2-flex");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://myresource.services.ai.azure.com", "test-key", httpClient, modelId: "FLUX.2-flex");
         Assert.Equal("https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-flex?api-version=preview", generator.Endpoint);
     }
 
     [Fact]
     public void Endpoint_FullBflUrl_UsedAsIs()
     {
+        using var httpClient = new HttpClient();
         var fullUrl = "https://myresource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview";
-        using var generator = new Flux2Generator(fullUrl, "test-key");
+        using var generator = new Flux2Generator(fullUrl, "test-key", httpClient);
         Assert.Equal(fullUrl, generator.Endpoint);
     }
 
     [Fact]
     public void Endpoint_CustomFullUrl_UsedAsIs()
     {
+        using var httpClient = new HttpClient();
         var fullUrl = "https://custom-endpoint.example.com/api/generate";
-        using var generator = new Flux2Generator(fullUrl, "test-key");
+        using var generator = new Flux2Generator(fullUrl, "test-key", httpClient);
         Assert.Equal(fullUrl, generator.Endpoint);
     }
 
     [Fact]
     public async Task GenerateAsync_ThrowsOnNullPrompt()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             generator.GenerateAsync(null!));
     }
@@ -673,7 +691,8 @@ public class Flux2GeneratorTests
     [Fact]
     public async Task GenerateAsync_ThrowsOnEmptyPrompt()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         await Assert.ThrowsAsync<ArgumentException>(() =>
             generator.GenerateAsync(""));
     }
@@ -681,7 +700,8 @@ public class Flux2GeneratorTests
     [Fact]
     public async Task GenerateAsync_ThrowsOnWhitespacePrompt()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         await Assert.ThrowsAsync<ArgumentException>(() =>
             generator.GenerateAsync("   "));
     }
@@ -689,7 +709,8 @@ public class Flux2GeneratorTests
     [Fact]
     public async Task GenerateAsync_ThrowsOnTooLongPrompt()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         var longPrompt = new string('a', 1001);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             generator.GenerateAsync(longPrompt));
@@ -729,7 +750,8 @@ public class MeaiInterfaceTests
     [Fact]
     public void Flux2Generator_Implements_MeaiIImageGenerator()
     {
-        using var generator = new Flux2Generator("https://example.com/api", "test-key");
+        using var httpClient = new HttpClient();
+        using var generator = new Flux2Generator("https://example.com/api", "test-key", httpClient);
         Assert.IsAssignableFrom<Microsoft.Extensions.AI.IImageGenerator>(generator);
     }
 

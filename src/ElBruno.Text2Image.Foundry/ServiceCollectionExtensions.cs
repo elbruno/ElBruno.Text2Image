@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds a FLUX.2 cloud API image generator to the service collection.
     /// Requires a Microsoft Foundry deployment endpoint and API key.
+    /// Uses IHttpClientFactory for connection pooling.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
@@ -27,13 +28,20 @@ public static class ServiceCollectionExtensions
         string? modelName = null,
         string? modelId = null)
     {
-        services.AddSingleton<IImageGenerator>(new Flux2Generator(endpoint, apiKey, modelName, modelId));
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient();
+            return new Flux2Generator(endpoint, apiKey, httpClient, modelName, modelId);
+        });
         return services;
     }
 
     /// <summary>
     /// Adds a MAI-Image-2 cloud API image generator to the service collection.
     /// Requires a Microsoft Foundry deployment endpoint and API key.
+    /// Uses IHttpClientFactory for connection pooling.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
@@ -50,13 +58,20 @@ public static class ServiceCollectionExtensions
         string? modelName = null,
         string? modelId = null)
     {
-        services.AddSingleton<IImageGenerator>(new MaiImage2Generator(endpoint, apiKey, modelName, modelId));
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient();
+            return new MaiImage2Generator(endpoint, apiKey, httpClient, modelName, modelId);
+        });
         return services;
     }
 
     /// <summary>
     /// Adds a GPT-Image-1.5 cloud API image generator to the service collection.
     /// Requires an Azure OpenAI deployment endpoint and API key.
+    /// Uses IHttpClientFactory for connection pooling.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="endpoint">The Azure OpenAI endpoint URL (e.g., "https://your-resource.openai.azure.com/").</param>
@@ -73,7 +88,13 @@ public static class ServiceCollectionExtensions
         string? modelName = null,
         string? deploymentName = null)
     {
-        services.AddSingleton<IImageGenerator>(new GptImage1p5Generator(endpoint, apiKey, modelName, deploymentName));
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient();
+            return new GptImage1p5Generator(endpoint, apiKey, httpClient, modelName, deploymentName);
+        });
         return services;
     }
 }

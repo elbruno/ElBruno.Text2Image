@@ -105,6 +105,7 @@ internal sealed class FoundryGptImage2Adapter : IProviderAdapter
         using var generator = new GptImage2Generator(
             endpoint,
             apiKey,
+            httpClient,
             modelName: modelName,
             deploymentName: deploymentName);
 

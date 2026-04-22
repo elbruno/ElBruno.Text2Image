@@ -60,7 +60,7 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
     {
         var modelPath = _defaultOptions.GetModelDirectory(ModelSubfolder);
         await ModelManager.EnsureModelAvailableAsync(
-            modelPath, HuggingFaceRepo, RequiredFiles, OptionalFiles, progress, cancellationToken);
+            modelPath, HuggingFaceRepo, RequiredFiles, OptionalFiles, progress, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -77,7 +77,7 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
         var modelPath = options.GetModelDirectory(ModelSubfolder);
 
         await ModelManager.EnsureModelAvailableAsync(
-            modelPath, HuggingFaceRepo, RequiredFiles, OptionalFiles, cancellationToken: cancellationToken);
+            modelPath, HuggingFaceRepo, RequiredFiles, OptionalFiles, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (_pipeline == null)
         {
@@ -91,7 +91,7 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
             }
         }
 
-        return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken);
+        return await Task.Run(() => _pipeline.Generate(prompt, options, ModelName), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -109,7 +109,7 @@ public sealed class LcmDreamshaperV7 : IImageGenerator, Microsoft.Extensions.AI.
             localOptions.NumInferenceSteps = 4;
         if (options?.AdditionalProperties == null || !options.AdditionalProperties.ContainsKey(Text2ImagePropertyNames.GuidanceScale))
             localOptions.GuidanceScale = 1.0;
-        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken);
+        var result = await GenerateAsync(request.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }
 

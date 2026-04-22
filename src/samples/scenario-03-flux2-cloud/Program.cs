@@ -60,9 +60,10 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
 
 // Uncomment the next line to use a custom HttpClient with a longer timeout (e.g., 600 seconds)
 // var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(600) };
-// using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId, httpClient: httpClient);
+// using var generator = new Flux2Generator(endpoint, apiKey, httpClient, modelName: modelName, modelId: modelId);
 
-using var generator = new Flux2Generator(endpoint, apiKey, modelName: modelName, modelId: modelId);
+using var httpClient = new HttpClient();
+using var generator = new Flux2Generator(endpoint, apiKey, httpClient, modelName: modelName, modelId: modelId);
 
 Console.WriteLine($"Model: {generator.ModelName}");
 Console.WriteLine($"Model ID: {generator.ModelId}");
