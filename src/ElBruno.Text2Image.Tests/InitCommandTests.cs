@@ -7,7 +7,9 @@ namespace ElBruno.Text2Image.Tests;
 
 /// <summary>
 /// Tests for InitCommand — writes embedded SKILL.md to .github/skills/t2i/ and .claude/skills/t2i/
+/// Serialized execution: modifies global Directory.CurrentDirectory, must not run in parallel.
 /// </summary>
+[Collection("Global State")]
 public class InitCommandTests : IDisposable
 {
     private readonly string _testDir;

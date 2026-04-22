@@ -8,6 +8,7 @@ namespace ElBruno.Text2Image.Tests.Cli;
 public class ConfigModelTests : IDisposable
 {
     private readonly string _tempConfigDir;
+    private readonly TextWriter _originalStdErr;
 
     public ConfigModelTests()
     {
@@ -15,6 +16,10 @@ public class ConfigModelTests : IDisposable
         Directory.CreateDirectory(_tempConfigDir);
         Environment.SetEnvironmentVariable("APPDATA", _tempConfigDir);
         Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", _tempConfigDir);
+        
+        // Suppress Console.Error output during tests to prevent warning noise
+        _originalStdErr = Console.Error;
+        Console.SetError(TextWriter.Null);
     }
 
     [Fact]
@@ -141,6 +146,8 @@ public class ConfigModelTests : IDisposable
 
     public void Dispose()
     {
+        Console.SetError(_originalStdErr);
+        
         Environment.SetEnvironmentVariable("APPDATA", null);
         Environment.SetEnvironmentVariable("XDG_CONFIG_HOME", null);
 

@@ -8,7 +8,8 @@ namespace ElBruno.Text2Image.Cli.Config;
 /// </summary>
 public sealed class ConfigStore
 {
-    private readonly SemaphoreSlim _fileLock = new(1, 1);
+    private static readonly SemaphoreSlim StaticFileLock = new(1, 1);
+    private readonly SemaphoreSlim _fileLock = StaticFileLock;
     private readonly string _filePath;
 
     public ConfigStore()
