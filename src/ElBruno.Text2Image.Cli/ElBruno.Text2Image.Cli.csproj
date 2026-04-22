@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,7 +15,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>t2i</ToolCommandName>
     <PackageId>ElBruno.Text2Image.Cli</PackageId>
-    <Version>0.12.0</Version>
+    <Version>0.15.0</Version>
     <Description>Lightweight cross-platform CLI for AI text-to-image generation. Includes cloud providers (Microsoft Foundry FLUX.2, MAI-Image-2). For local CPU/GPU inference, see the upcoming ElBruno.Text2Image.Cli.Full package.</Description>
     <PackageTags>text-to-image;stable-diffusion;flux;mai;ai;image-generation;cli;dotnet-tool</PackageTags>
     <Authors>Bruno Capuano</Authors>
