@@ -232,3 +232,101 @@ The previous "independent CLI versioning" decision was correct for timing flexib
 - **Release discipline matters for ecosystem trust:** Users rely on matching versions as a signal of compatibility
 
 **Decision:** Created comprehensive decision document at `.squad/decisions/inbox/mal-synchronized-versioning.md` with versioning principle, release coordination rules, post-release validation checklist, CI/CD recommendations, implementation phases, and FAQ. Awaiting Bruno's approval before Phase 1 execution.
+
+---
+
+## Phase 3 Release Readiness (2026-04-22)
+
+**Context:** Bruno requested Phase 3 release documentation after completion of comprehensive test expansion (206 new tests across 3 batches: 3A, 3B, 3C).
+
+**Current State:**
+- Git tag: `v1.0.0-security-hardened` (Phase 1-2 hardening + baseline tests)
+- Latest commit: `e2ca0e0` (Phase 3: Fix test suite parallel execution issues and E2E assertions)
+- Test count: ~850+ passing tests (206 new + 697 baseline)
+- Build quality: 0 warnings, 0 errors, 0 test failures
+- Coverage: Estimated 60-65% (up from ~40%)
+
+**Deliverables Created:**
+
+1. **RELEASE_NOTES_Phase3.md** (`docs/release/`)
+   - Comprehensive 206-test breakdown (Phase 3A/3B/3C scope)
+   - Security improvements from Phase 1-2 (5 critical fixes: H-1, H-3, H-2, M-2, M-3)
+   - Performance improvements from Phase 1-2 (73% latency reduction)
+   - Test categories: CLI, providers, integration, config, secrets, TUI, utilities, performance, error recovery, local providers, regression
+   - Coverage improvement: ~40% → 60-65%
+   - Breaking changes: None (100% backward compatible)
+
+2. **GITHUB_RELEASE_v1.1.0.md** (root directory)
+   - User-facing release announcement
+   - Title: "ElBruno.Text2Image v1.1.0 — Comprehensive Test Coverage & Security Hardening"
+   - Sections: Test Coverage, Security, Performance, Compatibility, Installation, Features, Documentation, Bug Fixes, Testing, Contributing, Metrics
+   - Badges: NuGet version, build status, test coverage
+   - Installation instructions for all 6 packages
+
+3. **CHANGELOG.md** (updated)
+   - New v1.1.0 entry at top (Semantic Versioning order)
+   - Added section breakdown: Added, Security, Performance, Fixed, Infrastructure, Quality
+   - 206 test summary with Phase 3A/3B/3C details
+   - Security fixes (5 critical issues)
+   - Performance improvements (73% latency reduction)
+   - Regression protection (Issue #5, config locking, boundaries, Unicode)
+   - Test infrastructure documentation
+
+4. **mal-phase3-release-readiness.md** (`.squad/decisions/inbox/`)
+   - Version bump recommendation: **v1.1.0** (minor bump) over v1.0.0-phase3-quality
+   - Rationale: Semantic versioning compliance, signals production quality, significant value delivery
+   - Test coverage metrics: 206 tests, 60-65% coverage, 11 test categories
+   - Security/performance context from Phase 1-2
+   - Release timeline: Immediate (24-48h), Short-term (1 week), Long-term (next sprint)
+   - Quality assurance checklist (build, test, compatibility, documentation)
+   - Risk assessment (low risk, mitigation strategies, rollback plan)
+   - Next steps for release publication
+
+**Key Metrics:**
+- **Tests Added:** 206 (Phase 3A: 102, Phase 3B: 54, Phase 3C: 50)
+- **Total Tests:** ~850+ (206 new + 697 baseline)
+- **Coverage Improvement:** ~40% → 60-65% (estimated +20-25%)
+- **Security Fixes:** 5 critical issues (Phase 1-2)
+- **Performance Improvement:** 73% latency reduction (Phase 1-2)
+- **Build Quality:** 0 warnings, 0 errors, 0 test failures
+- **Backward Compatibility:** 100%
+
+**Recommendation:**
+Tag and release **v1.1.0** immediately. This is a minor version bump (not pre-release tag) because:
+1. Significant new features (test coverage, security hardening, performance optimization)
+2. Production-ready quality (0 warnings, 0 errors, 0 failures)
+3. Semantic versioning compliance (new features = minor bump)
+4. User value delivery (security, performance, reliability)
+
+**Release Timeline:**
+- **Immediate (24-48h):** Version bump, tagging, CI/CD validation, GitHub release
+- **Short-term (1 week):** Documentation updates, community engagement
+- **Long-term (next sprint):** Phase 4 consideration (monitoring, docs, guides)
+
+**Next Steps:**
+1. Bruno approval of v1.1.0 version bump
+2. Update Directory.Build.props to 1.1.0
+3. Create tags: `v1.1.0` (primary) + `foundry-v1.1.0`, `cli-v1.1.0`, `cpu-v1.1.0`, `cuda-v1.1.0`, `directml-v1.1.0` (informational)
+4. Monitor CI/CD workflow execution (`publish.yml`)
+5. Create GitHub release from GITHUB_RELEASE_v1.1.0.md
+6. Smoke test installed packages
+7. Announce release (optional)
+
+**Learnings:**
+- **Test coverage is a feature:** 206 new tests provide user-visible value (reliability, confidence, regression protection)
+- **Documentation tells the story:** Release notes must connect Phase 3 (tests) with Phase 1-2 (security/performance) to show complete value
+- **Version semantics matter:** v1.1.0 signals "stable, production-ready, new features" while v1.0.0-phase3-quality signals "pre-release, experimental"
+- **Release readiness is multifaceted:** Quality gates (tests), documentation (notes, changelog), process (tagging, CI/CD), communication (announcement)
+- **Test infrastructure pays dividends:** Reusable components (FakeHttpHandler, FakeSecretStore) and patterns (isolation, DI) accelerate future test development
+
+**Decision:** Created 4 release artifacts (RELEASE_NOTES_Phase3.md, GITHUB_RELEASE_v1.1.0.md, CHANGELOG.md update, mal-phase3-release-readiness.md). Recommended v1.1.0 minor version bump with immediate release timeline. Awaiting Bruno's approval for version bump and tag creation.
+
+**Files Created/Modified:**
+- `docs/release/RELEASE_NOTES_Phase3.md` (created, ~400 lines)
+- `GITHUB_RELEASE_v1.1.0.md` (created, ~300 lines)
+- `CHANGELOG.md` (updated, added v1.1.0 entry)
+- `.squad/decisions/inbox/mal-phase3-release-readiness.md` (created, ~300 lines)
+- `.squad/agents/mal/history.md` (this file, updated)
+
+📌 Team update (2026-04-22): Phase 3 release readiness complete. Mal created comprehensive release documentation (RELEASE_NOTES_Phase3.md, GITHUB_RELEASE_v1.1.0.md, CHANGELOG update) and recommended v1.1.0 minor version bump. 206 tests delivered 60-65% coverage. Awaiting Bruno approval for release. — decided by Mal
+
