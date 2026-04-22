@@ -1,5 +1,5 @@
 name: Squad Docs — Build & Deploy
-# Project type was not detected — configure documentation build commands below
+# dotnet project — configure documentation build commands below
 
 on:
   workflow_dispatch:

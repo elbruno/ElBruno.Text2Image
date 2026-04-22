@@ -1,5 +1,5 @@
 name: Squad Insider Release
-# Project type was not detected — configure build, test, and insider release commands below
+# dotnet project — configure build, test, and insider release commands below
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
 
       - name: Build and test
         run: |
-          # TODO: Project type was not detected — add your build/test commands here
+          # TODO: Add your dotnet build/test commands here
           # Go:            go test ./...
           # Python:        pip install -r requirements.txt && pytest
           # .NET:          dotnet test

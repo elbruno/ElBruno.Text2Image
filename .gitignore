@@ -106,3 +106,4 @@ src/samples/**/appsettings.json
 # Squad runtime team state (lives on dev/feature branches only)
 .squad/
 *.lscache
+.squad-workstream
