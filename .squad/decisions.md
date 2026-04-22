@@ -5821,3 +5821,474 @@ Created `src/ElBruno.Text2Image.Foundry/GptImage2Generator.cs` following the est
 - **EXISTING:** `src/ElBruno.Text2Image.Cli/Providers/FoundryGptImage2Adapter.cs` (already referenced the class)
 - **EXISTING:** `src/ElBruno.Text2Image.Cli/Infrastructure/ProviderServiceCollectionExtensions.cs` (already registered)
 
+
+
+# Decision: Synchronized Multi-Package Versioning & Release Coordination
+
+**Date:** 2026-04-22  
+**Author:** Mal (Lead)  
+**Status:** Proposed  
+**Driven By:** Bruno Capuano  
+**Rule:** "When a new release is published, all packages should be published with the same version number."
+
+---
+
+## Problem Statement
+
+ElBruno.Text2Image currently publishes six interdependent packages on NuGet:
+1. ElBruno.Text2Image (core library)
+2. ElBruno.Text2Image.Foundry (cloud provider)
+3. ElBruno.Text2Image.Cli (command-line tool)
+4. ElBruno.Text2Image.Cpu (local CPU provider)
+5. ElBruno.Text2Image.Cuda (local GPU/CUDA provider)
+6. ElBruno.Text2Image.DirectML (local GPU/DirectML provider)
+
+**Current State:**
+- All packages have independent `<Version>` entries in their `.csproj` files (e.g., each lists `<Version>0.16.0</Version>`)
+- No centralized version source of truth
+- Release workflows use distinct tag patterns: `v0.X.Y` for libraries, `cli-v0.X.Y` for CLI
+- Risk: Version drift across packages (e.g., CPU at 0.16.0 while Cuda at 0.15.0)
+- Users cannot assume any package version equals another — confusing for consumers
+
+**Why It Matters:**
+- Ecosystem consistency: All providers and the core library should evolve together
+- User trust: A single version number reassures users that all packages are tested and compatible
+- Release discipline: Forces coordination instead of ad-hoc independent bumps
+
+---
+
+## Versioning Principle: Single Source of Truth
+
+### Current Implementation Gap
+
+**Finding:** All packages currently have `<Version>` hardcoded in their `.csproj` files:
+```xml
+<!-- ElBruno.Text2Image.csproj -->
+<Version>0.16.0</Version>
+
+<!-- ElBruno.Text2Image.Foundry.csproj -->
+<Version>0.16.0</Version>
+
+<!-- ElBruno.Text2Image.Cli.csproj -->
+<Version>0.16.0</Version>
+
+<!-- ElBruno.Text2Image.Cpu.csproj -->
+<Version>0.16.0</Version>
+
+<!-- ElBruno.Text2Image.Cuda.csproj -->
+<Version>0.16.0</Version>
+
+<!-- ElBruno.Text2Image.DirectML.csproj -->
+<Version>0.16.0</Version>
+```
+
+**Improvement:** Centralize all `<Version>` entries in `Directory.Build.props` (the natural single source of truth for .NET projects).
+
+### Rule 1: Single Version Property in Directory.Build.props
+
+```xml
+<!-- Directory.Build.props -->
+<Project>
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Version>0.16.0</Version>  <!-- SINGLE SOURCE OF TRUTH -->
+  </PropertyGroup>
+</Project>
+```
+
+**Consequence:** Remove all `<Version>` entries from individual `.csproj` files. They automatically inherit from `Directory.Build.props`.
+
+### Rule 2: No Package-Specific Versioning
+
+All packages must use the same version. Do not add:
+- `<FileVersion>`, `<AssemblyVersion>`, or `<InformationalVersion>` overrides per `.csproj`
+- Package-specific pre-release suffixes (e.g., `-cli-alpha1`, `-cpu-rc1`)
+
+---
+
+## Release Coordination Rule
+
+### Tag Naming Convention
+
+When releasing version X.Y.Z, create **two categories of tags**:
+
+#### 1. Primary Release Tag (Triggers Main Package Publish)
+```
+v0.16.0
+```
+- One generic tag per release
+- Triggers `publish.yml` workflow
+- Publishes: Core + Foundry + Cpu + Cuda + DirectML to NuGet
+
+#### 2. Package-Specific Tags (Optional, for Clarity & Filtering)
+```
+foundry-v0.16.0
+cli-v0.16.0
+cpu-v0.16.0
+cuda-v0.16.0
+directml-v0.16.0
+```
+- Created simultaneously with the primary tag
+- Allow filtering GitHub releases by provider
+- Do NOT trigger separate publish workflows (same code, same version)
+- Purely organizational/documentation
+
+**Example Workflow for v0.17.0 Release:**
+
+```bash
+git tag v0.17.0                    # Primary tag
+git tag foundry-v0.17.0            # Package-specific (informational)
+git tag cli-v0.17.0                # Package-specific (informational)
+git tag cpu-v0.17.0                # Package-specific (informational)
+git tag cuda-v0.17.0               # Package-specific (informational)
+git tag directml-v0.17.0           # Package-specific (informational)
+git push origin --tags
+```
+
+### Workflow Architecture
+
+#### publish.yml (Main Packages)
+
+```yaml
+on:
+  release:
+    types: [published]
+
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (
+        !startsWith(github.event.release.tag_name, 'foundry-v') &&
+        !startsWith(github.event.release.tag_name, 'cli-v') &&
+        !startsWith(github.event.release.tag_name, 'cpu-v') &&
+        !startsWith(github.event.release.tag_name, 'cuda-v') &&
+        !startsWith(github.event.release.tag_name, 'directml-v')
+      )
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to NuGet
+        run: |
+          # Publishes all 6 packages with the version from Directory.Build.props
+          dotnet publish -c Release
+```
+
+**Key Point:** This workflow ONLY runs on `v0.X.Y` tags, ignoring `*-v0.X.Y` package-specific tags. This prevents duplicate publishes.
+
+#### Why Package-Specific Tags Don't Trigger Independent Workflows
+
+Since all packages now share a single version in `Directory.Build.props`, there is no technical reason to maintain separate workflows. The `foundry-v0.X.Y`, `cli-v0.X.Y`, etc. tags serve as:
+1. **Human documentation** — helps users filter releases by provider
+2. **GitHub Releases filtering** — easy to see "all CLI releases" or "all CUDA releases"
+3. **Git history organization** — developers can quickly find provider-specific commits
+
+They do NOT trigger separate builds or publishes.
+
+---
+
+## Publish Workflow Validation Checklist
+
+### Pre-Release Validation (Internal)
+
+Before publishing a release, the team must:
+
+1. **Update Directory.Build.props** to the new version:
+   ```xml
+   <Version>0.17.0</Version>
+   ```
+
+2. **Commit & push the version change:**
+   ```bash
+   git add Directory.Build.props
+   git commit -m "chore: bump version to 0.17.0"
+   git push origin main
+   ```
+
+3. **Local build validation:**
+   ```bash
+   dotnet restore
+   dotnet build -c Release
+   dotnet test
+   ```
+
+4. **Tag the release:**
+   ```bash
+   git tag v0.17.0
+   git tag foundry-v0.17.0
+   git tag cli-v0.17.0
+   git tag cpu-v0.17.0
+   git tag cuda-v0.17.0
+   git tag directml-v0.17.0
+   git push origin --tags
+   ```
+
+5. **Monitor CI/CD:**
+   - Watch `publish.yml` execution on the `v0.17.0` tag
+   - Verify all 6 packages publish to NuGet within 5–10 minutes
+
+### Post-Release Verification (Quality Gate)
+
+After the `publish.yml` workflow completes, **manually verify all packages on NuGet:**
+
+| Package | URL | Expected Version |
+|---------|-----|-----------------|
+| ElBruno.Text2Image | `https://www.nuget.org/packages/ElBruno.Text2Image/` | 0.17.0 |
+| ElBruno.Text2Image.Foundry | `https://www.nuget.org/packages/ElBruno.Text2Image.Foundry/` | 0.17.0 |
+| ElBruno.Text2Image.Cli | `https://www.nuget.org/packages/ElBruno.Text2Image.Cli/` | 0.17.0 |
+| ElBruno.Text2Image.Cpu | `https://www.nuget.org/packages/ElBruno.Text2Image.Cpu/` | 0.17.0 |
+| ElBruno.Text2Image.Cuda | `https://www.nuget.org/packages/ElBruno.Text2Image.Cuda/` | 0.17.0 |
+| ElBruno.Text2Image.DirectML | `https://www.nuget.org/packages/ElBruno.Text2Image.DirectML/` | 0.17.0 |
+
+**Verification Command (Bash/PowerShell):**
+```powershell
+$version = "0.17.0"
+$packages = @(
+  "ElBruno.Text2Image",
+  "ElBruno.Text2Image.Foundry",
+  "ElBruno.Text2Image.Cli",
+  "ElBruno.Text2Image.Cpu",
+  "ElBruno.Text2Image.Cuda",
+  "ElBruno.Text2Image.DirectML"
+)
+
+foreach ($pkg in $packages) {
+  $url = "https://api.nuget.org/v3-flatcontainer/$($pkg.ToLower())/index.json"
+  $versions = (Invoke-RestMethod $url).versions
+  Write-Host "$pkg : $(if ($version -in $versions) { '✓ ' } else { '✗ ' })$version"
+}
+```
+
+**Success Criteria:**
+- All 6 packages appear on NuGet with version 0.17.0
+- Release notes link to GitHub release (auto-generated or manually edited)
+- All dependent packages (if any exist outside this repo) update their references
+
+---
+
+## CI/CD Pre-flight Checks
+
+### Recommended: Lightweight Version Consistency Check
+
+Add a new workflow **`.github/workflows/validate-version.yml`** that runs on pull requests targeting `main`:
+
+```yaml
+name: Validate Version Consistency
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Directory.Build.props'
+      - 'src/*/*.csproj'
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract version from Directory.Build.props
+        id: build-props
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Check all .csproj files match Directory.Build.props
+        run: |
+          EXPECTED="${{ steps.build-props.outputs.version }}"
+          for csproj in src/*/*.csproj; do
+            if grep -q "<Version>" "$csproj"; then
+              ACTUAL=$(grep -oP '(?<=<Version>)[^<]+' "$csproj")
+              if [ "$ACTUAL" != "$EXPECTED" ]; then
+                echo "❌ $csproj has version $ACTUAL (expected $EXPECTED)"
+                exit 1
+              fi
+            fi
+          done
+          echo "✓ All versions consistent: $EXPECTED"
+```
+
+**Purpose:**
+- Catches version mismatches before they reach `main`
+- Prevents accidental package-specific bumps
+- Quick pass/fail (< 10 seconds)
+- Blocks PR merge if versions diverge
+
+**Configuration:**
+- Trigger: PRs to `main` that touch `Directory.Build.props` or any `.csproj`
+- Action: Fail if any `.csproj` contains a `<Version>` tag that differs from `Directory.Build.props`
+- Recommend: Add to branch protection rules as a required check
+
+---
+
+## Release Checklist
+
+### For Release Coordinators (Kaylee, or designated)
+
+Use this checklist when preparing a release:
+
+```markdown
+# Release Checklist for v0.X.Y
+
+## Pre-Release (48 hours before)
+- [ ] Create a release planning issue with target date
+- [ ] Review all PRs merged to `main` since last release
+- [ ] Confirm no breaking changes or undocumented features
+- [ ] Run `dotnet build -c Release` and `dotnet test` locally
+
+## Version Bump (Day of Release)
+- [ ] Edit `Directory.Build.props`, set `<Version>X.Y.Z</Version>`
+- [ ] Create commit: `git commit -m "chore: release v0.X.Y"`
+- [ ] Push to `main`: `git push origin main`
+- [ ] Wait for CI/CD to complete (build, test, no errors)
+
+## Tagging
+- [ ] Create primary tag: `git tag v0.X.Y && git push origin v0.X.Y`
+- [ ] Create package-specific tags:
+  ```bash
+  for pkg in foundry cli cpu cuda directml; do
+    git tag ${pkg}-v0.X.Y
+  done
+  git push origin --tags
+  ```
+- [ ] Monitor GitHub Actions: `publish.yml` should be running
+
+## Validation (5–10 minutes after tag push)
+- [ ] Check `publish.yml` status in Actions tab
+- [ ] Verify all 6 packages on NuGet (see [Post-Release Verification](#post-release-verification-quality-gate))
+- [ ] Create/update GitHub Release notes with changelog
+
+## Post-Release (Next 24 hours)
+- [ ] Verify no NuGet API errors in workflow logs
+- [ ] Test installation: `dotnet tool install -g ElBruno.Text2Image.Cli` (version X.Y.Z)
+- [ ] Update CHANGELOG.md or release notes
+- [ ] Announce in team Slack/Discord
+- [ ] Close release planning issue
+```
+
+### Tag Naming Quick Reference
+
+```
+v0.17.0                 ← PRIMARY (triggers publish.yml)
+foundry-v0.17.0         ← Informational (no trigger)
+cli-v0.17.0             ← Informational (no trigger)
+cpu-v0.17.0             ← Informational (no trigger)
+cuda-v0.17.0            ← Informational (no trigger)
+directml-v0.17.0        ← Informational (no trigger)
+```
+
+---
+
+## Implementation Steps
+
+### Phase 1: Centralize Versioning (Immediate)
+
+1. **Update `Directory.Build.props`:**
+   ```xml
+   <Version>0.16.0</Version>
+   ```
+
+2. **Remove `<Version>` from all `.csproj` files:**
+   - `src/ElBruno.Text2Image/ElBruno.Text2Image.csproj`
+   - `src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj`
+   - `src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj`
+   - `src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj`
+   - `src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj`
+   - `src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj`
+
+3. **Verify build:**
+   ```bash
+   dotnet clean
+   dotnet build -c Release
+   dotnet test
+   ```
+
+4. **Commit:**
+   ```bash
+   git add Directory.Build.props src/*/*.csproj
+   git commit -m "chore: centralize versioning in Directory.Build.props"
+   git push origin main
+   ```
+
+### Phase 2: Update Release Workflows (Next Release)
+
+1. **Modify `publish.yml`** to skip package-specific tags (if they trigger today)
+2. **Document tag strategy** in `.github/RELEASE_PROCESS.md` (mirrors this decision)
+3. **Train team** on new tagging convention
+
+### Phase 3: Add Pre-flight Checks (Optional, Recommended)
+
+1. **Add `validate-version.yml` workflow**
+2. **Configure as branch protection rule**
+
+---
+
+## FAQ
+
+### Q1: Why not keep package-specific versions (e.g., CLI at 0.15.0 while core is 0.16.0)?
+
+**A:** This creates confusion for users. If I install the CLI, I want to know exactly which version of the core library it depends on. Single versioning guarantees consistency. If you need to release only the CLI with a bug fix, bump the entire suite (add a pre-release tag if needed: `v0.16.1-cli-hotfix1`).
+
+### Q2: Why create both `v0.X.Y` and `foundry-v0.X.Y` tags?
+
+**A:** The primary tag `v0.X.Y` is required to trigger workflows. Package-specific tags are optional but valuable for:
+- Organizing GitHub releases (users can filter)
+- Git history clarity (quick grep for "all CLI releases")
+- Future flexibility (if we ever need to split workflows)
+
+It's low-cost bookkeeping.
+
+### Q3: What if I only want to update one package, not all six?
+
+**A:** You can't, under this rule. All packages share a version. If only the CPU provider needs a bug fix, bump the entire suite to 0.X.(Y+1). The other packages carry forward with no functional changes. This is a disciplined, predictable approach.
+
+### Q4: What if the publish workflow fails for one package?
+
+**A:** The workflow is atomic: it publishes all 6 packages or none. If one fails, investigate the error in the logs, fix the root cause (e.g., NuGet API overload), and re-run the workflow. Do NOT manually publish individual packages — that breaks synchronization.
+
+### Q5: Can I pre-release one package before others?
+
+**A:** Yes, use pre-release versions:
+```
+v0.17.0-cpu-rc1       # Pre-release candidate for testing
+v0.17.0               # Stable, all packages together
+```
+
+Pre-release tags still publish all 6 packages, but they're marked as pre-release on NuGet.
+
+### Q6: How do I handle the CLI's independent release cadence?
+
+**A:** The CLI is part of this suite, so it follows the same versioning. If the CLI has faster release needs, use pre-release tags (e.g., `v0.17.0-cli-alpha1`, `v0.17.0-cli-beta1`, `v0.17.0`). The primary tag `v0.X.Y` always publishes the entire suite.
+
+---
+
+## Success Metrics
+
+After implementing this decision:
+
+1. ✓ All packages on NuGet always share the same version
+2. ✓ Zero version-mismatch bugs reported by users
+3. ✓ Release process takes < 15 minutes (tag, validate, done)
+4. ✓ GitHub releases clearly categorized by provider (via tags)
+5. ✓ New contributors understand versioning from this document
+
+---
+
+## Related Decisions
+
+- **[Separate CLI & Library Release Workflows](../mal-cli-release-workflow.md)** — Established the `cli-v*` tagging pattern for independent publish timing
+- **[Version Sync Resolution](../mal-cli-version-sync.md)** — Identified version drift problem that this decision resolves
+
+---
+
+## Approval & Sign-Off
+
+- **Proposed By:** Mal (Lead)
+- **Approved By:** [Awaiting Bruno Capuano]
+- **Implementation Lead:** [Awaiting assignment]
+- **Target Implementation Date:** [Next release cycle]
+
+

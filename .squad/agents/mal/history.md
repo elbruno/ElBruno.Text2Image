@@ -158,3 +158,77 @@ The two-workflow design is correct — it allows independent CLI and main packag
 **Decision:** Created detailed diagnosis and fix plan at `.squad/decisions/inbox/mal-cli-version-sync.md`. Routed Part A (publish missing CLI versions) to Kaylee via squad routing. Bruno to approve Part B documentation updates.
 
 📌 Team update (2026-04-22T10:28:06Z): CLI version sync decision merged. Mal diagnosed missing cli-v0.13.0–0.16.0 releases; Kaylee updated NuGet package metadata with GPT models. Awaiting release publication. — decided by Scribe
+
+### 2026-04-22 — Synchronized Multi-Package Versioning & Release Coordination
+
+**Decision Merged:** Established centralized versioning strategy for all 6 packages (core, Foundry, CLI, CPU, CUDA, DirectML).
+
+**Key Rules:**
+1. **Single Source of Truth:** All versions defined in `Directory.Build.props` (not individual `.csproj` files)
+2. **Tag Naming Convention:** 
+   - Primary: `v0.X.Y` (triggers `publish.yml`, publishes all 6 packages)
+   - Informational: `foundry-v0.X.Y`, `cli-v0.X.Y`, `cpu-v0.X.Y`, `cuda-v0.X.Y`, `directml-v0.X.Y` (organizational only, no workflow triggers)
+3. **Release Coordination:** All packages must be synchronized — no independent versioning
+4. **Pre-flight Validation:** New workflow `validate-version.yml` ensures version consistency on PR
+
+**Phase 1 (Immediate):** Centralize versioning (Directory.Build.props, remove per-project `<Version>` entries)
+**Phase 2 (Next Release):** Implement tag strategy and document in `.github/RELEASE_PROCESS.md`
+**Phase 3 (Optional):** Add pre-flight CI/CD checks
+
+**Learnings:**
+- Version drift is a coordination problem, not a code problem — enforced by tag discipline
+- Multi-package releases need clear tag semantics (which triggers workflows, which are informational)
+- Centralized version source eliminates silent mismatches
+
+📌 Team update (2026-04-22T10:55:45Z): Synchronized multi-package versioning decision merged. All packages now centralize version in Directory.Build.props. Release coordination via v0.X.Y (primary) + provider-specific informational tags. Mal established rule; Kaylee to implement Phase 1 on next release. — decided by Scribe
+
+### 2026-04-22 — Synchronized Multi-Package Versioning Decision
+
+**Context:** Bruno requested a rule: "When a new release is published, all packages should be published with the same version number."
+
+**Problem Identified:**
+- All 6 packages (Core, Foundry, CLI, CPU, CUDA, DirectML) have independent `<Version>` entries in `.csproj` files
+- No single source of truth for versioning
+- Risk of version drift (e.g., CPU at 0.16.0 while CUDA at 0.15.0)
+- Previous decision allowed independent CLI versioning via `cli-v*` tags, but all packages share code — no technical reason for independent versions
+
+**Solution: Three-Part Strategy**
+
+**Part A — Centralize Versioning:**
+- Move all `<Version>` entries to `Directory.Build.props` (single source of truth)
+- Remove `<Version>` from individual `.csproj` files (inherit from Directory.Build.props)
+- Consequence: All packages always have identical version numbers
+
+**Part B — Release Coordination:**
+- **Primary tag:** `v0.X.Y` (triggers `publish.yml`, publishes all 6 packages)
+- **Package-specific tags (informational only):** `foundry-v0.X.Y`, `cli-v0.X.Y`, `cpu-v0.X.Y`, `cuda-v0.X.Y`, `directml-v0.X.Y`
+- These tags organize GitHub releases and Git history but do NOT trigger separate workflows (all code is same, all version is same)
+
+**Part C — CI/CD Validation:**
+- Add lightweight `validate-version.yml` workflow to ensure all `.csproj` versions match `Directory.Build.props`
+- Prevents accidental per-package version bumps
+- Runs on PRs to `main` that touch version files
+- Blocks merge if versions diverge
+
+**Key Insight:**
+The previous "independent CLI versioning" decision was correct for timing flexibility (CLI could ship on different schedule via `cli-v*` tags). However, all packages are codependent and released together. With a single Directory.Build.props version, we can keep the tagging flexibility (for filtering/documentation) while guaranteeing version consistency.
+
+**Implementation Phases:**
+1. **Immediate:** Centralize versioning in Directory.Build.props (Phase 1)
+2. **Next Release:** Update release workflows to use new tagging strategy (Phase 2)
+3. **Optional:** Add pre-flight version validation workflow (Phase 3)
+
+**Release Checklist Included:**
+- Pre-release (48h before): Planning, review, local test
+- Version bump: Update Directory.Build.props, commit, push
+- Tagging: Create all 6 tags at once, push
+- Validation: Monitor CI/CD, verify all 6 packages on NuGet
+- Post-release: Install test, CHANGELOG update, team announcement
+
+**Learnings:**
+- **Centralization reduces configuration debt:** Moving version to Directory.Build.props eliminates 6 duplicate property declarations, making future bumps a single-file edit
+- **Tagging flexibility ≠ versioning flexibility:** Package-specific tags (foundry-v0.X.Y) can coexist with unified versioning (all packages at 0.X.Y)
+- **Pre-flight checks prevent human error:** A lightweight validation workflow catches version drift before it reaches production
+- **Release discipline matters for ecosystem trust:** Users rely on matching versions as a signal of compatibility
+
+**Decision:** Created comprehensive decision document at `.squad/decisions/inbox/mal-synchronized-versioning.md` with versioning principle, release coordination rules, post-release validation checklist, CI/CD recommendations, implementation phases, and FAQ. Awaiting Bruno's approval before Phase 1 execution.
