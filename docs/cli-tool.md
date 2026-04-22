@@ -92,6 +92,9 @@ t2i "a sunset over the ocean" --out sunset.png
 | `t2i doctor` | Run system diagnostics | `t2i doctor` |
 | `t2i providers` | List available providers | `t2i providers` |
 | `t2i version` | Show version information | `t2i version` |
+| `t2i init` | Initialize skill integration for AI agents | `t2i init` |
+| `t2i init --target github` | Initialize GitHub Copilot skill integration | `t2i init --target github` |
+| `t2i init --target claude` | Initialize Claude Code skill integration | `t2i init --target claude` |
 
 ### Generate Command Options
 
@@ -271,6 +274,71 @@ t2i secrets test foundry-flux2
 # Remove secrets
 t2i secrets remove foundry-flux2
 ```
+
+## Skill Integration
+
+The `t2i` CLI can be integrated as a skill for AI agents like GitHub Copilot and Claude Code, making it discoverable for autonomous image generation tasks within your development workflow.
+
+### What is Skill Integration?
+
+Skill integration exposes `t2i` to AI coding agents by installing metadata files in well-known directories:
+- **GitHub Copilot**: `.github/skills/t2i/`
+- **Claude Code**: `.claude/skills/t2i/`
+
+Once initialized, AI agents can automatically discover and invoke `t2i` to generate images when needed.
+
+### Initialize Skill Integration
+
+```bash
+# Install for all supported agents (GitHub Copilot and Claude Code)
+t2i init
+
+# Install for GitHub Copilot only
+t2i init --target github
+
+# Install for Claude Code only
+t2i init --target claude
+```
+
+The `t2i init` command creates the following files:
+
+**For GitHub Copilot** (`.github/skills/t2i/`):
+- `SKILL.md` — Skill documentation and usage instructions
+- `skill.json` — Metadata and capability manifest
+
+**For Claude Code** (`.claude/skills/t2i/`):
+- `SKILL.md` — Skill documentation and usage instructions
+
+### Usage After Integration
+
+Once initialized, AI agents can invoke `t2i` directly. For example:
+- "Generate an image of a sunset over mountains"
+- "Create a logo with abstract geometric shapes"
+- "Generate a diagram showing three interconnected nodes"
+
+The agent will automatically call `t2i` with appropriate parameters based on your prompt.
+
+### Updating the Skill
+
+When you update the `t2i` CLI tool, re-run `t2i init` to refresh the skill metadata:
+
+```bash
+dotnet tool update --global ElBruno.Text2Image.Cli
+t2i init
+```
+
+### Troubleshooting Skill Integration
+
+**Skills not discovered by agents:**
+1. Verify skill files exist: `ls .github/skills/t2i/` or `ls .claude/skills/t2i/`
+2. Re-run `t2i init` to regenerate files
+3. Restart your AI agent or IDE
+
+**Permission errors:**
+- Ensure you have write permissions in your workspace directory
+- Run `t2i init` from your project root
+
+For comprehensive details, see [docs/skill-integration.md](skill-integration.md).
 
 ## Roadmap
 

@@ -93,6 +93,12 @@ See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 - 🔌 **Microsoft.Extensions.AI** — All generators implement `IImageGenerator` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions)
 - 🌱 **Reproducible** — Seed-based generation for reproducible results
 
+## 🤖 AI Agent Integration
+
+The `t2i` CLI is now discoverable by GitHub Copilot and Claude Code as a native skill, enabling AI agents to generate images directly within your development workflow. Run `t2i init` to configure skill integration, which adds the necessary metadata to `.github/skills/t2i/` or `.claude/skills/t2i/` directories in your workspace. Once integrated, AI agents can autonomously invoke `t2i` for image generation tasks without manual configuration.
+
+See [docs/skill-integration.md](docs/skill-integration.md) for the complete setup guide.
+
 ## Quick Start
 
 ### Install
