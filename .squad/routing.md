@@ -1,59 +1,17 @@
-# Work Routing
+# Routing
 
-How to decide who handles what.
+## Default Routes
 
-## Routing Table
+- GitHub Actions, release automation, package publishing, CI/CD failures -> Hicks
+- Library implementation, provider integrations, CLI/runtime behavior -> Bishop
+- Tests, repros, failure analysis, approval/rejection of code quality -> Vasquez
+- Docs, samples, release notes, user-facing guidance -> Lambert
+- Cross-cutting design, ambiguity, reviewer escalation, multi-agent synthesis -> Ripley
+- Decisions merge, session logging, orchestration records -> Scribe
+- Backlog scanning and follow-up work monitoring -> Ralph
 
-| Work Type | Route To | Examples |
-|-----------|----------|----------|
-| Architecture & scope | Mal | System design, project structure, tech decisions |
-| Core implementation | Kaylee | Feature development, main application logic, refactoring |
-| APIs & services | Wash | Backend endpoints, data services, infrastructure |
-| AI/ML & image generation | River | Model integration, prompt engineering, image pipelines |
-| Testing & quality | Jayne | Unit tests, integration tests, edge cases, coverage |
-| Code review | Mal | Review PRs, check quality, approve/reject work |
-| Scope & priorities | Mal | What to build next, trade-offs, decisions |
-| Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
-| Session logging | Scribe | Automatic — never needs routing |
+## Collaboration Rules
 
-## Issue Routing
-
-| Label | Action | Who |
-|-------|--------|-----|
-| `squad` | Triage: analyze issue, evaluate @copilot fit, assign `squad:{member}` label | Mal |
-| `squad:mal` | Architecture, scope, or review work | Mal |
-| `squad:kaylee` | Core implementation tasks | Kaylee |
-| `squad:wash` | Backend/API/infrastructure tasks | Wash |
-| `squad:river` | AI/ML and image generation tasks | River |
-| `squad:jayne` | Testing and quality tasks | Jayne |
-| `squad:copilot` | Assign to @copilot for autonomous work (if enabled) | @copilot 🤖 |
-
-### How Issue Assignment Works
-
-1. When a GitHub issue gets the `squad` label, **Mal** triages it — analyzing content, evaluating @copilot's capability profile, assigning the right `squad:{member}` label, and commenting with triage notes.
-2. **@copilot evaluation:** Mal checks if the issue matches @copilot's capability profile (🟢 good fit / 🟡 needs review / 🔴 not suitable). If it's a good fit, Mal may route to `squad:copilot` instead of a squad member.
-3. When a `squad:{member}` label is applied, that member picks up the issue in their next session.
-4. When `squad:copilot` is applied and auto-assign is enabled, `@copilot` is assigned on the issue and picks it up autonomously.
-5. Members can reassign by removing their label and adding another member's label.
-6. The `squad` label is the "inbox" — untriaged issues waiting for Mal's review.
-
-### Lead Triage Guidance for @copilot
-
-When triaging, Mal should ask:
-
-1. **Is this well-defined?** Clear title, reproduction steps or acceptance criteria, bounded scope → likely 🟢
-2. **Does it follow existing patterns?** Adding a test, fixing a known bug, updating a dependency → likely 🟢
-3. **Does it need design judgment?** Architecture, API design, UX decisions → likely 🔴
-4. **Is it security-sensitive?** Auth, encryption, access control → always 🔴
-5. **Is it medium complexity with specs?** Feature with clear requirements, refactoring with tests → likely 🟡
-
-## Rules
-
-1. **Eager by default** — spawn all agents who could usefully start work, including anticipatory downstream work.
-2. **Scribe always runs** after substantial work, always as `mode: "background"`. Never blocks.
-3. **Quick facts → coordinator answers directly.** Don't spawn an agent for "what port does the server run on?"
-4. **When two agents could handle it**, pick the one whose domain is the primary concern.
-5. **"Team, ..." → fan-out.** Spawn all relevant agents in parallel as `mode: "background"`.
-6. **Anticipate downstream work.** If a feature is being built, spawn the tester to write test cases from requirements simultaneously.
-7. **Issue-labeled work** — when a `squad:{member}` label is applied to an issue, route to that member. Morpheus handles all `squad` (base label) triage.
-8. **@copilot routing** — when evaluating issues, check @copilot's capability profile in `team.md`. Route 🟢 good-fit tasks to `squad:copilot`. Flag 🟡 needs-review tasks for PR review. Keep 🔴 not-suitable tasks with squad members.
+- Hicks may pair with Vasquez when workflow changes need validation.
+- Ripley reviews multi-file or policy-impacting changes before they are treated as complete.
+- Lambert is anticipatory for release-facing or user-facing changes.
