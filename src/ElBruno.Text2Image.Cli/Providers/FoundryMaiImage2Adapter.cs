@@ -139,12 +139,23 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         var sw = Stopwatch.StartNew();
 
         var httpClient = _httpClientFactory.CreateClient();
+        
+        // Parse timeout from request options (default: 300 seconds for slow providers)
+        var timeoutSeconds = 300;
+        if (req.ExtraOptions.TryGetValue("timeout", out var timeoutStr) && 
+            int.TryParse(timeoutStr, out var parsed) && 
+            parsed > 0)
+        {
+            timeoutSeconds = parsed;
+        }
+        
         using var generator = new MaiImage2Generator(
             endpoint,
             apiKey,
             httpClient,
             modelName: modelName,
-            modelId: modelId);
+            modelId: modelId,
+            timeoutSeconds: timeoutSeconds);
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
 

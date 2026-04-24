@@ -62,6 +62,11 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         [CommandOption("--api-key")]
         [Description("Cloud provider API key (override secrets)")]
         public string? ApiKey { get; init; }
+
+        [CommandOption("--timeout")]
+        [Description("Request timeout in seconds (default: 300)")]
+        [DefaultValue(300)]
+        public int Timeout { get; init; } = 300;
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -147,6 +152,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         }
 
         // 4. Generate image
+        cliOverrides["timeout"] = settings.Timeout.ToString();
         var req = new GenerationRequest(
             settings.Prompt,
             settings.Width,

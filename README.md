@@ -58,8 +58,8 @@ t2i --provider foundry-mai2 "a serene mountain landscape at sunrise"
 # GPT-Image-1.5 (DALL-E 3 via Azure OpenAI)
 t2i --provider azure-openai-gpt-image-15 "an impressionist painting of a garden"
 
-# GPT-Image-2 (next-gen model)
-t2i --provider gpt-image-2 "a sci-fi space station in orbit"
+# GPT-Image-2 (next-gen model, may take 3-4 minutes)
+t2i --provider gpt-image-2 "a sci-fi space station in orbit" --timeout 300
 ```
 
 **Model Configuration:**

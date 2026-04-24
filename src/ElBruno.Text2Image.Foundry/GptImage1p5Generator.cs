@@ -45,9 +45,10 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
     /// <param name="modelName">Optional model display name. Defaults to "GPT-Image-1.5".</param>
     /// <param name="deploymentName">Optional deployment name. Defaults to "gpt-image-1.5".</param>
     /// <param name="httpClient">HttpClient instance for making HTTP requests. Use IHttpClientFactory for production to enable connection pooling.</param>
+    /// <param name="timeoutSeconds">Optional timeout in seconds for API requests. If not specified, uses HttpClient default (typically 100 seconds).</param>
     /// <exception cref="ArgumentException">Thrown when endpoint is null/empty or doesn't use HTTPS, or when apiKey is null/empty.</exception>
     /// <exception cref="ArgumentNullException">Thrown when httpClient is null.</exception>
-    public GptImage1p5Generator(string endpoint, string apiKey, HttpClient httpClient, string? modelName = null, string? deploymentName = null)
+    public GptImage1p5Generator(string endpoint, string apiKey, HttpClient httpClient, string? modelName = null, string? deploymentName = null, int? timeoutSeconds = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey, nameof(apiKey));
@@ -60,6 +61,11 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         _deploymentName = deploymentName ?? "gpt-image-1.5";
         _httpClient = httpClient;
         _ownsHttpClient = false;
+        
+        if (timeoutSeconds.HasValue)
+        {
+            _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds.Value);
+        }
         
         var client = new AzureOpenAIClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         _imageClient = client.GetImageClient(_deploymentName);
