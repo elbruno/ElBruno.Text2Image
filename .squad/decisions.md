@@ -15,10 +15,19 @@
 **Decision:** All packages in the ElBruno.Text2Image monorepo **MUST** be versioned identically. When any package version is bumped, ALL packages (library, CLI, Foundry, CUDA, DirectML) are bumped to the same version and published together.
 
 **Implementation:**
-- Version source of truth: Update ALL `.csproj` `<Version>` tags together
+- Version source of truth: Update ALL `.csproj` `<Version>` tags together using `.\scripts\Update-AllVersions.ps1 -Version "X.Y.Z"`
 - Release with single unified tag: `vX.Y.Z` (not component-specific)
 - PR reviews verify all `.csproj` files are synchronized before merge
+- Pre-commit hook (`.githooks/pre-commit-version-check`) blocks commits with mismatched versions
 - CI/CD validates version consistency before publishing
+- See `docs/publishing.md` for the full versioning workflow
+
+**Workflow:**
+1. Run: `.\scripts\Update-AllVersions.ps1 -Version "1.2.2" -Commit -Tag`
+2. This updates all 6 projects, commits, and creates the tag
+3. Push: `git push origin main && git push origin v1.2.2`
+4. Create GitHub release: `gh release create v1.2.2 --title "..." --notes "..."`
+5. NuGet publish workflow runs automatically on release creation
 
 **Rationale:**
 1. Single version number = single point of compatibility (no confusion)

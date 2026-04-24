@@ -1,0 +1,77 @@
+#!/bin/bash
+# Pre-commit hook: Enforce unified versioning across all packages
+# 
+# This hook prevents commits that have mismatched versions in .csproj files.
+# All packages MUST have the same version number.
+#
+# Install: cp .githooks/pre-commit-version-check .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Extract version from a .csproj file
+get_version() {
+    grep -oP '(?<=<Version>)[\d.]+(?=</Version>)' "$1" | head -1
+}
+
+# List of all .csproj files that must be synchronized
+CSPROJ_FILES=(
+    "src/ElBruno.Text2Image/ElBruno.Text2Image.csproj"
+    "src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj"
+    "src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj"
+    "src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj"
+    "src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj"
+    "src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj"
+)
+
+# Check if any .csproj files were modified in this commit
+MODIFIED_CSPROJ=$(git diff --cached --name-only | grep -E '\.csproj$' | grep -E '(ElBruno\.Text2Image|Cli|Foundry|Cuda|Cpu|DirectML)' | wc -l)
+
+if [ "$MODIFIED_CSPROJ" -eq 0 ]; then
+    # No package files modified, nothing to check
+    exit 0
+fi
+
+echo "🔍 Checking unified versioning..."
+
+# Collect all versions
+declare -A versions
+for file in "${CSPROJ_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        version=$(get_version "$file")
+        if [ -z "$version" ]; then
+            echo "❌ ERROR: Could not extract version from $file"
+            exit 1
+        fi
+        versions["$file"]="$version"
+    fi
+done
+
+# Check if all versions are the same
+first_version=""
+first_file=""
+all_same=true
+
+for file in "${!versions[@]}"; do
+    if [ -z "$first_version" ]; then
+        first_version="${versions[$file]}"
+        first_file="$file"
+    elif [ "${versions[$file]}" != "$first_version" ]; then
+        echo "❌ VERSION MISMATCH DETECTED:"
+        echo ""
+        echo "  $first_file: $first_version"
+        echo "  $file: ${versions[$file]}"
+        echo ""
+        echo "All packages MUST have the same version number."
+        echo ""
+        echo "✅ To fix this, use the provided script:"
+        echo "   PowerShell: .\\scripts\\Update-AllVersions.ps1 -Version \"$first_version\""
+        echo "   or manually update all .csproj files to match."
+        echo ""
+        all_same=false
+    fi
+done
+
+if [ "$all_same" = false ]; then
+    exit 1
+fi
+
+echo "✅ All packages have version: $first_version"
+exit 0

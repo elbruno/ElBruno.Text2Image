@@ -41,6 +41,35 @@ These steps only need to be done once.
 
 ## Publishing a New Version
 
+### ⚠️ UNIFIED VERSIONING RULE
+
+**All packages in the ElBruno.Text2Image monorepo MUST be versioned identically.** When you bump the version, you must update:
+
+- `src/ElBruno.Text2Image/ElBruno.Text2Image.csproj`
+- `src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj`
+- `src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj`
+- `src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj`
+- `src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj`
+- `src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj`
+
+**Use the provided script to update all at once:**
+
+```powershell
+.\scripts\Update-AllVersions.ps1 -Version "1.2.2"
+```
+
+Add `-Commit` to auto-commit, and `-Tag` to auto-create the git tag:
+
+```powershell
+.\scripts\Update-AllVersions.ps1 -Version "1.2.2" -Commit -Tag
+```
+
+A pre-commit hook (`.githooks/pre-commit-version-check`) will verify that all packages have matching versions before you commit. If versions don't match, you'll see an error — use the script above to fix them.
+
+---
+
+## Publishing a New Version
+
 ### Option A: Create a GitHub Release (Recommended)
 
 This is the standard workflow — the version is derived from the release tag.
