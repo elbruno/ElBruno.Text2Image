@@ -4,6 +4,33 @@
 
 <!-- Scribe merges decisions from .squad/decisions/inbox/ into this file. Do not edit directly — use the inbox. -->
 
+### Decision: Unified Versioning Across All Packages
+
+**Author:** Copilot  
+**Date:** 2025-01-24  
+**Status:** Active  
+
+**Context:** Previously used separate versioning for CLI (v0.x), Foundry (v0.x), library (v1.x), causing misalignment and confusion.
+
+**Decision:** All packages in the ElBruno.Text2Image monorepo **MUST** be versioned identically. When any package version is bumped, ALL packages (library, CLI, Foundry, CUDA, DirectML) are bumped to the same version and published together.
+
+**Implementation:**
+- Version source of truth: Update ALL `.csproj` `<Version>` tags together
+- Release with single unified tag: `vX.Y.Z` (not component-specific)
+- PR reviews verify all `.csproj` files are synchronized before merge
+- CI/CD validates version consistency before publishing
+
+**Rationale:**
+1. Single version number = single point of compatibility (no confusion)
+2. Monorepo dependencies mean feature changes affect all packages anyway
+3. Reduces manual release coordination errors
+4. Matches user expectations: "Install v1.2.1" works for everything
+
+**Implications:**
+- All packages ship on same cadence
+- Even patch-only CLI fixes bump library/Foundry version (acceptable for clarity)
+- Tag naming changes: no more `cli-vX.Y.Z`, only `vX.Y.Z`
+
 ### Decision: MAI-Image-2 Cloud API Support
 
 **Author:** Kaylee (Core Dev)  
