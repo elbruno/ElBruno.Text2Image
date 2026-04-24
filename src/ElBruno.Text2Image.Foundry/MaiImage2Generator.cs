@@ -57,12 +57,14 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
     /// This matches the deployment name you created in Microsoft Foundry. Defaults to "mai-image-2".
     /// </param>
     /// <param name="httpClient">HttpClient instance for making HTTP requests. Use IHttpClientFactory for production to enable connection pooling.</param>
+    /// <param name="timeoutSeconds">Optional timeout in seconds for API requests. If not specified, uses HttpClient default (typically 100 seconds).</param>
     public MaiImage2Generator(
         string endpoint,
         string apiKey,
         HttpClient httpClient,
         string? modelName = null,
-        string? modelId = null)
+        string? modelId = null,
+        int? timeoutSeconds = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
@@ -77,6 +79,11 @@ public sealed class MaiImage2Generator : IImageGenerator, Microsoft.Extensions.A
         _modelId = modelId ?? "mai-image-2";
         _httpClient = httpClient;
         _ownsHttpClient = false;
+        
+        if (timeoutSeconds.HasValue)
+        {
+            _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds.Value);
+        }
     }
 
     /// <summary>

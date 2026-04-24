@@ -29,6 +29,40 @@
 
 *Append new learnings below this line.*
 
+### 2026-04-22: Configurable Timeout for Slow Providers (#19)
+
+**Problem Context:**
+Azure GPT-Image-2 API can take 3-4 minutes to generate images, but default HttpClient timeout is 100 seconds. Generations were failing with timeout errors, especially for complex prompts.
+
+**Implementation:**
+- **CLI Integration:** Added `--timeout` option to GenerateCommand (default: 300 seconds). Value passed through ExtraOptions dictionary in GenerationRequest.
+- **Generator Constructors:** Added optional `timeoutSeconds: int?` parameter to all cloud generators (Flux2Generator, MaiImage2Generator, GptImage1p5Generator, GptImage2Generator). When provided, sets `HttpClient.Timeout` on injected client instance.
+- **Adapter Pattern:** All four provider adapters (FoundryFlux2Adapter, FoundryMaiImage2Adapter, FoundryGptImage1p5Adapter, FoundryGptImage2Adapter) parse timeout from `req.ExtraOptions["timeout"]` and pass to generator constructor.
+- **Backward Compatibility:** Null timeout parameter means "don't modify HttpClient.Timeout" — preserves existing behavior and any pre-configured timeouts.
+
+**Key Design Choices:**
+- **Default 300 seconds (5 minutes):** Chosen to accommodate GPT-Image-2's 3-4 minute generation time with safety margin. Overrides HttpClient's 100-second default which is too short for slow providers.
+- **Per-request timeout:** Timeout configured per GenerateAsync call via HttpClient instance, not globally. Each provider adapter creates fresh HttpClient from IHttpClientFactory, sets timeout, uses it for one generation.
+- **ExtraOptions transport:** Timeout flows from CLI → GenerationRequest.ExtraOptions → Adapter → Generator constructor. Keeps timeout in same channel as endpoint/apiKey overrides.
+
+**Testing Coverage (Jayne):**
+31 tests in TimeoutConfigurationTests.cs covering constructor parameter acceptance, HttpClient.Timeout property modification, backward compatibility, boundary values (1s, 86400s, infinite), and independence of multiple generator instances.
+
+**Documentation:**
+- Updated `docs/cli-tool.md` with `--timeout` option in Generate Command Options table
+- Added "Extended Timeout for Slow Providers" example section showing GPT-Image-2 usage with `--timeout 300`
+- Updated README.md with timeout example in GPT-Image-2 CLI example
+
+**Files Modified:**
+- CLI: `GenerateCommand.cs` (added --timeout option, pass via ExtraOptions)
+- Adapters: `FoundryFlux2Adapter.cs`, `FoundryMaiImage2Adapter.cs`, `FoundryGptImage1p5Adapter.cs`, `FoundryGptImage2Adapter.cs` (parse timeout, pass to generator)
+- Generators: `Flux2Generator.cs`, `MaiImage2Generator.cs`, `GptImage1p5Generator.cs`, `GptImage2Generator.cs` (add timeoutSeconds parameter, set HttpClient.Timeout)
+- Docs: `README.md`, `docs/cli-tool.md` (document --timeout option)
+- Tests: `TimeoutConfigurationTests.cs` (new file, 31 tests)
+
+**Branch:** `squad/19-configurable-timeout`
+**Commit:** `c9e1f9c` — "feat: add configurable timeout for image generation providers (#19)"
+
 📌 CLI tool merged-style implementation shipped (PR #10) — coordinated CLI delivery across five agents: Mal (scaffolding), Wash (secrets), Kaylee (commands), River (adapters), Jayne (tests). 211 tests passing on net10.0.
 📌 Team update (2026-04-20T11:31:33Z): CLI now ships `t2i init` command for AI agent skill discovery. Kaylee implemented InitCommand with embedded SKILL.md resource. Mal authored canonical SKILL.md (3 copies) and updated blog. Jayne verified with 6 tests. Branch: feature/cli-init-skill, PR #11 (not merged per user). — decided by Kaylee
 📌 Team update (2026-04-20T14:50:59Z): MAI-Image-2 adapter now silently auto-bumps dimensions <768px to 1024px with progress note. No breaking changes; generic 512×512 default works transparently with MAI. Coordinator merged PRs #14, #15; released cli-v0.10.1.

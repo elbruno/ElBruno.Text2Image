@@ -74,6 +74,15 @@ t2i "a futuristic city" --provider foundry-flux2 --width 1024 --height 1024
 t2i "a sunset over the ocean" --out sunset.png
 ```
 
+### Extended Timeout for Slow Providers
+
+Some cloud providers (like GPT-Image-2) can take several minutes to generate images. Use `--timeout` to increase the request timeout:
+
+```bash
+# GPT-Image-2 can take 3-4 minutes, so set a 5-minute timeout
+t2i "a photorealistic portrait" --provider foundry-gpt-image-2 --timeout 300
+```
+
 ## Command Reference
 
 | Command | Description | Example |
@@ -109,6 +118,7 @@ t2i "<prompt>" [options]
 | `--width`, `-w` | Image width in pixels | 512 (local), 1024 (cloud) |
 | `--height` | Image height in pixels | 512 (local), 1024 (cloud) |
 | `--steps`, `-s` | Inference steps (local only) | 20 |
+| `--timeout` | Request timeout in seconds (cloud providers) | 300 |
 | `--endpoint` | Cloud endpoint URL (override config) | From config |
 | `--api-key` | Cloud API key (override secrets) | From secrets |
 
