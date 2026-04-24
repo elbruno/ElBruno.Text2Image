@@ -357,6 +357,7 @@ dotnet run
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
+- [docs/version-management.md](docs/version-management.md) — **Version bumping and unified versioning workflow**
 - [docs/security.md](docs/security.md) — Security considerations and hardening
 - [scripts/](scripts/) — Python conversion and upload scripts
 
