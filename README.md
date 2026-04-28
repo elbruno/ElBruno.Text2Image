@@ -1,5 +1,65 @@
 # ElBruno.Text2Image
 
+**Text-to-image for .NET developers: use as library, CLI tool, or AI coding skill. Cloud (FLUX.2, MAI-Image-2, GPT-Image) + local ONNX (Stable Diffusion). No Python required.**
+
+---
+
+## Three Ways to Use It
+
+| **🧑‍💻 .NET Developer** | **⌨️ CLI User** | **🤖 AI Agent Developer** |
+|------------------------|-----------------|---------------------------|
+| Install NuGet package | Install global tool | Add as GitHub Copilot / Claude Code skill |
+| `dotnet add package ElBruno.Text2Image.Foundry` | `dotnet tool install -g ElBruno.Text2Image.Cli` | `t2i init` to enable agent discovery |
+| [Jump to Quick Start ↓](#quick-start) | [Jump to CLI ↓](#🛠️-command-line-tool) | [Jump to AI Integration ↓](#🤖-ai-agent-integration) |
+
+---
+
+## Model Support
+
+### ☁️ Cloud Models (API-based, no GPU required)
+
+| Model | Provider | Use Case |
+|-------|----------|----------|
+| **FLUX.2 Pro/Flex** | Microsoft Foundry | Photorealistic + text-heavy design |
+| **MAI-Image-2** | Microsoft Foundry | High-quality generation |
+| **GPT-Image-1.5** | Azure OpenAI (DALL-E 3) | Creative & reliable |
+| **GPT-Image-2** | Azure OpenAI | Next-gen quality |
+
+### 🖥️ Local Models (ONNX Runtime, works offline)
+
+| Model | Resolution | Speed | Hardware |
+|-------|------------|-------|----------|
+| **Stable Diffusion 1.5** | 512×512 | 15-50 steps | CPU/CUDA/DirectML |
+| **SDXL Turbo** | 512×512 | 1-4 steps | CPU/CUDA/DirectML |
+| **SD 2.1 Base** | 768×768 | 15-50 steps | CPU/CUDA/DirectML |
+| **LCM Dreamshaper v7** | 512×512 | 2-4 steps | CPU/CUDA/DirectML |
+
+---
+
+## Why This Library?
+
+✅ **No Python** — Pure .NET, no environment setup headaches  
+✅ **~30 MB footprint** — Lightweight compared to Python stacks  
+✅ **Cross-platform** — Windows, Linux, macOS  
+✅ **Auto GPU detection** — CUDA → DirectML → CPU fallback  
+✅ **Unified interface** — Same API for cloud and local models  
+✅ **Microsoft.Extensions.AI** — Implements `IImageGenerator` standard  
+
+---
+
+## What's Your Use Case?
+
+**Are you a...**
+
+| You are... | Start here |
+|------------|------------|
+| **.NET library developer** building apps? | [Quick Start](#quick-start) — Install NuGet package |
+| **CLI user** needing quick image generation? | [CLI Tool](#🛠️-command-line-tool) — Install `t2i` global tool |
+| **AI agent developer** integrating with Copilot/Claude? | [AI Agent Integration](#🤖-ai-agent-integration) — Run `t2i init` |
+| **DevOps/infra person** setting up CI/CD? | [GitHub Actions Workflow](docs/cli-tool.md#github-actions-usage) |
+
+---
+
 ![Banner generated with FLUX.2 Pro on Microsoft Foundry](images/banner.png)
 
 [![Build Status](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml/badge.svg)](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml)
@@ -10,6 +70,8 @@
 **HuggingFace ONNX Models:**
 [![SD 2.1 ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SD%202.1%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
 [![SDXL Turbo ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SDXL%20Turbo%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
+
+---
 
 ## 📦 NuGet Packages
 
@@ -22,9 +84,9 @@
 | **ElBruno.Text2Image.DirectML** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) |
 | **ElBruno.Text2Image.Cli** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) |
 
-> 📢 **This project started with [FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)** — a cloud-first approach to text-to-image generation with best-in-class text rendering. After wrapping that API, we thought: *"Why not bring the same developer experience to local models too?"* So we did. Now you can generate images from text prompts using cloud APIs or local Stable Diffusion models with ONNX Runtime — all through the same clean .NET interface.
+---
 
-A .NET library for **text-to-image generation** — cloud and local. Generate images from text prompts using Microsoft Foundry FLUX.2 or Stable Diffusion (ONNX Runtime) with automatic model downloads from HuggingFace. No Python needed. Just `dotnet add package` and go. 🚀
+> 📢 **Origin Story:** This project started with [FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041) — a cloud-first approach to text-to-image generation with best-in-class text rendering. After wrapping that API, we thought: *"Why not bring the same developer experience to local models too?"* So we did. Now you can generate images from text prompts using cloud APIs or local Stable Diffusion models with ONNX Runtime — all through the same clean .NET interface.
 
 ## 🛠️ Command-Line Tool
 
