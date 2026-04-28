@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -32,7 +33,24 @@ internal sealed class DoctorCommand : AsyncCommand
         AnsiConsole.Write(new Rule("[bold cyan]t2i Doctor — System Diagnostics[/]").RuleStyle("blue").LeftJustified());
         AnsiConsole.WriteLine();
 
-        // 1. System info
+        // 1. CLI Tool info
+        var assembly = Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version?.ToString() ?? "unknown";
+        var infoVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion ?? version;
+        
+        var cliPanel = new Panel(new Rows(
+            new Markup($"CLI: [bold cyan]t2i[/] v[cyan]{Markup.Escape(infoVersion)}[/]")
+        ))
+        {
+            Header = new PanelHeader("[bold]CLI Tool[/]"),
+            Border = BoxBorder.Rounded
+        };
+        AnsiConsole.Write(cliPanel);
+        AnsiConsole.WriteLine();
+
+        // 2. System info
         var systemPanel = new Panel(new Rows(
             new Text($"OS: {RuntimeInformation.OSDescription}"),
             new Text($".NET: {RuntimeInformation.FrameworkDescription}"),
@@ -46,7 +64,7 @@ internal sealed class DoctorCommand : AsyncCommand
         AnsiConsole.Write(systemPanel);
         AnsiConsole.WriteLine();
 
-        // 2. Providers
+        // 3. Providers
         AnsiConsole.MarkupLine("[bold]Providers[/]");
         var providerTable = new Table().Border(TableBorder.Rounded);
         providerTable.AddColumn("Provider");
@@ -72,7 +90,7 @@ internal sealed class DoctorCommand : AsyncCommand
         AnsiConsole.Write(providerTable);
         AnsiConsole.WriteLine();
 
-        // 3. Config
+        // 4. Config
         var configExists = File.Exists(ConfigPaths.ConfigFilePath);
         var configStatus = configExists ? "[green]✓ Present[/]" : "[yellow]⚠ Not found[/]";
         var configSize = configExists ? $"{new FileInfo(ConfigPaths.ConfigFilePath).Length} bytes" : "—";
@@ -89,7 +107,7 @@ internal sealed class DoctorCommand : AsyncCommand
         AnsiConsole.Write(configPanel);
         AnsiConsole.WriteLine();
 
-        // 4. Secrets and Fields
+        // 5. Secrets and Fields
         AnsiConsole.MarkupLine("[bold]Configuration Status[/]");
         var configTable = new Table().Border(TableBorder.Rounded);
         configTable.AddColumn("Provider");

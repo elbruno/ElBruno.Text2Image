@@ -40,6 +40,8 @@ Update to the latest version:
 dotnet tool update --global ElBruno.Text2Image.Cli
 ```
 
+**Note:** All packages are released with matching versions for consistency. Use `t2i doctor` to verify your CLI version and configuration.
+
 ### CLI Examples
 
 **Local Models (Stable Diffusion):**

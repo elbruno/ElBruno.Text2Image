@@ -208,16 +208,40 @@ The wizard is non-destructive — you can re-run it to update settings.
 
 ## Diagnostics
 
-Run diagnostics to check system health:
+Run diagnostics to check system health and configuration:
 
 ```bash
 t2i doctor
 ```
 
-Checks:
-- Config file validity
-- Secret store accessibility
-- Provider connectivity (cloud)
+The `doctor` command displays:
+- **CLI Tool** — The installed CLI tool version for troubleshooting and version verification
+- **Config file validity** — Validates your configuration file format
+- **Secret store accessibility** — Checks if your secrets can be read
+- **Provider connectivity** — Tests cloud provider endpoints
+
+Example output:
+
+```
+🔍 t2i Doctor Report
+
+CLI Tool
+  Version: 0.1.5
+
+Environment
+  Config Path: C:\Users\user\AppData\Roaming\t2i\config.json
+  Config Status: ✅ Valid
+
+Secrets
+  Store: DPAPI (Windows)
+  Status: ✅ Accessible
+
+Providers
+  foundry-flux2: ✅ Connected
+  foundry-mai2: ⚠️ No credentials configured
+```
+
+Use `t2i doctor` to troubleshoot issues and verify your CLI tool version matches your library package versions.
 
 ## Examples
 

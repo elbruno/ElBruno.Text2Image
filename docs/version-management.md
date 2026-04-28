@@ -2,12 +2,28 @@
 
 > **Key Rule:** All packages in the ElBruno.Text2Image monorepo MUST have identical version numbers. When you update one, you update all.
 
+## Version Alignment Rule
+
+All NuGet packages in the ElBruno.Text2Image monorepo must maintain identical version numbers. This applies to:
+
+- **ElBruno.Text2Image** — Core library
+- **ElBruno.Text2Image.Cli** — Command-line tool
+- **ElBruno.Text2Image.Foundry** — Cloud provider support
+- **ElBruno.Text2Image.Cpu** — CPU inference
+- **ElBruno.Text2Image.Cuda** — CUDA GPU support
+- **ElBruno.Text2Image.DirectML** — DirectML GPU support
+
+The version number is defined in each `.csproj` file using the `<Version>` tag. When you bump one package, you must bump all others to match.
+
+**Rationale:** Unified versioning ensures user confidence and feature parity. When a developer installs `ElBruno.Text2Image.Cli v1.3.0`, they know it's fully compatible with `ElBruno.Text2Image v1.3.0`, `ElBruno.Text2Image.Foundry v1.3.0`, and all other packages at v1.3.0. This eliminates version confusion and makes troubleshooting easier.
+
 ## Why Unified Versioning?
 
 - **Clarity:** Users see "v1.2.1" and know all packages are compatible
 - **Simplicity:** No confusion about which CLI version goes with which library version
 - **Automation:** Reduces manual errors during releases
 - **Consistency:** Matches user expectations
+- **Developer Experience:** Users can quickly verify they're running compatible versions across all packages
 
 ## How to Bump the Version
 

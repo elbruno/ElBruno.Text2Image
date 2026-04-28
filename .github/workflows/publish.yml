@@ -23,6 +23,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify version synchronization
+        shell: pwsh
+        run: |
+          # Extract versions from all published .csproj files
+          $projects = @(
+            "src/ElBruno.Text2Image/ElBruno.Text2Image.csproj",
+            "src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj",
+            "src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj",
+            "src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj",
+            "src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj"
+          )
+          
+          $versions = @{}
+          foreach ($proj in $projects) {
+            $xml = [xml](Get-Content $proj)
+            $version = $xml.Project.PropertyGroup.Version
+            $versions[$proj] = $version
+            Write-Host "  $proj => $version"
+          }
+          
+          $uniqueVersions = $versions.Values | Select-Object -Unique
+          if ($uniqueVersions.Count -gt 1) {
+            Write-Host ""
+            Write-Host "❌ ERROR: Version mismatch detected across projects:" -ForegroundColor Red
+            foreach ($kv in $versions.GetEnumerator()) {
+              Write-Host "  $($kv.Key) => $($kv.Value)"
+            }
+            Write-Host ""
+            Write-Host "All library packages must share the same version before publish." -ForegroundColor Red
+            exit 1
+          }
+          
+          Write-Host ""
+          Write-Host "✓ All library versions are synchronized: $($uniqueVersions[0])" -ForegroundColor Green
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
