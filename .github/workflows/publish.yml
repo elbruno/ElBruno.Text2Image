@@ -98,6 +98,7 @@ jobs:
         run: |
           for proj in \
             src/ElBruno.Text2Image/ElBruno.Text2Image.csproj \
+            src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj \
             src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj \
             src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj \
             src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj \
