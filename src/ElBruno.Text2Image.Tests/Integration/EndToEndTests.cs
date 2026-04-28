@@ -698,7 +698,9 @@ public class EndToEndTests : IDisposable
 
     private FakeSecretStore CreateFakeSecretStore()
     {
-        return new FakeSecretStore { IsAvailable = true };
+        // On Windows, tests need a fake DPAPI store to satisfy the mandatory DPAPI requirement
+        var name = OperatingSystem.IsWindows() ? "dpapi" : "file";
+        return new FakeSecretStore { Name = name, IsAvailable = true };
     }
 
     private sealed class FakeRemainingArguments : IRemainingArguments

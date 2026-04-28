@@ -75,12 +75,26 @@ public sealed class SecretResolver
         }
         else
         {
-            targetStore = _stores.FirstOrDefault(s => s.Name == "dpapi" && s.IsAvailable)
-                          ?? _stores.FirstOrDefault(s => s.Name == "file" && s.IsAvailable);
-
-            if (targetStore == null)
+            // On Windows, DPAPI is mandatory for security
+            if (OperatingSystem.IsWindows())
             {
-                throw new InvalidOperationException("No writable secret store is available");
+                targetStore = _stores.FirstOrDefault(s => s.Name == "dpapi" && s.IsAvailable);
+                if (targetStore == null)
+                {
+                    throw new InvalidOperationException(
+                        "Windows DPAPI secret store is not available. " +
+                        "Plaintext secret storage is not allowed on Windows for security reasons. " +
+                        "Please ensure you are running on Windows with DPAPI support.");
+                }
+            }
+            else
+            {
+                // Non-Windows: allow plaintext file storage
+                targetStore = _stores.FirstOrDefault(s => s.Name == "file" && s.IsAvailable);
+                if (targetStore == null)
+                {
+                    throw new InvalidOperationException("No writable secret store is available");
+                }
             }
         }
 

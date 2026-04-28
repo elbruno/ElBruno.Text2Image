@@ -107,17 +107,29 @@ public class SecretResolverTests
     }
 
     [Fact]
-    public async Task SetAsync_FallsBackToFile_WhenDpapiUnavailable()
+    public async Task SetAsync_ThrowsOnWindows_WhenDpapiUnavailable()
     {
         var dpapiStore = new FakeSecretStore { Name = "dpapi", IsAvailable = false };
         var fileStore = new FakeSecretStore { Name = "file" };
 
         var resolver = new SecretResolver(new ISecretStore[] { dpapiStore, fileStore });
 
-        await resolver.SetAsync("test-provider", "apiKey", "secret-value", preferredStoreName: null, CancellationToken.None);
-
-        Assert.False(dpapiStore.Data.ContainsKey(("test-provider", "apiKey")));
-        Assert.True(fileStore.Data.ContainsKey(("test-provider", "apiKey")));
+        if (OperatingSystem.IsWindows())
+        {
+            // On Windows, must throw if DPAPI is unavailable
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => resolver.SetAsync("test-provider", "apiKey", "secret-value", preferredStoreName: null, CancellationToken.None));
+            
+            Assert.Contains("Windows DPAPI", ex.Message);
+            Assert.Contains("not allowed on Windows", ex.Message);
+        }
+        else
+        {
+            // On non-Windows, should fall back to file store
+            await resolver.SetAsync("test-provider", "apiKey", "secret-value", preferredStoreName: null, CancellationToken.None);
+            Assert.False(dpapiStore.Data.ContainsKey(("test-provider", "apiKey")));
+            Assert.True(fileStore.Data.ContainsKey(("test-provider", "apiKey")));
+        }
     }
 }
 #endif

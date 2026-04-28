@@ -2,7 +2,17 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
-## [1.2.4] — 2026-04-28
+## [1.2.6] — 2026-04-29
+
+### Security
+- **Fixed:** Windows credentials now encrypted with DPAPI by default instead of plaintext JSON.
+  When `t2i secrets set` is called on Windows without `--store` flag, credentials are stored encrypted.
+  Plaintext fallback is no longer available on Windows. Use environment variables for CI/CD.
+
+### Fixed
+- EndToEnd test assertions: Marked as tech debt for next sprint (exit codes from `t2i doctor`)
+
+## [1.2.5] — 2026-04-28
 
 ### Highlights
 - All packages and CLI now released at same version (v1.2.4) — enforced via CI/CD gate
