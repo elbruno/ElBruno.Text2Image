@@ -7,6 +7,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cpu?style=flat-square&logo=nuget&label=ElBruno.Text2Image.Cpu)](https://www.nuget.org/packages/ElBruno.Text2Image.Cpu)
 [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cuda?style=flat-square&logo=nuget&label=ElBruno.Text2Image.Cuda)](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda)
 [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.DirectML?style=flat-square&logo=nuget&label=ElBruno.Text2Image.DirectML)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML)
+[![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cli?style=flat-square&logo=nuget&label=ElBruno.Text2Image.Cli)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli)
 [![Build Status](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml/badge.svg)](https://github.com/elbruno/ElBruno.Text2Image/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/elbruno/ElBruno.Text2Image?style=social)](https://github.com/elbruno/ElBruno.Text2Image)
@@ -15,6 +16,17 @@
 **HuggingFace ONNX Models:**
 [![SD 2.1 ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SD%202.1%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
 [![SDXL Turbo ONNX](https://img.shields.io/badge/🤗%20HuggingFace-SDXL%20Turbo%20ONNX-yellow?style=flat-square)](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
+
+## 📦 NuGet Packages
+
+| Package | Version | Downloads | NuGet |
+|---------|---------|-----------|-------|
+| **ElBruno.Text2Image** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image) |
+| **ElBruno.Text2Image.Foundry** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Foundry?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Foundry) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Foundry?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Foundry) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image.Foundry) |
+| **ElBruno.Text2Image.Cpu** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cpu?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cpu) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cpu?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cpu) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image.Cpu) |
+| **ElBruno.Text2Image.Cuda** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cuda?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cuda?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda) |
+| **ElBruno.Text2Image.DirectML** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) |
+| **ElBruno.Text2Image.Cli** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) | [Link](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) |
 
 > 📢 **This project started with [FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)** — a cloud-first approach to text-to-image generation with best-in-class text rendering. After wrapping that API, we thought: *"Why not bring the same developer experience to local models too?"* So we did. Now you can generate images from text prompts using cloud APIs or local Stable Diffusion models with ONNX Runtime — all through the same clean .NET interface.
 
