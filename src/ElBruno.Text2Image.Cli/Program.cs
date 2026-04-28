@@ -51,12 +51,18 @@ app.Configure(config =>
         .WithDescription("Display version information")
         .WithExample(new[] { "version" });
 
+    // Update command
+    config.AddCommand<UpdateCommand>("update")
+        .WithDescription("Check for and install updates to the t2i tool")
+        .WithExample(new[] { "update" })
+        .WithExample(new[] { "update", "--auto" });
+
     // Init command
     config.AddCommand<InitCommand>("init")
         .WithDescription("Initialize the current folder with a t2i skill file for AI coding agents")
         .WithExample(new[] { "init" })
         .WithExample(new[] { "init", "--target", "github" })
-        .WithExample(new[] { "init", "--force" });
+        .WithExample(new[] { "init", "--keep-existing" });
 });
 
 return await app.RunAsync(args);

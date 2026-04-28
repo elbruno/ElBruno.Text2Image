@@ -1,6 +1,31 @@
 ---
 name: t2i
+version: 1.2.1
 description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry providers (FLUX.2, MAI-Image-2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+author: Bruno Capuano <bruno@elbruno.com>
+license: MIT
+tags:
+  - text-to-image
+  - image-generation
+  - foundry
+  - ai
+  - cli
+  - dotnet-tool
+  - dotnet
+inputs:
+  - prompt: string, required, text description of the image to generate
+  - provider: string, optional, image generation provider (foundry-flux2 or foundry-mai2), default foundry-flux2
+  - output: string, optional, output file path for the generated image
+  - width: integer, optional, image width in pixels, default 512
+  - height: integer, optional, image height in pixels, default 512
+  - steps: integer, optional, number of inference steps, default 20
+outputs:
+  - image: PNG file saved to specified output path or auto-generated filename
+  - status: generation success/failure with error details on failure
+requirements:
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.2.0
+  - runtime: '.NET 8.0 or .NET 10.0'
+entrypoint: t2i
 ---
 
 # t2i — Text-to-Image CLI Skill

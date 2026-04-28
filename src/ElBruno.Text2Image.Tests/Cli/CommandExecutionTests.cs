@@ -474,7 +474,7 @@ public class CommandExecutionTests : IDisposable
             Directory.SetCurrentDirectory(testDir);
             
             var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "all", Force = false };
+            var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
             var context = CreateContext();
 
             var exitCode = command.Execute(context, settings);
@@ -505,7 +505,7 @@ public class CommandExecutionTests : IDisposable
             Directory.SetCurrentDirectory(testDir);
             
             var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "github", Force = false };
+            var settings = new InitCommand.Settings { Target = "github", KeepExisting = false };
             var context = CreateContext();
 
             var exitCode = command.Execute(context, settings);
@@ -536,7 +536,7 @@ public class CommandExecutionTests : IDisposable
             Directory.SetCurrentDirectory(testDir);
             
             var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "claude", Force = false };
+            var settings = new InitCommand.Settings { Target = "claude", KeepExisting = false };
             var context = CreateContext();
 
             var exitCode = command.Execute(context, settings);
@@ -556,9 +556,9 @@ public class CommandExecutionTests : IDisposable
     }
 
     [Fact]
-    public void InitCommand_SkipsExistingFile_WithoutForce()
+    public void InitCommand_UpdatesExistingFile_ByDefault()
     {
-        var testDir = Path.Combine(_tempDir, "init-test-skip");
+        var testDir = Path.Combine(_tempDir, "init-test-update");
         Directory.CreateDirectory(testDir);
         var originalCwd = Directory.GetCurrentDirectory();
         
@@ -566,48 +566,14 @@ public class CommandExecutionTests : IDisposable
         {
             Directory.SetCurrentDirectory(testDir);
             
-            const string sentinel = "PRE-EXISTING CONTENT";
+            const string sentinel = "OLD CONTENT";
             var githubPath = Path.Combine(testDir, ".github", "skills", "t2i", "SKILL.md");
             
             Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
             File.WriteAllText(githubPath, sentinel);
             
             var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "github", Force = false };
-            var context = CreateContext();
-
-            var exitCode = command.Execute(context, settings);
-
-            Assert.Equal(0, exitCode);
-            
-            var content = File.ReadAllText(githubPath);
-            Assert.Equal(sentinel, content);
-        }
-        finally
-        {
-            Directory.SetCurrentDirectory(originalCwd);
-        }
-    }
-
-    [Fact]
-    public void InitCommand_OverwritesExistingFile_WithForce()
-    {
-        var testDir = Path.Combine(_tempDir, "init-test-force");
-        Directory.CreateDirectory(testDir);
-        var originalCwd = Directory.GetCurrentDirectory();
-        
-        try
-        {
-            Directory.SetCurrentDirectory(testDir);
-            
-            const string sentinel = "PRE-EXISTING CONTENT";
-            var githubPath = Path.Combine(testDir, ".github", "skills", "t2i", "SKILL.md");
-            
-            Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
-            File.WriteAllText(githubPath, sentinel);
-            
-            var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "github", Force = true };
+            var settings = new InitCommand.Settings { Target = "github", KeepExisting = false };
             var context = CreateContext();
 
             var exitCode = command.Execute(context, settings);
@@ -617,6 +583,41 @@ public class CommandExecutionTests : IDisposable
             var content = File.ReadAllText(githubPath);
             Assert.DoesNotContain(sentinel, content);
             Assert.Contains("# t2i", content);
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalCwd);
+        }
+    }
+
+    [Fact]
+    public void InitCommand_KeepsExistingFile_WithKeepExisting()
+    {
+        var testDir = Path.Combine(_tempDir, "init-test-keep");
+        Directory.CreateDirectory(testDir);
+        var originalCwd = Directory.GetCurrentDirectory();
+        
+        try
+        {
+            Directory.SetCurrentDirectory(testDir);
+            
+            const string sentinel = "KEEP THIS CONTENT";
+            var githubPath = Path.Combine(testDir, ".github", "skills", "t2i", "SKILL.md");
+            
+            Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
+            File.WriteAllText(githubPath, sentinel);
+            
+            var command = new InitCommand();
+            var settings = new InitCommand.Settings { Target = "github", KeepExisting = true };
+            var context = CreateContext();
+
+            var exitCode = command.Execute(context, settings);
+
+            Assert.Equal(0, exitCode);
+            
+            var content = File.ReadAllText(githubPath);
+            Assert.Equal(sentinel, content);
+            Assert.DoesNotContain("# t2i", content);
         }
         finally
         {
@@ -636,7 +637,7 @@ public class CommandExecutionTests : IDisposable
             Directory.SetCurrentDirectory(testDir);
             
             var command = new InitCommand();
-            var settings = new InitCommand.Settings { Target = "invalid-target", Force = false };
+            var settings = new InitCommand.Settings { Target = "invalid-target", KeepExisting = false };
             var context = CreateContext();
 
             var exitCode = command.Execute(context, settings);

@@ -1,6 +1,31 @@
 ---
 name: t2i
+version: 1.2.1
 description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry providers (FLUX.2, MAI-Image-2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+author: Bruno Capuano <bruno@elbruno.com>
+license: MIT
+tags:
+  - text-to-image
+  - image-generation
+  - foundry
+  - ai
+  - cli
+  - dotnet-tool
+  - dotnet
+inputs:
+  - prompt: string, required, text description of the image to generate
+  - provider: string, optional, image generation provider (foundry-flux2 or foundry-mai2), default foundry-flux2
+  - output: string, optional, output file path for the generated image
+  - width: integer, optional, image width in pixels, default 512
+  - height: integer, optional, image height in pixels, default 512
+  - steps: integer, optional, number of inference steps, default 20
+outputs:
+  - image: PNG file saved to specified output path or auto-generated filename
+  - status: generation success/failure with error details on failure
+requirements:
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.2.0
+  - runtime: '.NET 8.0 or .NET 10.0'
+entrypoint: t2i
 ---
 
 # t2i — Text-to-Image CLI Skill
@@ -31,7 +56,8 @@ Activate this skill when:
 | `t2i secrets remove <provider>` | Delete credentials | `--field` |
 | `t2i secrets test <provider>` | Test provider connectivity | None |
 | `t2i doctor` | Run full diagnostics | None |
-| `t2i init` | Setup skill files | `--target`, `--force` |
+| `t2i init` | Setup skill files in repo | `--target`, `--keep-existing` |
+| `t2i update` | Check for and install updates | `--auto` |
 | `t2i version` | Show version info | None |
 
 ### Generate Command Flags
@@ -69,10 +95,10 @@ t2i secrets test <provider>      # Test provider connection
 ### Init Command Targets
 
 ```bash
-t2i init                 # Create skill files for GitHub and Claude (default)
-t2i init --target github # Create .github/skills/t2i/SKILL.md only
-t2i init --target claude # Create .claude/skills/t2i/SKILL.md only
-t2i init --force         # Overwrite existing files
+t2i init                 # Create or update skill files for GitHub and Claude (default: update existing)
+t2i init --target github # Create/update .github/skills/t2i/SKILL.md only
+t2i init --target claude # Create/update .claude/skills/t2i/SKILL.md only
+t2i init --keep-existing # Skip files that already exist (do not update)
 ```
 
 ## Providers
@@ -247,6 +273,22 @@ t2i config show
 t2i config path
 ```
 
+### 6. Updating the Tool
+
+```bash
+# Step 1: Check if an update is available
+t2i update
+
+# Step 2: If update is available, confirm the prompt (or use --auto)
+# Step 3: Review the new version after update
+t2i version
+```
+
+**Automatic update (no confirmation prompt):**
+```bash
+t2i update --auto
+```
+
 ## Important Rules for Agents
 
 ### 1. Always Verify Configuration First
@@ -293,12 +335,14 @@ t2i doctor  # One command checks everything:
             # - Secret store health
 ```
 
-### 6. Suggest `t2i init` for New Repos
-When onboarding a new project:
+### 6. Suggest `t2i init` for New Repos & Updates
+When onboarding a new project or updating skill files:
 ```bash
-t2i init  # Creates skill files for AI agents
+t2i init  # Creates or updates skill files for AI agents
           # - .github/skills/t2i/SKILL.md
           # - .claude/skills/t2i/SKILL.md
+          # By default, existing files are updated with latest content
+          # Use --keep-existing to preserve existing files
 ```
 
 ### 7. Respect Rate Limits

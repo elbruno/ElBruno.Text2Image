@@ -43,7 +43,7 @@ public class InitCommandTests : IDisposable
     public void Init_WritesBothFiles_WhenTargetAll()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -69,7 +69,7 @@ public class InitCommandTests : IDisposable
     public void Init_WritesOnlyGithub_WhenTargetGithub()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "github", Force = false };
+        var settings = new InitCommand.Settings { Target = "github", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -90,7 +90,7 @@ public class InitCommandTests : IDisposable
     public void Init_WritesOnlyClaude_WhenTargetClaude()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "claude", Force = false };
+        var settings = new InitCommand.Settings { Target = "claude", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -108,9 +108,9 @@ public class InitCommandTests : IDisposable
     }
 
     [Fact]
-    public void Init_SkipsExistingFile_WithoutForce()
+    public void Init_UpdatesExistingFile_ByDefault()
     {
-        const string sentinel = "PRE-EXISTING CONTENT";
+        const string sentinel = "OLD CONTENT";
         var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
         
         // Pre-create file with sentinel content
@@ -118,30 +118,7 @@ public class InitCommandTests : IDisposable
         File.WriteAllText(githubPath, sentinel);
         
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "github", Force = false };
-        var context = CreateContext();
-
-        var exitCode = command.Execute(context, settings);
-
-        Assert.Equal(0, exitCode);
-        
-        var content = File.ReadAllText(githubPath);
-        Assert.Equal(sentinel, content);
-        Assert.DoesNotContain("# t2i", content);
-    }
-
-    [Fact]
-    public void Init_OverwritesExistingFile_WithForce()
-    {
-        const string sentinel = "PRE-EXISTING CONTENT";
-        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
-        
-        // Pre-create file with sentinel content
-        Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
-        File.WriteAllText(githubPath, sentinel);
-        
-        var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "github", Force = true };
+        var settings = new InitCommand.Settings { Target = "github", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -151,6 +128,29 @@ public class InitCommandTests : IDisposable
         var content = File.ReadAllText(githubPath);
         Assert.DoesNotContain(sentinel, content);
         Assert.Contains("# t2i", content);
+    }
+
+    [Fact]
+    public void Init_KeepsExistingFile_WithKeepExisting()
+    {
+        const string sentinel = "KEEP THIS CONTENT";
+        var githubPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        
+        // Pre-create file with sentinel content
+        Directory.CreateDirectory(Path.GetDirectoryName(githubPath)!);
+        File.WriteAllText(githubPath, sentinel);
+        
+        var command = new InitCommand();
+        var settings = new InitCommand.Settings { Target = "github", KeepExisting = true };
+        var context = CreateContext();
+
+        var exitCode = command.Execute(context, settings);
+
+        Assert.Equal(0, exitCode);
+        
+        var content = File.ReadAllText(githubPath);
+        Assert.Equal(sentinel, content);
+        Assert.DoesNotContain("# t2i", content);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class InitCommandTests : IDisposable
         Assert.False(Directory.Exists(claudeDir));
         
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -185,7 +185,7 @@ public class InitCommandTests : IDisposable
     public void Init_ReturnsError_WhenInvalidTarget()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "invalid-target", Force = false };
+        var settings = new InitCommand.Settings { Target = "invalid-target", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -204,7 +204,7 @@ public class InitCommandTests : IDisposable
     public void Init_IsIdempotent_MultipleCallsSameResult()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var context = CreateContext();
 
         // First call - creates files
@@ -217,20 +217,20 @@ public class InitCommandTests : IDisposable
         var firstGithubContent = File.ReadAllText(githubPath);
         var firstClaudeContent = File.ReadAllText(claudePath);
         
-        // Second call - skips existing files
+        // Second call - updates existing files to same content
         var exitCode2 = command.Execute(context, settings);
         Assert.Equal(0, exitCode2);
         
         var secondGithubContent = File.ReadAllText(githubPath);
         var secondClaudeContent = File.ReadAllText(claudePath);
         
-        // Content should be unchanged
+        // Content should be unchanged (idempotent)
         Assert.Equal(firstGithubContent, secondGithubContent);
         Assert.Equal(firstClaudeContent, secondClaudeContent);
     }
 
     [Fact]
-    public void Init_WithForce_OverwritesAllExistingFiles()
+    public void Init_WithKeepExisting_SkipsAllExistingFiles()
     {
         const string sentinel = "OLD CONTENT";
         
@@ -245,7 +245,7 @@ public class InitCommandTests : IDisposable
         File.WriteAllText(claudePath, sentinel);
         
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = true };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = true };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -255,11 +255,11 @@ public class InitCommandTests : IDisposable
         var githubContent = File.ReadAllText(githubPath);
         var claudeContent = File.ReadAllText(claudePath);
         
-        // Both should be overwritten
-        Assert.DoesNotContain(sentinel, githubContent);
-        Assert.DoesNotContain(sentinel, claudeContent);
-        Assert.Contains("# t2i", githubContent);
-        Assert.Contains("# t2i", claudeContent);
+        // Both should be kept (not overwritten)
+        Assert.Equal(sentinel, githubContent);
+        Assert.Equal(sentinel, claudeContent);
+        Assert.DoesNotContain("# t2i", githubContent);
+        Assert.DoesNotContain("# t2i", claudeContent);
     }
 
     [Fact]
@@ -270,10 +270,10 @@ public class InitCommandTests : IDisposable
     }
 
     [Fact]
-    public void Init_DefaultForceIsFalse()
+    public void Init_DefaultKeepExistingIsFalse()
     {
         var settings = new InitCommand.Settings();
-        Assert.False(settings.Force);
+        Assert.False(settings.KeepExisting);
     }
 
     [Theory]
@@ -283,13 +283,13 @@ public class InitCommandTests : IDisposable
     [InlineData("GITHUB")]
     [InlineData("CLAUDE")]
     [InlineData("ALL")]
-    [InlineData("GitHub")]
+    [InlineData("Github")]
     [InlineData("Claude")]
     [InlineData("All")]
     public void Init_AcceptsCaseInsensitiveTargets(string target)
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = target, Force = false };
+        var settings = new InitCommand.Settings { Target = target, KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);
@@ -302,7 +302,7 @@ public class InitCommandTests : IDisposable
     public void Init_FilesContainExpectedContent()
     {
         var command = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = command.Execute(context, settings);

@@ -102,7 +102,7 @@ public class EndToEndTests : IDisposable
     public async Task E2E_FirstRun_InitCommand_CreatesSkillFiles()
     {
         var initCmd = new InitCommand();
-        var settings = new InitCommand.Settings { Target = "all", Force = false };
+        var settings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var context = CreateContext();
 
         var exitCode = initCmd.Execute(context, settings);
@@ -394,7 +394,7 @@ public class EndToEndTests : IDisposable
 
         // Step 1: Init
         var initCmd = new InitCommand();
-        var initSettings = new InitCommand.Settings { Target = "all", Force = false };
+        var initSettings = new InitCommand.Settings { Target = "all", KeepExisting = false };
         var initExit = initCmd.Execute(CreateContext(), initSettings);
         Assert.Equal(0, initExit);
 
@@ -610,7 +610,7 @@ public class EndToEndTests : IDisposable
         var settings = new InitCommand.Settings();
 
         Assert.Equal("all", settings.Target);
-        Assert.False(settings.Force);
+        Assert.False(settings.KeepExisting);
     }
 
     [Fact]

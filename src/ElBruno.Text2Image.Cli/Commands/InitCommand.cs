@@ -17,9 +17,9 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         [DefaultValue("all")]
         public string Target { get; set; } = "all";
 
-        [CommandOption("--force")]
-        [Description("Overwrite existing files")]
-        public bool Force { get; set; }
+        [CommandOption("--keep-existing")]
+        [Description("Skip files that already exist (default: update existing files)")]
+        public bool KeepExisting { get; set; }
     }
 
     public override int Execute(CommandContext context, Settings settings)
@@ -53,7 +53,7 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
                 continue;
             }
             
-            var (status, written) = WriteSkillFile(fullPath, skillContent, settings.Force);
+            var (status, written) = WriteSkillFile(fullPath, skillContent, settings.KeepExisting);
             results.Add((relativePath, status));
         }
 
@@ -84,7 +84,7 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         if (updatedCount > 0)
             summaryLines.Add($"[yellow]{updatedCount} updated[/]");
         if (skippedCount > 0)
-            summaryLines.Add($"[dim]{skippedCount} skipped (use --force to overwrite)[/]");
+            summaryLines.Add($"[dim]{skippedCount} skipped (use --keep-existing to preserve)[/]");
 
         if (summaryLines.Count > 0)
         {
@@ -135,11 +135,11 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         };
     }
 
-    private static (string Status, bool Written) WriteSkillFile(string fullPath, string content, bool force)
+    private static (string Status, bool Written) WriteSkillFile(string fullPath, string content, bool keepExisting)
     {
         var exists = File.Exists(fullPath);
 
-        if (exists && !force)
+        if (exists && keepExisting)
         {
             return ("skipped", false);
         }
