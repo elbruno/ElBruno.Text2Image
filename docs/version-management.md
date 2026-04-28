@@ -128,8 +128,16 @@ git push origin main && git push origin v1.3.0
 gh release create v1.3.0 --title "v1.3.0 — New Features" --notes "Added support for X, improved Y, fixed Z"
 ```
 
+## Version History
+
+| Version | Release Date | Status |
+|---------|--------------|--------|
+| 1.2.3 | 2026-04-24 | Current — All packages synchronized |
+| 1.2.2 | — | Previous |
+
 ## See Also
 
 - [`docs/publishing.md`](./publishing.md) — Full publishing workflow for NuGet
 - [`.squad/decisions.md`](../.squad/decisions.md) — Team decision on unified versioning
 - [`scripts/Update-AllVersions.ps1`](../scripts/Update-AllVersions.ps1) — The automation script (full help available)
+- [`CHANGELOG.md`](../CHANGELOG.md) — Release notes
