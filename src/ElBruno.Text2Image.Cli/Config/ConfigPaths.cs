@@ -2,12 +2,13 @@ namespace ElBruno.Text2Image.Cli.Config;
 
 /// <summary>
 /// Provides platform-specific config file paths.
+/// Note: Paths are evaluated dynamically to support test environment variable overrides.
 /// </summary>
 public static class ConfigPaths
 {
     /// <summary>
     /// Gets the config directory path for the current OS.
-    /// Windows: %APPDATA%\t2i
+    /// Windows: %APPDATA%\t2i (reads environment variable to support test isolation)
     /// Linux/macOS: $XDG_CONFIG_HOME/t2i or ~/.config/t2i
     /// </summary>
     public static string ConfigDirectory
@@ -16,7 +17,10 @@ public static class ConfigPaths
         {
             if (OperatingSystem.IsWindows())
             {
-                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                // Read APPDATA from environment variable (supports test overrides)
+                // Fallback to GetFolderPath if env var not set
+                var appData = Environment.GetEnvironmentVariable("APPDATA") 
+                    ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 return Path.Combine(appData, "t2i");
             }
             else
