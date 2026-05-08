@@ -71,11 +71,11 @@ internal sealed class FoundryComparisonRunner(
         {
             new DeploymentDefinition(
                 settings.MaiImage2Deployment,
-                "MAI-Image-2",
+                settings.MaiImage2Deployment,
                 RunMaiImage2Async),
             new DeploymentDefinition(
                 settings.GptImage2Deployment,
-                "GPT-Image-2",
+                settings.GptImage2Deployment,
                 RunGptImage2Async)
         };
 
