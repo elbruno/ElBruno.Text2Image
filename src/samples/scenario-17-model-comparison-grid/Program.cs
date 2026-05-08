@@ -31,7 +31,7 @@ var scenarios = new (string ModelName, Func<IImageGenerator> CreateGenerator, Im
     }, "sdxl-turbo.png", "~8 GB")
 };
 
-var rows = new List<(string ModelName, long InferenceTimeMs, int Steps, string ModelSize)>();
+var rows = new List<(string ModelName, long InferenceTimeMs, int Steps, string ModelSize, string OutputFile)>();
 
 foreach (var scenario in scenarios)
 {
@@ -49,7 +49,7 @@ foreach (var scenario in scenarios)
     Console.WriteLine($"Saved: {Path.GetFullPath(scenario.OutputFile)}");
     Console.WriteLine();
 
-    rows.Add((scenario.ModelName, result.InferenceTimeMs, scenario.Options.NumInferenceSteps, scenario.ModelSize));
+    rows.Add((scenario.ModelName, result.InferenceTimeMs, scenario.Options.NumInferenceSteps, scenario.ModelSize, scenario.OutputFile));
 }
 
 var readme = new StringBuilder()
@@ -64,8 +64,7 @@ var readme = new StringBuilder()
 
 foreach (var row in rows)
 {
-    var outputFile = scenarios.First(s => s.ModelName == row.ModelName).OutputFile;
-    readme.AppendLine($"| {row.ModelName} | {row.InferenceTimeMs} | {row.Steps} | {row.ModelSize} | `{outputFile}` |");
+    readme.AppendLine($"| {row.ModelName} | {row.InferenceTimeMs} | {row.Steps} | {row.ModelSize} | `{row.OutputFile}` |");
 }
 
 await File.WriteAllTextAsync("README.md", readme.ToString());
