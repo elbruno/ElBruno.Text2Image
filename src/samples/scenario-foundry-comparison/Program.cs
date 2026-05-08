@@ -241,9 +241,12 @@ internal sealed class FoundryComparisonRunner(
     private static string FormatOutput(RunMetric metric) =>
         metric.OutputTokens is int outputTokens
             ? outputTokens.ToString()
-            : $"{metric.OutputCount} image";
+            : FormatImageCount(metric.OutputCount);
 
     private static string FormatCost(decimal? value) => value is null ? "N/A" : value.Value.ToString("0.0000");
+
+    internal static string FormatImageCount(double count) =>
+        Math.Abs(count - 1d) < 0.001d ? "1 image" : $"{count:0.#} images";
 }
 
 internal sealed class FoundryAuthHeaderProvider
@@ -310,7 +313,7 @@ internal sealed record DeploymentSummary(
             deploymentName,
             averageLatency,
             averageInputTokens?.ToString() ?? "N/A",
-            averageOutputTokens?.ToString() ?? $"{measuredRuns.Average(run => run.OutputCount):0.#} image",
+            averageOutputTokens?.ToString() ?? FoundryComparisonRunner.FormatImageCount(measuredRuns.Average(run => run.OutputCount)),
             averageCost?.ToString("0.0000") ?? "N/A",
             sampleFileName);
     }
