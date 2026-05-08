@@ -411,6 +411,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 | [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
 | [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 (DALL-E 3) cloud API via Azure OpenAI |
+| [scenario-foundry-comparison](src/samples/scenario-foundry-comparison/) | Benchmark MAI-Image-2 vs GPT-Image-2 on the same Foundry prompt |
 
 ### Run a Sample
 

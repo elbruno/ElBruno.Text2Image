@@ -22,5 +22,6 @@
     <Project Path="src/samples/scenario-11-gpu-diagnostics/scenario-11-gpu-diagnostics.csproj" />
     <Project Path="src/samples/scenario-13-mai-image2-cloud/scenario-13-mai-image2-cloud.csproj" />
     <Project Path="src/samples/scenario-14-gpu-stress-test/scenario-14-gpu-stress-test.csproj" />
+    <Project Path="src/samples/scenario-foundry-comparison/scenario-foundry-comparison.csproj" />
   </Folder>
 </Solution>
