@@ -95,6 +95,7 @@ venv/
 
 # Generated images from samples
 *.png
+!src/samples/scenario-17-model-comparison-grid/*.png
 !images/*.png
 
 nupkgs/

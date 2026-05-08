@@ -6,7 +6,7 @@ Prompt used for all models:
 
 | Model | Inference time (ms) | Steps used | Model size | Output |
 |---|---:|---:|---|---|
-| StableDiffusion15 | _(generated at runtime)_ | 20 | ~4 GB | `sd15.png` |
+| StableDiffusion15 | 219240 | 20 | ~4 GB | `sd15.png` |
 | LcmDreamshaperV7 | _(generated at runtime)_ | 4 | ~4 GB | `lcm.png` |
 | SdxlTurbo | _(generated at runtime)_ | 4 | ~8 GB | `sdxl-turbo.png` |
 
@@ -15,17 +15,23 @@ Prompt used for all models:
 Command used:
 
 ```bash
-dotnet run --framework net10.0
+dotnet ./bin/Debug/net10.0/scenario-17-model-comparison-grid.dll
 ```
 
 Result:
 
-- The run stopped before generation because the sandbox could not reach Hugging Face (`huggingface.co:443`).
-- No model files were downloaded, so no images were produced in this environment.
+- `StableDiffusion15` image was generated and saved as `sd15.png`.
+- The run then failed on `LcmDreamshaperV7` because `unet/model.onnx_data` was missing in the local cache.
+- `SdxlTurbo` was not executed because the app stopped at the LCM failure.
+
+Generated output:
+
+![StableDiffusion15 output](./sd15.png)
 
 Error excerpt:
 
 ```text
-System.InvalidOperationException: Failed to download required file 'text_encoder/model.onnx' ...
-System.Net.Http.HttpRequestException: Resource temporarily unavailable (huggingface.co:443)
+Microsoft.ML.OnnxRuntime.OnnxRuntimeException: [ErrorCode:RuntimeException]
+Exception during initialization: filesystem error: cannot get file size:
+No such file or directory [.../lcm-dreamshaper-v7-onnx/unet/model.onnx_data]
 ```
