@@ -109,7 +109,7 @@ jobs:
       - name: Validate CLI tool package
         run: |
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
-          tar -tf "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+          unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
 
           mkdir -p artifacts/tool-validation
           pushd artifacts/tool-validation
@@ -172,7 +172,7 @@ jobs:
       - name: Validate CLI tool package
         run: |
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
-          tar -tf "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+          unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
 
           mkdir -p artifacts/tool-validation
           pushd artifacts/tool-validation
