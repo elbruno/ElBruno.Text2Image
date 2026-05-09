@@ -106,6 +106,21 @@ jobs:
             dotnet pack "$proj" -c Release --no-build -o artifacts -p:Version=${{ steps.version.outputs.version }}
           done
 
+      - name: Validate CLI tool package
+        run: |
+          CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
+          tar -tf "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+
+          mkdir -p artifacts/tool-validation
+          pushd artifacts/tool-validation
+          dotnet new tool-manifest --force
+          dotnet tool install ElBruno.Text2Image.Cli \
+            --version "${{ steps.version.outputs.version }}" \
+            --add-source "$GITHUB_WORKSPACE/artifacts" \
+            --ignore-failed-sources
+          dotnet tool run t2i -- --help
+          popd
+
       - name: NuGet login (OIDC → temp API key)
         uses: NuGet/login@v1
         id: login
@@ -153,6 +168,21 @@ jobs:
 
       - name: Pack
         run: dotnet pack src/ElBruno.Text2Image.Cli/ElBruno.Text2Image.Cli.csproj -c Release -o artifacts -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Validate CLI tool package
+        run: |
+          CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
+          tar -tf "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+
+          mkdir -p artifacts/tool-validation
+          pushd artifacts/tool-validation
+          dotnet new tool-manifest --force
+          dotnet tool install ElBruno.Text2Image.Cli \
+            --version "${{ steps.version.outputs.version }}" \
+            --add-source "$GITHUB_WORKSPACE/artifacts" \
+            --ignore-failed-sources
+          dotnet tool run t2i -- --help
+          popd
 
       - name: NuGet login (OIDC)
         uses: NuGet/login@v1
