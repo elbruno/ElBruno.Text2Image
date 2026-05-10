@@ -114,6 +114,7 @@ jobs:
       - name: Validate CLI tool package
         run: |
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
+          unzip -l "$CLI_PKG" | grep -q "tools/net8.0/any/DotnetToolSettings.xml"
           unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
 
           mkdir -p artifacts/tool-validation
@@ -138,25 +139,31 @@ jobs:
       - name: Verify published CLI tool from NuGet.org
         run: |
           dotnet nuget locals all --clear
-          for i in {1..15}; do
+          for i in {1..30}; do
             rm -rf artifacts/post-publish-verify
             mkdir -p artifacts/post-publish-verify
             pushd artifacts/post-publish-verify
             dotnet new tool-manifest --force
-            if dotnet tool install ElBruno.Text2Image.Cli \
+            INSTALL_OUTPUT=$(dotnet tool install ElBruno.Text2Image.Cli \
               --version "${{ steps.version.outputs.version }}" \
-              --source "https://api.nuget.org/v3/index.json" \
               --ignore-failed-sources \
-              --verbosity minimal; then
+              --verbosity minimal 2>&1) && INSTALL_EXIT=0 || INSTALL_EXIT=$?
+            if [ "$INSTALL_EXIT" -eq 0 ]; then
               dotnet tool run t2i -- --help
               popd
               exit 0
             fi
+            echo "$INSTALL_OUTPUT"
             popd
-            echo "Package not available yet on NuGet.org (attempt $i/15). Retrying..."
-            sleep 20
+            if echo "$INSTALL_OUTPUT" | grep -q "not found in NuGet feeds"; then
+              echo "Package not indexed yet on NuGet.org (attempt $i/30). Retrying..."
+              sleep 20
+            else
+              echo "ERROR: dotnet tool install failed with a non-propagation error."
+              exit 1
+            fi
           done
-          echo "ERROR: Published CLI package could not be installed from NuGet.org."
+          echo "ERROR: Published CLI package was not discoverable on NuGet.org after retries."
           exit 1
 
       - name: Upload nupkg artifact
@@ -201,6 +208,7 @@ jobs:
       - name: Validate CLI tool package
         run: |
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
+          unzip -l "$CLI_PKG" | grep -q "tools/net8.0/any/DotnetToolSettings.xml"
           unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
 
           mkdir -p artifacts/tool-validation
@@ -225,25 +233,31 @@ jobs:
       - name: Verify published CLI tool from NuGet.org
         run: |
           dotnet nuget locals all --clear
-          for i in {1..15}; do
+          for i in {1..30}; do
             rm -rf artifacts/post-publish-verify
             mkdir -p artifacts/post-publish-verify
             pushd artifacts/post-publish-verify
             dotnet new tool-manifest --force
-            if dotnet tool install ElBruno.Text2Image.Cli \
+            INSTALL_OUTPUT=$(dotnet tool install ElBruno.Text2Image.Cli \
               --version "${{ steps.version.outputs.version }}" \
-              --source "https://api.nuget.org/v3/index.json" \
               --ignore-failed-sources \
-              --verbosity minimal; then
+              --verbosity minimal 2>&1) && INSTALL_EXIT=0 || INSTALL_EXIT=$?
+            if [ "$INSTALL_EXIT" -eq 0 ]; then
               dotnet tool run t2i -- --help
               popd
               exit 0
             fi
+            echo "$INSTALL_OUTPUT"
             popd
-            echo "Package not available yet on NuGet.org (attempt $i/15). Retrying..."
-            sleep 20
+            if echo "$INSTALL_OUTPUT" | grep -q "not found in NuGet feeds"; then
+              echo "Package not indexed yet on NuGet.org (attempt $i/30). Retrying..."
+              sleep 20
+            else
+              echo "ERROR: dotnet tool install failed with a non-propagation error."
+              exit 1
+            fi
           done
-          echo "ERROR: Published CLI package could not be installed from NuGet.org."
+          echo "ERROR: Published CLI package was not discoverable on NuGet.org after retries."
           exit 1
 
       - name: Upload nupkg artifact

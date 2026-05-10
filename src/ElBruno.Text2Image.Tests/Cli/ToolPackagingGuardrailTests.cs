@@ -21,7 +21,7 @@ public class ToolPackagingGuardrailTests
             var version = "9.9.9-guardrail";
             await RunProcessAsync(
                 "dotnet",
-                $"pack \"{projectPath}\" -c Release --no-restore -o \"{outputDir}\" -p:Version={version}",
+                $"pack \"{projectPath}\" -c Release -o \"{outputDir}\" -p:Version={version}",
                 outputDir);
 
             var packagePath = Directory
@@ -30,6 +30,9 @@ public class ToolPackagingGuardrailTests
 
             using (var archive = ZipFile.OpenRead(packagePath))
             {
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "tools/net8.0/any/DotnetToolSettings.xml", StringComparison.Ordinal));
                 Assert.Contains(
                     archive.Entries,
                     e => string.Equals(e.FullName, "tools/net10.0/any/DotnetToolSettings.xml", StringComparison.Ordinal));
