@@ -1238,6 +1238,16 @@ Agents create branch (`squad/{issue-number}-{slug}`), do work, commit referencin
 
 After issue work completes, follow standard After Agent Work flow.
 
+### NuGet Tool Package Incident Protocol
+
+When a user reports `dotnet tool install` failure with `DotnetToolSettings.xml` missing:
+
+1. Treat it as a release-quality incident, not a local-user-only issue.
+2. Validate the currently published package in a clean temp folder (`dotnet new tool-manifest` + `dotnet tool install` with the exact version).
+3. If the package is bad, ship a **new patch version**. Never reuse the same version number (NuGet versions are immutable).
+4. Ensure full-library release workflows pack CLI tool packages with build enabled (no `--no-build` for the CLI tool package), and keep tool-package validation before push.
+5. After publish, verify the release workflow succeeded and provide the fixed version tag in the user handoff.
+
 ---
 
 ## PRD Mode
