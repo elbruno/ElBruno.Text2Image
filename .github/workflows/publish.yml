@@ -135,6 +135,30 @@ jobs:
       - name: Push to NuGet.org
         run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
+      - name: Verify published CLI tool from NuGet.org
+        run: |
+          dotnet nuget locals all --clear
+          for i in {1..15}; do
+            rm -rf artifacts/post-publish-verify
+            mkdir -p artifacts/post-publish-verify
+            pushd artifacts/post-publish-verify
+            dotnet new tool-manifest --force
+            if dotnet tool install ElBruno.Text2Image.Cli \
+              --version "${{ steps.version.outputs.version }}" \
+              --source "https://api.nuget.org/v3/index.json" \
+              --ignore-failed-sources \
+              --verbosity minimal; then
+              dotnet tool run t2i -- --help
+              popd
+              exit 0
+            fi
+            popd
+            echo "Package not available yet on NuGet.org (attempt $i/15). Retrying..."
+            sleep 20
+          done
+          echo "ERROR: Published CLI package could not be installed from NuGet.org."
+          exit 1
+
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4
         with:
@@ -197,6 +221,30 @@ jobs:
 
       - name: Push to NuGet.org
         run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Verify published CLI tool from NuGet.org
+        run: |
+          dotnet nuget locals all --clear
+          for i in {1..15}; do
+            rm -rf artifacts/post-publish-verify
+            mkdir -p artifacts/post-publish-verify
+            pushd artifacts/post-publish-verify
+            dotnet new tool-manifest --force
+            if dotnet tool install ElBruno.Text2Image.Cli \
+              --version "${{ steps.version.outputs.version }}" \
+              --source "https://api.nuget.org/v3/index.json" \
+              --ignore-failed-sources \
+              --verbosity minimal; then
+              dotnet tool run t2i -- --help
+              popd
+              exit 0
+            fi
+            popd
+            echo "Package not available yet on NuGet.org (attempt $i/15). Retrying..."
+            sleep 20
+          done
+          echo "ERROR: Published CLI package could not be installed from NuGet.org."
+          exit 1
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4
