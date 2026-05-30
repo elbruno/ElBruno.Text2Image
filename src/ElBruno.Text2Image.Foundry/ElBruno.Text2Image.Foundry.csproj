@@ -5,7 +5,7 @@
 
     <!-- NuGet Package Metadata -->
     <PackageId>ElBruno.Text2Image.Foundry</PackageId>
-    <Version>1.2.6</Version>
+    <Version>1.2.7</Version>
     <Authors>Bruno Capuano</Authors>
     <Description>Microsoft Foundry cloud image generation for ElBruno.Text2Image. Provides FLUX.2 and MAI-Image-2 text-to-image generation via the Microsoft Foundry REST API. No local models needed — runs in the cloud.</Description>
     <PackageTags>text-to-image;flux2;mai-image-2;image-generation;microsoft-foundry;cloud;ai</PackageTags>

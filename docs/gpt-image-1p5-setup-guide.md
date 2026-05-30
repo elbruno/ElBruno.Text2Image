@@ -95,6 +95,8 @@ az cognitiveservices account deployment create \
    - **Endpoint** — e.g., `https://my-gpt-image-resource.openai.azure.com/`
    - **Key 1** or **Key 2** — Either key works; keep it secret
 
+> **Endpoint format:** use the **bare resource URL**. Do **not** append `/openai/v1` or `/openai`; the SDK adds the API path automatically.
+
 ### Using Azure CLI
 
 ```bash

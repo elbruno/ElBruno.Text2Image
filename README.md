@@ -54,6 +54,7 @@
 | **MAI-Image-2** | Microsoft Foundry | High-quality generation |
 | **GPT-Image-1.5** | Azure OpenAI (DALL-E 3) | Creative & reliable |
 | **GPT-Image-2** | Azure OpenAI | Next-gen quality |
+| **GPT-Image-2** | Azure OpenAI | Next-gen quality |
 
 ### 🖥️ Local Models (ONNX Runtime, works offline)
 
@@ -109,6 +110,7 @@ dotnet tool update --global ElBruno.Text2Image.Cli
 ### CLI Examples
 
 **Local Models (Stable Diffusion):**
+
 ```bash
 t2i config                                           # interactive setup
 t2i "a robot painting a landscape"                  # generate with default local model
@@ -116,6 +118,7 @@ t2i --provider stable-diffusion-15 "sunset over mountains, oil painting style"
 ```
 
 **Cloud Models (Microsoft Foundry & Azure OpenAI):**
+
 ```bash
 # FLUX.2 Pro (photorealistic)
 t2i --provider foundry-flux2 "a futuristic cityscape with neon lights"
@@ -135,6 +138,7 @@ t2i --provider gpt-image-2 "a sci-fi space station in orbit" --timeout 300
 ```
 
 **Model Configuration:**
+
 ```bash
 # View current configuration
 t2i config show
@@ -262,9 +266,11 @@ using ElBruno.Text2Image;
 using ElBruno.Text2Image.Foundry;
 
 // Create a GPT-Image-1.5 (DALL-E 3) generator using Azure OpenAI
+using var httpClient = new HttpClient();
 using var generator = new GptImage1p5Generator(
     endpoint: "https://your-resource.openai.azure.com/",
     apiKey: "your-api-key",
+    httpClient: httpClient,
     deploymentName: "gpt-image-15");
 
 // Generate an image — same interface as other providers
@@ -276,6 +282,26 @@ var landscape = await generator.GenerateAsync(
     "a panoramic view of a futuristic cityscape",
     new ImageGenerationOptions { Width = 1792, Height = 1024 });
 ```
+
+### Basic Usage — Cloud (GPT-Image-2 via Azure OpenAI)
+
+```csharp
+using ElBruno.Text2Image;
+using ElBruno.Text2Image.Foundry;
+
+using var httpClient = new HttpClient();
+using var generator = new GptImage2Generator(
+    endpoint: "https://your-resource.services.ai.azure.com", // bare resource URL
+    apiKey: "your-api-key",
+    httpClient: httpClient,
+    deploymentName: "gpt-image-2",
+    timeoutSeconds: 300); // GPT-Image-2 requests can take longer
+
+var result = await generator.GenerateAsync("a sci-fi space station in orbit");
+await result.SaveAsync("gpt-image-2-output.png");
+```
+
+> **Endpoint format (Azure OpenAI):** pass the **bare resource URL** (`https://<resource>.services.ai.azure.com` or `https://<resource>.openai.azure.com`). Do **not** append `/openai/v1` or `/openai`; the SDK adds the API path.
 
 ### With Custom Options
 
@@ -392,6 +418,7 @@ public class MyService(IImageGenerator generator)
 | **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2** | `MaiImage2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI (DALL-E 3) | Excellent | ✅ Available |
+| **GPT-Image-2** | `GptImage2Generator` | Azure OpenAI | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
 ## Samples
@@ -407,10 +434,12 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-07-custom-model-directory](src/samples/scenario-07-custom-model-directory/) | Download models to a custom directory |
 | [scenario-08-meai-interface](src/samples/scenario-08-meai-interface/) | Use via Microsoft.Extensions.AI `IImageGenerator` |
 | [scenario-09-batch-generation](src/samples/scenario-09-batch-generation/) | Generate multiple images from a batch of prompts |
+| [scenario-17-foundry-batch](src/samples/scenario-17-foundry-batch/) | Generate 5 images in batch using FLUX.2 on Microsoft Foundry |
 | [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 | [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
 | [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 (DALL-E 3) cloud API via Azure OpenAI |
+| [scenario-16-gpt-image-2-cloud](src/samples/scenario-16-gpt-image-2-cloud/) | GPT-Image-2 cloud API via Azure OpenAI |
 
 ### Run a Sample
 
@@ -418,6 +447,22 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 cd src/samples/scenario-01-simple
 dotnet run
 ```
+
+### Run the Foundry Batch Sample (5 images)
+
+```bash
+cd src/samples/scenario-17-foundry-batch
+
+# Configure credentials (recommended: user secrets)
+dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com"
+dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
+dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-pro"
+
+# Generate 5 images to ./foundry_batch_output
+dotnet run
+```
+
+See [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) for full Foundry setup details.
 
 ## Documentation
 

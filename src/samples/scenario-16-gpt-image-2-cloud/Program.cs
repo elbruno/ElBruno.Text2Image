@@ -42,12 +42,14 @@ if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
     Console.WriteLine("  2. Create or navigate to your Azure OpenAI resource");
     Console.WriteLine("  3. Go to Deployments and create/select a gpt-image-2 deployment");
     Console.WriteLine("  4. Copy the endpoint URL from the resource's Keys + Endpoint section");
+    Console.WriteLine("     IMPORTANT: use the bare resource URL (no /openai/v1 or /openai suffix).");
     Console.WriteLine("  5. Copy your API key from the same section");
     return;
 }
 
 // Create a GPT-Image-2 generator
-using var generator = new GptImage2Generator(endpoint, apiKey, modelName: "GPT-Image-2", deploymentName: model);
+using var httpClient = new HttpClient();
+using var generator = new GptImage2Generator(endpoint, apiKey, httpClient, modelName: "GPT-Image-2", deploymentName: model);
 
 Console.WriteLine($"Model: {generator.ModelName}");
 Console.WriteLine($"Deployment: {generator.DeploymentName}");

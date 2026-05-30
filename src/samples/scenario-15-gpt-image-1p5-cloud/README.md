@@ -31,6 +31,8 @@ All generated images are saved to the `output/` folder as PNG files.
    - **Endpoint URL** (e.g., `https://my-resource.openai.azure.com/`)
    - **API Key** (from Key 1 or Key 2)
 
+> **Endpoint format:** use the **bare resource URL** only. Do **not** append `/openai/v1` or `/openai`.
+
 ### Step 2: Configure Credentials
 
 #### Option A: User Secrets (Recommended for Development)
@@ -154,8 +156,9 @@ Requests with other dimensions will be automatically mapped to the nearest suppo
 **Causes**:
 - Deployment name does not exist
 - Wrong resource or region
+- Endpoint includes `/openai/v1` or `/openai`
 
-**Solution**: Verify the deployment name matches your Azure OpenAI deployment.
+**Solution**: Verify deployment name and use the bare resource URL (for example, `https://my-resource.openai.azure.com`).
 
 ### Generation takes longer than expected
 

@@ -40,7 +40,7 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
     /// <summary>
     /// Initializes a new instance of the <see cref="GptImage1p5Generator"/> class.
     /// </summary>
-    /// <param name="endpoint">The Azure OpenAI Service endpoint URL (must be HTTPS).</param>
+    /// <param name="endpoint">The Azure OpenAI Service endpoint URL (must be HTTPS). Use the bare resource URL; any /openai or /openai/v1 suffix is automatically removed.</param>
     /// <param name="apiKey">The Azure OpenAI Service API key.</param>
     /// <param name="modelName">Optional model display name. Defaults to "GPT-Image-1.5".</param>
     /// <param name="deploymentName">Optional deployment name. Defaults to "gpt-image-1.5".</param>
@@ -55,7 +55,7 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         ArgumentNullException.ThrowIfNull(httpClient);
         if (!endpoint.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
-        _endpoint = endpoint.TrimEnd('/');
+        _endpoint = NormalizeAzureOpenAiEndpoint(endpoint);
         _apiKey = apiKey;
         _modelDisplayName = modelName ?? "GPT-Image-1.5";
         _deploymentName = deploymentName ?? "gpt-image-1.5";
@@ -69,6 +69,21 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         
         var client = new AzureOpenAIClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         _imageClient = client.GetImageClient(_deploymentName);
+    }
+
+    private static string NormalizeAzureOpenAiEndpoint(string endpoint)
+    {
+        var normalizedEndpoint = endpoint.TrimEnd('/');
+        var uri = new Uri(normalizedEndpoint);
+        var path = uri.AbsolutePath;
+
+        if (path.Equals("/openai", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/openai/", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{uri.Scheme}://{uri.Authority}";
+        }
+
+        return normalizedEndpoint;
     }
     /// <summary>
     /// Ensures the cloud model is available. For cloud-based models, this is a no-op and returns a completed task.
