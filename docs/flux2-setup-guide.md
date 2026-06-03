@@ -55,18 +55,24 @@ Use cases: brand design, product UI prototyping, social graphics, marketing coll
 1. In Microsoft Foundry, go to your deployment
 2. Copy the **Endpoint URL**:
    - **Recommended**: Use the `.services.ai.azure.com` base URL:
+
      ```
      https://your-resource.services.ai.azure.com
      ```
+
      The library will automatically build the BFL Native API path (e.g., `/providers/blackforestlabs/v1/flux-2-pro?api-version=preview`)
    - **Also supported**: A `.openai.azure.com` URL — the library auto-converts it:
+
      ```
      https://your-resource.openai.azure.com
      ```
+
    - **Full URL**: The complete BFL endpoint — used as-is:
+
      ```
      https://your-resource.services.ai.azure.com/providers/blackforestlabs/v1/flux-2-pro?api-version=preview
      ```
+
 3. Copy the **API key** from the **Keys and Endpoint** section
 
 > ⚠️ **Important:** FLUX.2 models use the **BFL (Black Forest Labs) Native API**, not the OpenAI-compatible API.
@@ -79,7 +85,7 @@ You have three options for providing the endpoint and API key. **User Secrets is
 
 ### Option A: User Secrets (Recommended)
 
-Navigate to the sample project directory and initialize secrets:
+Navigate to a FLUX.2 sample project directory and initialize secrets:
 
 ```bash
 cd src/samples/scenario-03-flux2-cloud
@@ -93,12 +99,23 @@ dotnet user-secrets set FLUX2_MODEL_NAME "FLUX.2-pro"
 dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-pro"
 ```
 
+You can use the same settings with the batch sample:
+
+```bash
+cd src/samples/scenario-17-foundry-batch
+dotnet user-secrets set FLUX2_ENDPOINT "https://your-resource.services.ai.azure.com"
+dotnet user-secrets set FLUX2_API_KEY "your-api-key-here"
+dotnet user-secrets set FLUX2_MODEL_ID "FLUX.2-pro"
+```
+
 > **Note on FLUX2_ENDPOINT:** You can provide either:
+>
 > - A **`.services.ai.azure.com` base URL** (recommended) — the library auto-builds the BFL API path
 > - A **`.openai.azure.com` base URL** — auto-converted to `.services.ai.azure.com`
 > - A **full BFL API URL** — used as-is
 
 Secrets are stored in your user profile at:
+
 - **Windows:** `%APPDATA%\Microsoft\UserSecrets\elbruno-text2image-flux2\secrets.json`
 - **macOS/Linux:** `~/.microsoft/usersecrets/elbruno-text2image-flux2/secrets.json`
 
@@ -144,7 +161,21 @@ The sample uses `Microsoft.Extensions.Configuration` and loads settings in this 
 
 This means user secrets override environment variables, which override appsettings.json.
 
-## Step 5: Use in C#
+## Step 5: Use in C #
+
+### Sample Projects
+
+- `src/samples/scenario-03-flux2-cloud` — single image generation with FLUX.2
+- `src/samples/scenario-17-foundry-batch` — batch generation of 5 images with FLUX.2
+
+Run the batch sample:
+
+```bash
+cd src/samples/scenario-17-foundry-batch
+dotnet run
+```
+
+Images are saved to `foundry_batch_output/`.
 
 ### Basic Usage
 
@@ -264,6 +295,7 @@ using var generator = new Flux2Generator(endpoint, apiKey);
 The `Flux2Generator` sends HTTP POST requests to the Microsoft Foundry endpoint:
 
 **Request:**
+
 ```json
 {
   "prompt": "your text prompt",
@@ -274,6 +306,7 @@ The `Flux2Generator` sends HTTP POST requests to the Microsoft Foundry endpoint:
 ```
 
 **Response:**
+
 ```json
 {
   "created": 1234567890,
@@ -334,12 +367,14 @@ await result.SaveAsync("logo.png");
 ```
 
 **Model variants:**
+
 - `FLUX.2-pro` (default) — Photorealistic, cinematic-quality image generation
 - `FLUX.2-flex` — Text-heavy design, logos, UI prototyping with excellent typography
 
 ## Pricing
 
 FLUX.2 on Microsoft Foundry is a pay-per-use service. Pricing depends on:
+
 - The model variant (Pro vs Flex)
 - Image resolution
 - Your Azure region
