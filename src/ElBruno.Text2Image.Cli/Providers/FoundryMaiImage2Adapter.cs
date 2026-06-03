@@ -23,6 +23,7 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
+    public string DefaultModel => "MAI-Image-2";
 
     public FoundryMaiImage2Adapter(
         IHttpClientFactory httpClientFactory,
@@ -102,7 +103,7 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         }
         
         // Read model from config, fallback to default
-        var modelName = providerCfg?.Model ?? "MAI-Image-2";
+        var modelName = providerCfg?.Model ?? DefaultModel;
         var modelId = modelName;  // For MAI, deployment name matches model name
         
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);

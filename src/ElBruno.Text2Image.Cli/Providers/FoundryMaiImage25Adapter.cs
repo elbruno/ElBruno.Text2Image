@@ -20,7 +20,7 @@ internal abstract class FoundryMaiImage25AdapterBase : IProviderAdapter
 
     public abstract string Id { get; }
     public abstract string DisplayName { get; }
-    protected abstract string DefaultModel { get; }
+    public abstract string DefaultModel { get; }
 
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
@@ -184,7 +184,7 @@ internal sealed class FoundryMaiImage25Adapter : FoundryMaiImage25AdapterBase
 {
     public override string Id => "foundry-mai25";
     public override string DisplayName => "MAI-Image-2.5 (Cloud)";
-    protected override string DefaultModel => "MAI-Image-2.5";
+    public override string DefaultModel => "MAI-Image-2.5";
 
     public FoundryMaiImage25Adapter(
         IHttpClientFactory httpClientFactory,
@@ -202,7 +202,7 @@ internal sealed class FoundryMaiImage25FlashAdapter : FoundryMaiImage25AdapterBa
 {
     public override string Id => "foundry-mai25-flash";
     public override string DisplayName => "MAI-Image-2.5-Flash (Cloud)";
-    protected override string DefaultModel => "MAI-Image-2.5-Flash";
+    public override string DefaultModel => "MAI-Image-2.5-Flash";
 
     public FoundryMaiImage25FlashAdapter(
         IHttpClientFactory httpClientFactory,

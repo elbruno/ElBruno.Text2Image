@@ -78,6 +78,7 @@ Activate this skill when:
 t2i config              # Launch interactive wizard
 t2i config show         # Display all configuration
 t2i config set <key> <value>  # Set config value (e.g., foundry-flux2.endpoint)
+t2i config set-all <field> <value>  # Set a shared field for ALL cloud providers (e.g., set-all apiKey <key>)
 t2i config remove <provider>  # Remove provider config and secrets
 t2i config path         # Show config file location
 ```

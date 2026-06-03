@@ -92,6 +92,7 @@ t2i "a photorealistic portrait" --provider foundry-gpt-image-2 --timeout 300
 | `t2i config` | Interactive configuration wizard | `t2i config` |
 | `t2i config show` | Display current config (masked secrets) | `t2i config show` |
 | `t2i config set <key> <value>` | Set config value | `t2i config set default-provider cpu` |
+| `t2i config set-all <field> <value>` | Set a shared field for **all cloud providers** at once | `t2i config set-all apiKey <key>` |
 | `t2i config path` | Show config file path | `t2i config path` |
 | `t2i config remove <provider>` | Remove provider config | `t2i config remove foundry-flux2` |
 | `t2i secrets set <provider>` | Set provider secrets (interactive) | `t2i secrets set foundry-flux2` |
@@ -282,6 +283,11 @@ t2i "a technical diagram" \
 ```bash
 # Set default provider
 t2i config set default-provider foundry-flux2
+
+# Apply a shared apiKey / endpoint to ALL cloud providers at once
+# (handy because the API key and endpoint are usually identical across models)
+t2i config set-all apiKey <your-api-key>
+t2i config set-all endpoint https://<your-resource>.services.ai.azure.com
 
 # View config path
 t2i config path

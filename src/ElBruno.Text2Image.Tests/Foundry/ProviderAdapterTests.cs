@@ -305,6 +305,25 @@ public class ProviderAdapterTests : IDisposable
 
     #endregion
 
+    #region DefaultModel Tests
+
+    [Fact]
+    public void Adapters_ExposeExpectedDefaultModelNames()
+    {
+        var httpClientFactory = new FakeHttpClientFactory();
+        var secretResolver = CreateSecretResolver();
+        var configStore = new ConfigStore();
+
+        Assert.Equal("MAI-Image-2", new FoundryMaiImage2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("MAI-Image-2.5", new FoundryMaiImage25Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("MAI-Image-2.5-Flash", new FoundryMaiImage25FlashAdapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("FLUX.2-pro", new FoundryFlux2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("gpt-image-2", new FoundryGptImage2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("gpt-image-1.5", new FoundryGptImage1p5Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+    }
+
+    #endregion
+
     #region Config Resolution Tests
 
     [Fact]

@@ -20,6 +20,7 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
+    public string DefaultModel => "FLUX.2-pro";
 
     public FoundryFlux2Adapter(
         IHttpClientFactory httpClientFactory,
@@ -99,7 +100,7 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
         }
         
         // Read model from config, fallback to default
-        var modelName = providerCfg?.Model ?? "FLUX.2-pro";
+        var modelName = providerCfg?.Model ?? DefaultModel;
         var modelId = modelName;
         
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);

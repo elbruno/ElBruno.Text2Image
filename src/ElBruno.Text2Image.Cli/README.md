@@ -101,6 +101,10 @@ t2i config set foundry-mai2      # Setup MAI-Image-2
 t2i config set foundry-gpt-image-1p5  # Setup GPT-Image-1.5
 t2i config set foundry-gpt-image-2    # Setup GPT-Image-2
 
+# Bulk edit: apply a shared apiKey / endpoint to ALL cloud providers at once
+t2i config set-all apiKey <your-api-key>
+t2i config set-all endpoint https://<your-resource>.services.ai.azure.com
+
 # Microsoft Foundry providers (FLUX.2, MAI-Image-2)
 export T2I_FOUNDRY_FLUX2_ENDPOINT="https://your-resource.services.ai.azure.com"
 export T2I_FOUNDRY_FLUX2_APIKEY="your-api-key"

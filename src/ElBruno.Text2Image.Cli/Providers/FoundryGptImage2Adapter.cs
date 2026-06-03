@@ -20,6 +20,7 @@ internal sealed class FoundryGptImage2Adapter : IProviderAdapter
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
+    public string DefaultModel => "gpt-image-2";
 
     public FoundryGptImage2Adapter(
         IHttpClientFactory httpClientFactory,
@@ -88,7 +89,7 @@ internal sealed class FoundryGptImage2Adapter : IProviderAdapter
         }
         
         // Read model (deployment name) from config, fallback to default
-        var deploymentName = providerCfg?.Model ?? "gpt-image-2";
+        var deploymentName = providerCfg?.Model ?? DefaultModel;
         var modelName = providerCfg?.Model ?? "GPT-Image-2";
         
         var apiKey = await _secretResolver.ResolveAsync(Id, "apiKey", null, ct);

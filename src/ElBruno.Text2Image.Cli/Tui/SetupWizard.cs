@@ -39,6 +39,10 @@ internal static class SetupWizard
 
         var selectedProvider = providerRegistry.Get(selectedProviderId)!;
 
+        // Track shared values entered so they can optionally be applied to all cloud providers.
+        var enteredSecrets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        string? enteredEndpoint = null;
+
         // Step 2: If cloud provider, configure secrets
         if (selectedProvider.Kind == ProviderKind.Cloud && selectedProvider.RequiredSecrets.Count > 0)
         {
@@ -52,6 +56,7 @@ internal static class SetupWizard
                         .Validate(s => !string.IsNullOrWhiteSpace(s), $"{field} cannot be empty"));
 
                 await secretResolver.SetAsync(selectedProviderId, field, value, ct);
+                enteredSecrets[field] = value;
             }
         }
 
@@ -77,17 +82,11 @@ internal static class SetupWizard
                                      "Endpoint must be a valid URL"));
 
                     providerCfg.Endpoint = string.IsNullOrWhiteSpace(endpoint) ? defaultEndpoint : endpoint;
+                    enteredEndpoint = providerCfg.Endpoint;
                 }
                 else if (field.Equals("model", StringComparison.OrdinalIgnoreCase))
                 {
-                    var defaultModel = selectedProviderId switch
-                    {
-                        "foundry-mai2" => "MAI-Image-2",
-                        "foundry-mai25" => "MAI-Image-2.5",
-                        "foundry-mai25-flash" => "MAI-Image-2.5-Flash",
-                        "foundry-flux2" => "FLUX.2-pro",
-                        _ => ""
-                    };
+                    var defaultModel = selectedProvider.DefaultModel ?? "";
 
                     var model = AnsiConsole.Prompt(
                         new TextPrompt<string>($"  Model name (default: {defaultModel}):")
@@ -98,6 +97,46 @@ internal static class SetupWizard
             }
 
             await configStore.SaveAsync(config, ct);
+        }
+
+        // Step 3b: Offer to apply shared values (apiKey, endpoint) to all cloud providers.
+        if (selectedProvider.Kind == ProviderKind.Cloud && (enteredSecrets.Count > 0 || enteredEndpoint != null))
+        {
+            var otherCloudProviders = providerRegistry.All
+                .Where(p => p.Kind == ProviderKind.Cloud && !p.Id.Equals(selectedProviderId, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (otherCloudProviders.Count > 0 &&
+                AnsiConsole.Confirm("\n[bold]Apply this apiKey/endpoint to all other cloud providers?[/]", defaultValue: false))
+            {
+                var config = await configStore.LoadAsync(ct);
+
+                foreach (var other in otherCloudProviders)
+                {
+                    // Shared secrets (e.g., apiKey)
+                    foreach (var (field, value) in enteredSecrets)
+                    {
+                        if (other.RequiredSecrets.Contains(field, StringComparer.OrdinalIgnoreCase))
+                        {
+                            await secretResolver.SetAsync(other.Id, field, value, ct);
+                        }
+                    }
+
+                    // Shared endpoint
+                    if (enteredEndpoint != null &&
+                        other.RequiredFields.Contains("endpoint", StringComparer.OrdinalIgnoreCase))
+                    {
+                        if (!config.Providers.ContainsKey(other.Id))
+                        {
+                            config.Providers[other.Id] = new ProviderConfig();
+                        }
+                        config.Providers[other.Id].Endpoint = enteredEndpoint;
+                    }
+                }
+
+                await configStore.SaveAsync(config, ct);
+                ConsoleHelpers.PrintSuccess($"Applied shared values to {otherCloudProviders.Count} other cloud provider(s).");
+            }
         }
 
         // Step 4: Test connection

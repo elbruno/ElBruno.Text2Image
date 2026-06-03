@@ -34,6 +34,12 @@ public interface IProviderAdapter
     IReadOnlyList<string> RequiredFields => Array.Empty<string>();
 
     /// <summary>
+    /// Default model/deployment name used when none is configured.
+    /// Null for local providers. Cloud providers return their canonical default.
+    /// </summary>
+    string? DefaultModel => null;
+
+    /// <summary>
     /// Checks if the provider is ready to use (e.g., GPU available, API reachable).
     /// </summary>
     Task<ProviderHealth> CheckAsync(CancellationToken ct);

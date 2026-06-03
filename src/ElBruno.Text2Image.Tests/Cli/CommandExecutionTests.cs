@@ -753,6 +753,81 @@ public class CommandExecutionTests : IDisposable
         Assert.Equal(1, exitCode);
     }
 
+    [Fact]
+    public async Task ConfigCommand_SetAll_Endpoint_AppliesToAllCloudProviders()
+    {
+        var (registry, resolver, store) = CreateConfigDependencies();
+        var command = new ConfigCommand(registry, resolver, store);
+        var settings = new ConfigCommand.Settings
+        {
+            Action = "set-all",
+            Key = "endpoint",
+            Value = "https://shared.services.ai.azure.com"
+        };
+        var context = CreateContext();
+
+        var exitCode = await command.ExecuteAsync(context, settings);
+        var config = await store.LoadAsync(CancellationToken.None);
+
+        Assert.Equal(0, exitCode);
+        foreach (var provider in registry.All.Where(p => p.Kind == ProviderKind.Cloud))
+        {
+            Assert.Equal("https://shared.services.ai.azure.com", config.Providers[provider.Id].Endpoint);
+        }
+    }
+
+    [Fact]
+    public async Task ConfigCommand_SetAll_ApiKey_AppliesToAllCloudProvidersAsSecret()
+    {
+        var httpClientFactory = new FakeHttpClientFactory();
+        var fakeStore = new FakeSecretStore { Name = "dpapi" };
+        var resolver = new SecretResolver(new List<ISecretStore> { fakeStore });
+        var store = new ConfigStore();
+        var registry = new ProviderRegistry(new List<IProviderAdapter>
+        {
+            new FoundryFlux2Adapter(httpClientFactory, resolver, store),
+            new FoundryMaiImage2Adapter(httpClientFactory, resolver, store),
+            new FoundryGptImage1p5Adapter(httpClientFactory, resolver, store),
+            new FoundryGptImage2Adapter(httpClientFactory, resolver, store)
+        });
+
+        var command = new ConfigCommand(registry, resolver, store);
+        var settings = new ConfigCommand.Settings
+        {
+            Action = "set-all",
+            Key = "apiKey",
+            Value = "shared-secret-key"
+        };
+        var context = CreateContext();
+
+        var exitCode = await command.ExecuteAsync(context, settings);
+
+        Assert.Equal(0, exitCode);
+        foreach (var provider in registry.All.Where(p => p.Kind == ProviderKind.Cloud))
+        {
+            var resolved = await resolver.ResolveAsync(provider.Id, "apiKey", null, CancellationToken.None);
+            Assert.Equal("shared-secret-key", resolved);
+        }
+    }
+
+    [Fact]
+    public async Task ConfigCommand_SetAll_WithMissingValue_ReturnsError()
+    {
+        var (registry, resolver, store) = CreateConfigDependencies();
+        var command = new ConfigCommand(registry, resolver, store);
+        var settings = new ConfigCommand.Settings
+        {
+            Action = "set-all",
+            Key = "apiKey",
+            Value = null
+        };
+        var context = CreateContext();
+
+        var exitCode = await command.ExecuteAsync(context, settings);
+
+        Assert.Equal(1, exitCode);
+    }
+
     #endregion
 
     #region Additional GenerateCommand Tests
