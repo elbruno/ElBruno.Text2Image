@@ -42,6 +42,8 @@ This **Lite edition** includes **cloud providers only**:
 | `foundry-flux2` | FLUX.2 Pro (Photorealistic) | Microsoft Foundry | Endpoint + API key |
 | `foundry-flux2` (model: FLUX.2-flex) | FLUX.2 Flex (Text-Heavy Design) | Microsoft Foundry | Endpoint + API key |
 | `foundry-mai2` | MAI-Image-2 (High Quality) | Microsoft Foundry | Endpoint + API key |
+| `foundry-mai25` | MAI-Image-2.5 (High Quality) | Microsoft Foundry | Endpoint + API key |
+| `foundry-mai25-flash` | MAI-Image-2.5-Flash (Speed-optimized) | Microsoft Foundry | Endpoint + API key |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 / DALL-E 3 | Azure OpenAI | Endpoint + API key |
 | `foundry-gpt-image-2` | GPT-Image-2 (Next-Gen) | Azure OpenAI | Endpoint + API key |
 
@@ -69,6 +71,10 @@ t2i --provider foundry-flux2 --set foundry-flux2.model=FLUX.2-flex "a business c
 
 # MAI-Image-2 (high-quality)
 t2i --provider foundry-mai2 "a serene mountain landscape at sunrise"
+
+# MAI-Image-2.5 (latest high-quality) and MAI-Image-2.5-Flash (speed-optimized)
+t2i --provider foundry-mai25 "a photograph of a red fox in an autumn forest"
+t2i --provider foundry-mai25-flash "a quick concept sketch of a city skyline"
 
 # GPT-Image-1.5 / DALL-E 3 (Azure OpenAI)
 t2i --provider foundry-gpt-image-1p5 "an impressionist painting of a garden"

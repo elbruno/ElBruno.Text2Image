@@ -69,6 +69,66 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds a MAI-Image-2.5 cloud API image generator to the service collection.
+    /// Requires a Microsoft Foundry deployment endpoint and API key.
+    /// Uses the OpenAI-compatible images API and IHttpClientFactory for connection pooling.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
+    /// <param name="apiKey">The API key for authentication.</param>
+    /// <param name="modelName">Optional display name (e.g., "MAI-Image-2.5"). Defaults to "MAI-Image-2.5".</param>
+    /// <param name="modelId">
+    /// The model name for the API request body (e.g., "MAI-Image-2.5", "MAI-Image-2.5-Flash").
+    /// Defaults to "MAI-Image-2.5".
+    /// </param>
+    public static IServiceCollection AddMaiImage25Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? modelId = null)
+    {
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient();
+            return new MaiImage25Generator(endpoint, apiKey, httpClient, modelName, modelId);
+        });
+        return services;
+    }
+
+    /// <summary>
+    /// Adds a MAI-Image-2.5-Flash (speed-optimized) cloud API image generator to the service collection.
+    /// Requires a Microsoft Foundry deployment endpoint and API key.
+    /// Uses the OpenAI-compatible images API and IHttpClientFactory for connection pooling.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
+    /// <param name="apiKey">The API key for authentication.</param>
+    /// <param name="modelName">Optional display name (e.g., "MAI-Image-2.5-Flash"). Defaults to "MAI-Image-2.5-Flash".</param>
+    public static IServiceCollection AddMaiImage25FlashGenerator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null)
+    {
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient();
+            return new MaiImage25Generator(
+                endpoint,
+                apiKey,
+                httpClient,
+                modelName ?? "MAI-Image-2.5-Flash",
+                modelId: "MAI-Image-2.5-Flash");
+        });
+        return services;
+    }
+
+    /// <summary>
     /// Adds a GPT-Image-1.5 cloud API image generator to the service collection.
     /// Requires an Azure OpenAI deployment endpoint and API key.
     /// Uses IHttpClientFactory for connection pooling.

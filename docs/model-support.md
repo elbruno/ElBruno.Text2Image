@@ -18,6 +18,8 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 | **FLUX.2 Pro** | `FLUX.2-pro` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Default |
 | **FLUX.2 Flex** | `FLUX.2-flex` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
 | **MAI-Image-2** | `MAI-Image-2` | `MaiImage2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
+| **MAI-Image-2.5** | `MAI-Image-2.5` | `MaiImage25Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
+| **MAI-Image-2.5-Flash** | `MAI-Image-2.5-Flash` | `MaiImage25Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
 
 ## Model Details
 
@@ -86,6 +88,19 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 - **Announcement**: [Introducing MAI-Image-2](https://microsoft.ai/news/introducing-MAI-Image-2/)
 - **Setup guide**: [mai-image-2-setup-guide.md](mai-image-2-setup-guide.md)
 
+### MAI-Image-2.5 / MAI-Image-2.5-Flash (Cloud API)
+
+- **Class**: `MaiImage25Generator` (both variants, selected via `modelId`)
+- **Provider**: Microsoft Foundry
+- **Models**: `MAI-Image-2.5` (quality) and `MAI-Image-2.5-Flash` (speed-optimized)
+- **API**: OpenAI-compatible `/openai/v1/images/generations` endpoint
+- **Resolution**: fixed sizes — `1024x1024`, `1024x1536`, `1536x1024` (default `1024x1024`)
+- **Synchronous API** — no polling needed
+- **Authentication**: API key from Microsoft Foundry
+- **Prompt limit**: 32,000 characters
+- **CLI providers**: `foundry-mai25`, `foundry-mai25-flash`
+- **Setup guide**: [mai-image-2.5-setup-guide.md](mai-image-2.5-setup-guide.md)
+
 ## Execution Providers
 
 | Provider | GPU Required | Platform | Notes |
@@ -123,3 +138,11 @@ This document lists all models supported by ElBruno.Text2Image and their status.
 | Width | 1024 | Min 768, max constrained by total pixel limit |
 | Height | 1024 | Min 768, max constrained by total pixel limit |
 | Total pixels | — | Max 1,048,576 (width × height) |
+
+### Cloud Models (MAI-Image-2.5 / Flash)
+
+| Option | Default | Notes |
+|--------|---------|-------|
+| Size | `1024x1024` | Fixed sizes: `1024x1024`, `1024x1536`, `1536x1024` |
+| Output format | `png` | Sent as `output_format` |
+| Response format | `b64_json` | Also supports URL |

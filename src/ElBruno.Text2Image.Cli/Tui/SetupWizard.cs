@@ -83,6 +83,8 @@ internal static class SetupWizard
                     var defaultModel = selectedProviderId switch
                     {
                         "foundry-mai2" => "MAI-Image-2",
+                        "foundry-mai25" => "MAI-Image-2.5",
+                        "foundry-mai25-flash" => "MAI-Image-2.5-Flash",
                         "foundry-flux2" => "FLUX.2-pro",
                         _ => ""
                     };

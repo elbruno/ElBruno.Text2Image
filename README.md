@@ -52,6 +52,7 @@
 |-------|----------|----------|
 | **FLUX.2 Pro/Flex** | Microsoft Foundry | Photorealistic + text-heavy design |
 | **MAI-Image-2** | Microsoft Foundry | High-quality generation |
+| **MAI-Image-2.5 / 2.5-Flash** | Microsoft Foundry | High-quality + speed-optimized |
 | **GPT-Image-1.5** | Azure OpenAI (DALL-E 3) | Creative & reliable |
 | **GPT-Image-2** | Azure OpenAI | Next-gen quality |
 | **GPT-Image-2** | Azure OpenAI | Next-gen quality |
@@ -130,6 +131,12 @@ t2i "a business card design with modern minimalist style"
 # MAI-Image-2 (high-quality generation)
 t2i --provider foundry-mai2 "a serene mountain landscape at sunrise"
 
+# MAI-Image-2.5 (latest high-quality model)
+t2i --provider foundry-mai25 "a photograph of a red fox in an autumn forest"
+
+# MAI-Image-2.5-Flash (speed-optimized)
+t2i --provider foundry-mai25-flash "a quick concept sketch of a city skyline"
+
 # GPT-Image-1.5 (DALL-E 3 via Azure OpenAI)
 t2i --provider azure-openai-gpt-image-15 "an impressionist painting of a garden"
 
@@ -160,8 +167,8 @@ See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 ## Features
 
 - 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion, FLUX.2, GPT-Image-1.5, and more
-- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2, MAI-Image-2, GPT-Image-1.5, GPT-Image-2
-- ☁️ **Cloud APIs** — FLUX.2, MAI-Image-2 (Microsoft Foundry), GPT-Image-1.5, GPT-Image-2 (Azure OpenAI)
+- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2, MAI-Image-2, MAI-Image-2.5, MAI-Image-2.5-Flash, GPT-Image-1.5, GPT-Image-2
+- ☁️ **Cloud APIs** — FLUX.2, MAI-Image-2, MAI-Image-2.5, MAI-Image-2.5-Flash (Microsoft Foundry), GPT-Image-1.5, GPT-Image-2 (Azure OpenAI)
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
@@ -257,6 +264,25 @@ await result.SaveAsync("mai-image2-output.png");
 // Or use MAI-Image-2e for alternative model:
 using var maiE = new MaiImage2Generator(endpoint, apiKey,
     modelName: "MAI-Image-2e", modelId: "MAI-Image-2e");
+```
+
+### Basic Usage — Cloud (MAI-Image-2.5 / MAI-Image-2.5-Flash)
+
+```csharp
+using ElBruno.Text2Image;
+using ElBruno.Text2Image.Foundry;
+
+// MAI-Image-2.5 (latest high-quality model) via Microsoft Foundry.
+// The same class serves both variants — pass "MAI-Image-2.5-Flash" for the speed-optimized model.
+using var generator = new MaiImage25Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    httpClient: new HttpClient(),
+    modelName: "MAI-Image-2.5",
+    modelId: "MAI-Image-2.5");
+
+var result = await generator.GenerateAsync("A photograph of a red fox in an autumn forest");
+await result.SaveAsync("mai-image25-output.png");
 ```
 
 ### Basic Usage — Cloud (GPT-Image-1.5 via Azure OpenAI)
@@ -388,6 +414,14 @@ services.AddMaiImage2Generator(
     apiKey: "your-api-key",
     modelId: "MAI-Image-2");
 
+// MAI-Image-2.5 / MAI-Image-2.5-Flash cloud models (requires ElBruno.Text2Image.Foundry package)
+services.AddMaiImage25Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key");
+services.AddMaiImage25FlashGenerator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key");
+
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
 {
@@ -417,6 +451,8 @@ public class MyService(IImageGenerator generator)
 | **FLUX.2 Pro** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Default |
 | **FLUX.2 Flex** | `Flux2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2** | `MaiImage2Generator` | Microsoft Foundry | Excellent | ✅ Available |
+| **MAI-Image-2.5** | `MaiImage25Generator` | Microsoft Foundry | Excellent | ✅ Available |
+| **MAI-Image-2.5-Flash** | `MaiImage25Generator` | Microsoft Foundry | Excellent (fast) | ✅ Available |
 | **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI (DALL-E 3) | Excellent | ✅ Available |
 | **GPT-Image-2** | `GptImage2Generator` | Azure OpenAI | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
@@ -438,6 +474,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-10-progress-reporting](src/samples/scenario-10-progress-reporting/) | Detailed download progress reporting with progress bar |
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 | [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
+| [scenario-18-mai-image25-cloud](src/samples/scenario-18-mai-image25-cloud/) | MAI-Image-2.5 / MAI-Image-2.5-Flash cloud API via Microsoft Foundry |
 | [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 (DALL-E 3) cloud API via Azure OpenAI |
 | [scenario-16-gpt-image-2-cloud](src/samples/scenario-16-gpt-image-2-cloud/) | GPT-Image-2 cloud API via Azure OpenAI |
 
@@ -470,6 +507,7 @@ See [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) for full Foundry setu
 - [docs/gpu-acceleration.md](docs/gpu-acceleration.md) — GPU setup (CUDA, DirectML, auto-detection)
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/mai-image-2-setup-guide.md](docs/mai-image-2-setup-guide.md) — Microsoft Foundry MAI-Image-2 setup
+- [docs/mai-image-2.5-setup-guide.md](docs/mai-image-2.5-setup-guide.md) — Microsoft Foundry MAI-Image-2.5 / 2.5-Flash setup
 - [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 (DALL-E 3) setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide

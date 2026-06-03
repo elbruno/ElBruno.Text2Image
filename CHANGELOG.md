@@ -2,6 +2,18 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.3.0] — 2026-06-02
+
+### Added
+- **MAI-Image-2.5 and MAI-Image-2.5-Flash** support via Microsoft Foundry.
+  - New `MaiImage25Generator` class (in `ElBruno.Text2Image.Foundry`) targeting the
+    OpenAI-compatible `/openai/v1/images/generations` endpoint. Both variants are served
+    by the same class, selected via `modelId`.
+  - New DI helpers: `AddMaiImage25Generator(...)` and `AddMaiImage25FlashGenerator(...)`.
+  - New CLI providers: `foundry-mai25` and `foundry-mai25-flash`.
+  - New sample: `scenario-18-mai-image25-cloud`.
+  - New setup guide: `docs/mai-image-2.5-setup-guide.md`.
+
 ## [1.2.6] — 2026-04-29
 
 ### Security

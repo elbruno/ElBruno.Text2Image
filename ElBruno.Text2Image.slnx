@@ -20,7 +20,9 @@
     <Project Path="src/samples/scenario-09-batch-generation/scenario-09-batch-generation.csproj" />
     <Project Path="src/samples/scenario-10-progress-reporting/scenario-10-progress-reporting.csproj" />
     <Project Path="src/samples/scenario-11-gpu-diagnostics/scenario-11-gpu-diagnostics.csproj" />
+    <Project Path="src/samples/scenario-17-foundry-batch/scenario-17-foundry-batch.csproj" />
     <Project Path="src/samples/scenario-13-mai-image2-cloud/scenario-13-mai-image2-cloud.csproj" />
     <Project Path="src/samples/scenario-14-gpu-stress-test/scenario-14-gpu-stress-test.csproj" />
+    <Project Path="src/samples/scenario-18-mai-image25-cloud/scenario-18-mai-image25-cloud.csproj" />
   </Folder>
 </Solution>

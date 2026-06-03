@@ -64,7 +64,7 @@ Activate this skill when:
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--provider` | Provider to use (foundry-flux2, foundry-mai2) | foundry-flux2 |
+| `--provider` | Provider to use (foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash) | foundry-flux2 |
 | `--output`, `-o` | Output file path | `generated-<timestamp>.png` |
 | `--width`, `-w` | Image width in pixels | 512 |
 | `--height` | Image height in pixels | 512 |
@@ -109,6 +109,8 @@ Two cloud providers available in the **Lite** edition:
 |----------|-------|-----|----------|
 | `foundry-flux2` | FLUX.2 Pro | Microsoft Foundry | High-quality images, fine-grained control, batch jobs, production use |
 | `foundry-mai2` | MAI-Image-2 | Microsoft Foundry | Fast iteration, rich prompt understanding, synchronous API, rapid prototyping |
+| `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | Latest high-quality generation, synchronous OpenAI-compatible API |
+| `foundry-mai25-flash` | MAI-Image-2.5-Flash | Microsoft Foundry | Speed-optimized, low-latency generation for real-time / prototyping |
 
 **Default:** `foundry-flux2` if user doesn't specify `--provider`.
 
@@ -522,7 +524,7 @@ t2i secrets set foundry-flux2
 **Solution:**
 ```bash
 t2i providers  # List all available providers
-# Valid providers: foundry-flux2, foundry-mai2
+# Valid providers: foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash
 ```
 
 #### Error: "Missing secret 'apiKey' for provider"
