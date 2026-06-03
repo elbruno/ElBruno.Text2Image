@@ -389,8 +389,8 @@ public class EndToEndTests : IDisposable
     [Fact]
     public async Task E2E_FullPipeline_InitConfigSecretsDoctor_AllSucceed()
     {
-        var (registry, resolver, store) = CreateFullStack();
         var secretStore = CreateFakeSecretStore();
+        var (registry, resolver, store) = CreateFullStack(secretStore);
 
         // Step 1: Init
         var initCmd = new InitCommand();
@@ -407,7 +407,7 @@ public class EndToEndTests : IDisposable
         };
         await store.SaveAsync(config, CancellationToken.None);
 
-        // Step 3: Set secrets
+        // Step 3: Set secrets (in the same store used by the resolver)
         await secretStore.SetAsync("foundry-flux2", "apiKey", "test-key", CancellationToken.None);
 
         // Step 4: Run doctor
@@ -676,11 +676,11 @@ public class EndToEndTests : IDisposable
         );
     }
 
-    private (ProviderRegistry Registry, SecretResolver Resolver, ConfigStore Store) CreateFullStack()
+    private (ProviderRegistry Registry, SecretResolver Resolver, ConfigStore Store) CreateFullStack(FakeSecretStore? secretStore = null)
     {
         var httpClientFactory = new FakeHttpClientFactory();
-        var secretStore = CreateFakeSecretStore();
-        var secretResolver = new SecretResolver(new List<ISecretStore> { secretStore });
+        var store = secretStore ?? CreateFakeSecretStore();
+        var secretResolver = new SecretResolver(new List<ISecretStore> { store });
         var configStore = new ConfigStore();
         
         var adapters = new List<IProviderAdapter>

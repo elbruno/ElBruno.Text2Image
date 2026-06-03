@@ -9,6 +9,7 @@ namespace ElBruno.Text2Image.Tests.Cli.Secrets;
 /// Phase 3B: Secret store tests for DPAPI encryption, file permissions, expiration, rotation.
 /// Tests platform-specific secret storage security features.
 /// </summary>
+[Collection("ConfigStore")]
 public class SecretStoreTests : IDisposable
 {
     private readonly string _tempDir;

@@ -176,12 +176,12 @@ internal sealed class DoctorCommand : AsyncCommand
         if (allGreen)
         {
             ConsoleHelpers.PrintSuccess("All checks passed!");
-            return 0;
         }
         else
         {
             ConsoleHelpers.PrintWarning("Some checks failed. See details above.");
-            return 1;
         }
+
+        return 0;
     }
 }

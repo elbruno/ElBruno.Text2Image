@@ -16,6 +16,7 @@ namespace ElBruno.Text2Image.Tests.Foundry;
 /// Phase 3B: Provider-specific tests for model selection, parameter validation, and quirks.
 /// Tests Flux2 batch handling, MAI-2 dimensions, GPT endpoint variations.
 /// </summary>
+[Collection("ConfigStore")]
 public class ProviderSpecificTests : IDisposable
 {
     private readonly string _tempDir;
@@ -163,13 +164,13 @@ public class ProviderSpecificTests : IDisposable
     {
         var (configStore, secretStore) = CreateStores();
         var config = new AppConfig();
-        config.Providers["foundry-gpt1.5"] = new ProviderConfig
+        config.Providers["foundry-gpt-image-1p5"] = new ProviderConfig
         {
             Endpoint = "https://eastus.api.cognitive.microsoft.com",
             Model = "dall-e-3"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
-        await secretStore.SetAsync("foundry-gpt1.5", "apiKey", "test-key", CancellationToken.None);
+        await secretStore.SetAsync("foundry-gpt-image-1p5", "apiKey", "test-key", CancellationToken.None);
 
         var adapter = CreateGptImage1p5Adapter(configStore, secretStore);
         var health = await adapter.CheckAsync(CancellationToken.None);
@@ -182,13 +183,13 @@ public class ProviderSpecificTests : IDisposable
     {
         var (configStore, secretStore) = CreateStores();
         var config = new AppConfig();
-        config.Providers["foundry-gpt2"] = new ProviderConfig
+        config.Providers["foundry-gpt-image-2"] = new ProviderConfig
         {
             Endpoint = "https://westus.api.cognitive.microsoft.com",
             Model = "dall-e-3-hd"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
-        await secretStore.SetAsync("foundry-gpt2", "apiKey", "test-key", CancellationToken.None);
+        await secretStore.SetAsync("foundry-gpt-image-2", "apiKey", "test-key", CancellationToken.None);
 
         var adapter = CreateGptImage2Adapter(configStore, secretStore);
         var health = await adapter.CheckAsync(CancellationToken.None);

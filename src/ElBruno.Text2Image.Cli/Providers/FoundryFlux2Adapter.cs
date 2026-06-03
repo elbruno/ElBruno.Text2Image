@@ -73,7 +73,14 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
             request.Headers.Add("Authorization", $"Bearer {apiKey}");
             
             var response = await httpClient.SendAsync(request, ct);
-            
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new ProviderHealth(
+                    Ok: false,
+                    Reason: $"Endpoint returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+            }
+
             return new ProviderHealth(Ok: true, Reason: null);
         }
         catch (Exception ex)

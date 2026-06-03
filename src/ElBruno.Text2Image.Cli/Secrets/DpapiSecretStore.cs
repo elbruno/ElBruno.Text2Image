@@ -15,12 +15,14 @@ internal sealed class DpapiSecretStore : ISecretStore
 {
     private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly string _filePath;
+    private readonly string _configDir;
 
     public DpapiSecretStore()
     {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var configDir = Path.Combine(localAppData, "t2i");
-        _filePath = Path.Combine(configDir, "secrets.dpapi");
+        var localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA")
+            ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        _configDir = Path.Combine(localAppData, "t2i");
+        _filePath = Path.Combine(_configDir, "secrets.dpapi");
     }
 
     public string Name => "dpapi";
@@ -143,9 +145,7 @@ internal sealed class DpapiSecretStore : ISecretStore
         var dir = Path.GetDirectoryName(fullPath);
         
         // Validate path is in expected location
-        var expectedDir = Path.GetFullPath(Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
-            "t2i"));
+        var expectedDir = Path.GetFullPath(_configDir);
         
         if (dir != null && !fullPath.StartsWith(expectedDir, StringComparison.OrdinalIgnoreCase))
         {

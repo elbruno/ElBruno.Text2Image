@@ -13,6 +13,7 @@ namespace ElBruno.Text2Image.Tests.Foundry;
 /// Phase 3A: Tests for all provider adapters (Flux2, MAI-2, GPT-1.5, GPT-2).
 /// Tests config/secret resolution, health checks, and generation workflows.
 /// </summary>
+[Collection("ConfigStore")]
 public class ProviderAdapterTests : IDisposable
 {
     private readonly string _tempDir;
@@ -146,7 +147,7 @@ public class ProviderAdapterTests : IDisposable
             OutputPath: Path.Combine(_tempDir, "test.png"),
             ExtraOptions: new Dictionary<string, string?>());
 
-        await Assert.ThrowsAsync<Exception>(
+        await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await adapter.GenerateAsync(request, null, CancellationToken.None));
     }
 
@@ -209,7 +210,7 @@ public class ProviderAdapterTests : IDisposable
             OutputPath: Path.Combine(_tempDir, "test.png"),
             ExtraOptions: new Dictionary<string, string?>());
 
-        await Assert.ThrowsAsync<Exception>(
+        await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await adapter.GenerateAsync(request, null, CancellationToken.None));
     }
 
@@ -234,13 +235,13 @@ public class ProviderAdapterTests : IDisposable
         var (adapter, _, secretStore, configStore) = CreateGptImage1p5AdapterWithDependencies();
         
         var config = new AppConfig();
-        config.Providers["foundry-gpt-image-1.5"] = new ProviderConfig
+        config.Providers["foundry-gpt-image-1p5"] = new ProviderConfig
         {
             Endpoint = "https://test.example.com/api",
             Model = "gpt-image-1.5"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
-        await secretStore.SetAsync("foundry-gpt-image-1.5", "apiKey", "test-key", CancellationToken.None);
+        await secretStore.SetAsync("foundry-gpt-image-1p5", "apiKey", "test-key", CancellationToken.None);
 
         var health = await adapter.CheckAsync(CancellationToken.None);
 
@@ -252,8 +253,8 @@ public class ProviderAdapterTests : IDisposable
     {
         var adapter = CreateGptImage1p5Adapter();
 
-        Assert.Equal("foundry-gpt-image-1.5", adapter.Id);
-        Assert.Equal("GPT-Image-1.5 (Cloud)", adapter.DisplayName);
+        Assert.Equal("foundry-gpt-image-1p5", adapter.Id);
+        Assert.Equal("GPT-Image-1.5 (Azure OpenAI)", adapter.DisplayName);
         Assert.Equal(ProviderKind.Cloud, adapter.Kind);
         Assert.Contains("apiKey", adapter.RequiredSecrets);
     }
@@ -298,7 +299,7 @@ public class ProviderAdapterTests : IDisposable
         var adapter = CreateGptImage2Adapter();
 
         Assert.Equal("foundry-gpt-image-2", adapter.Id);
-        Assert.Equal("GPT-Image-2 (Cloud)", adapter.DisplayName);
+        Assert.Equal("GPT-Image-2 (Azure OpenAI)", adapter.DisplayName);
         Assert.Equal(ProviderKind.Cloud, adapter.Kind);
         Assert.Contains("apiKey", adapter.RequiredSecrets);
     }
@@ -382,20 +383,21 @@ public class ProviderAdapterTests : IDisposable
     [Fact]
     public async Task Adapters_EnvVar_FallbackWorks()
     {
-        var (_, secretResolver, _, _) = CreateFlux2AdapterWithDependencies();
-        
-        Environment.SetEnvironmentVariable("FOUNDRY_FLUX2_APIKEY", "env-var-key");
+        Environment.SetEnvironmentVariable("T2I_FOUNDRY_FLUX2_APIKEY", "env-var-key");
         
         try
         {
-            var extraVars = new Dictionary<string, string?> { ["FOUNDRY_FLUX2_APIKEY"] = "FOUNDRY_FLUX2_APIKEY" };
-            var resolved = await secretResolver.ResolveAsync("foundry-flux2", "apiKey", extraVars, CancellationToken.None);
+            var fakeStore = new FakeSecretStore();
+            var envStore = new EnvVarSecretStore();
+            var secretResolver = new SecretResolver(new List<ISecretStore> { fakeStore, envStore });
+
+            var resolved = await secretResolver.ResolveAsync("foundry-flux2", "apiKey", null, CancellationToken.None);
 
             Assert.Equal("env-var-key", resolved);
         }
         finally
         {
-            Environment.SetEnvironmentVariable("FOUNDRY_FLUX2_APIKEY", null);
+            Environment.SetEnvironmentVariable("T2I_FOUNDRY_FLUX2_APIKEY", null);
         }
     }
 
@@ -551,13 +553,13 @@ public class ProviderAdapterTests : IDisposable
         var (adapter, _, secretStore, configStore) = CreateGptImage1p5AdapterWithDependencies();
         
         var config = new AppConfig();
-        config.Providers["foundry-gpt-image-1.5"] = new ProviderConfig
+        config.Providers["foundry-gpt-image-1p5"] = new ProviderConfig
         {
             Endpoint = "",
             Model = "gpt-image-1.5"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
-        await secretStore.SetAsync("foundry-gpt-image-1.5", "apiKey", "test-key", CancellationToken.None);
+        await secretStore.SetAsync("foundry-gpt-image-1p5", "apiKey", "test-key", CancellationToken.None);
 
         var health = await adapter.CheckAsync(CancellationToken.None);
 

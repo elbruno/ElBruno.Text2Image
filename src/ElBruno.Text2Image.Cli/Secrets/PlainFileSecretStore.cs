@@ -13,12 +13,14 @@ internal sealed class PlainFileSecretStore : ISecretStore
 {
     private readonly SemaphoreSlim _fileLock = new(1, 1);
     private readonly string _filePath;
+    private readonly string _configDirectory;
     private bool _hasWarnedOnce;
     private bool _hasWarnedOnStartup;
 
     public PlainFileSecretStore()
     {
-        _filePath = Path.Combine(ConfigPaths.ConfigDirectory, "secrets.json");
+        _configDirectory = ConfigPaths.ConfigDirectory;
+        _filePath = Path.Combine(_configDirectory, "secrets.json");
     }
 
     public string Name => "file";
@@ -120,7 +122,7 @@ internal sealed class PlainFileSecretStore : ISecretStore
     {
         // Prevent directory traversal when saving secrets
         var fullPath = Path.GetFullPath(_filePath);
-        var configDir = Path.GetFullPath(ConfigPaths.ConfigDirectory);
+        var configDir = Path.GetFullPath(_configDirectory);
         
         if (!fullPath.StartsWith(configDir, StringComparison.OrdinalIgnoreCase))
         {

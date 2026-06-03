@@ -15,6 +15,7 @@ namespace ElBruno.Text2Image.Tests.Cli;
 /// Phase 3A: Critical tests for CLI command execution.
 /// Tests all CLI commands: generate, config, secrets, doctor, providers, version, init.
 /// </summary>
+[Collection("ConfigStore")]
 public class CommandExecutionTests : IDisposable
 {
     private readonly string _tempDir;

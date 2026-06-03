@@ -10,7 +10,7 @@ namespace ElBruno.Text2Image.Tests.Cli.Config;
 /// Tests config file format validation and backward compatibility.
 /// Uses isolated temp directories to prevent pollution of actual user config.
 /// </summary>
-[Collection("ConfigValidation")]
+[Collection("ConfigStore")]
 public class ConfigValidationTests : IDisposable
 {
     private readonly string _tempDir;

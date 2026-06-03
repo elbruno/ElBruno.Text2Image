@@ -141,6 +141,16 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
             return 1;
         }
 
+        // Handle global config keys (no dot-separated provider prefix)
+        if (key.Equals("default-provider", StringComparison.OrdinalIgnoreCase))
+        {
+            var globalConfig = await _configStore.LoadAsync(ct);
+            globalConfig.DefaultProvider = value;
+            await _configStore.SaveAsync(globalConfig, ct);
+            ConsoleHelpers.PrintSuccess($"Default provider set to '{value}'");
+            return 0;
+        }
+
         var parts = key.Split('.', 2);
         if (parts.Length != 2)
         {
@@ -289,6 +299,16 @@ internal sealed class ConfigCommand : AsyncCommand<ConfigCommand.Settings>
         {
             ConsoleHelpers.PrintError("Usage: t2i config remove <provider>");
             return 1;
+        }
+
+        // Handle global config keys (no interactive prompt needed)
+        if (key.Equals("default-provider", StringComparison.OrdinalIgnoreCase))
+        {
+            var cfg = await _configStore.LoadAsync(ct);
+            cfg.DefaultProvider = null;
+            await _configStore.SaveAsync(cfg, ct);
+            ConsoleHelpers.PrintSuccess("Removed default provider setting");
+            return 0;
         }
 
         var providerId = key;

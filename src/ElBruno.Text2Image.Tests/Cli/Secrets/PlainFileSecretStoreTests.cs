@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace ElBruno.Text2Image.Tests.Cli.Secrets;
 
-[Collection("PlainFileSecretStore")]
+[Collection("ConfigStore")]
 public class PlainFileSecretStoreTests : IDisposable
 {
     private readonly string _tempConfigDir;
