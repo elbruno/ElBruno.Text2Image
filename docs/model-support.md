@@ -1,148 +1,47 @@
-# Model Support Matrix
+# Model support matrix
 
-This document lists all models supported by ElBruno.Text2Image and their status.
+## Local models (library packages)
 
-## Local Models (ONNX Runtime)
+| Model | Class | Typical steps | Status |
+|---|---|---:|---|
+| Stable Diffusion 1.5 | `StableDiffusion15` | 15–50 | Available |
+| LCM Dreamshaper v7 | `LcmDreamshaperV7` | 2–4 | Available |
+| SDXL Turbo | `SdxlTurbo` | 1–4 | Available |
+| SD 2.1 Base | `StableDiffusion21` | 15–50 | Available |
 
-| Model | Class | ONNX Source | Steps | VRAM | Status |
-|-------|-------|------------|-------|------|--------|
-| **Stable Diffusion 1.5** | `StableDiffusion15` | `onnx-community/stable-diffusion-v1-5-ONNX` | 15-50 | ~4 GB | ✅ Implemented |
-| **LCM Dreamshaper v7** | `LcmDreamshaperV7` | `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` | 2-4 | ~4 GB | ✅ Implemented |
-| **SDXL Turbo** | `SdxlTurbo` | `elbruno/sdxl-turbo-ONNX` | 1-4 | ~8 GB | ✅ Available |
-| **SD 2.1 Base** | `StableDiffusion21` | `elbruno/stable-diffusion-2-1-ONNX` | 15-50 | ~5 GB | ✅ Available |
+Local inference is available through the library's CPU, CUDA, and DirectML packages. It is not part of the cloud-first `ElBruno.Text2Image.Cli` Lite tool.
 
-## Cloud Models (REST API)
+## Cloud models (CLI and Foundry package)
 
-| Model | Model ID | Class | Provider | Resolution | Status |
-|-------|----------|-------|----------|------------|--------|
-| **FLUX.2 Pro** | `FLUX.2-pro` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Default |
-| **FLUX.2 Flex** | `FLUX.2-flex` | `Flux2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
-| **MAI-Image-2** | `MAI-Image-2` | `MaiImage2Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
-| **MAI-Image-2.5** | `MAI-Image-2.5` | `MaiImage25Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
-| **MAI-Image-2.5-Flash** | `MAI-Image-2.5-Flash` | `MaiImage25Generator` | Microsoft Foundry | 1024×1024 | ✅ Available |
+| CLI provider | Model | Service | Default model ID |
+|---|---|---|---|
+| `foundry-flux2` | FLUX.2 Pro/Flex | Microsoft Foundry | `FLUX.2-pro` |
+| `foundry-mai2` | MAI-Image-2 | Microsoft Foundry | `MAI-Image-2` |
+| `foundry-mai25` | MAI-Image-2.5 (Preview) | Microsoft Foundry | `MAI-Image-2.5` |
+| `foundry-mai25-flash` | MAI-Image-2.5-Flash (Preview) | Microsoft Foundry | `MAI-Image-2.5-Flash` |
+| `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | `gpt-image-1.5` |
+| `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | `gpt-image-2` |
 
-## Model Details
+All MAI image models are currently Preview. Microsoft Foundry documents `MAI-Image-2`, `MAI-Image-2e`, `MAI-Image-2.5`, and `MAI-Image-2.5-Flash` through its MAI Image API. The CLI exposes the six providers shown above (including MAI-Image-2, 2.5, and 2.5-Flash); use a provider's `model` setting to select a deployed model compatible with that provider.
 
-### Stable Diffusion 1.5
+### MAI Image request limits
 
-- **Resolution**: 512×512 (default)
-- **Embedding dimension**: 768
-- **Scheduler**: Euler Ancestral Discrete / LMS Discrete
-- **License**: CreativeML OpenRAIL-M
-- **Download size**: ~5.1 GB
-- **Auto-download**: Yes (from HuggingFace)
+Microsoft's current MAI Image API specification applies these generation limits:
 
-### LCM Dreamshaper v7
+- `width` and `height` must each be at least 768 pixels.
+- `width × height` must not exceed 1,048,576 pixels.
+- The output format is PNG.
+- A prompt has a maximum context length of 32,000 tokens.
 
-- **Resolution**: 512×512
-- **Key advantage**: Only 2-4 inference steps needed (near-instant generation)
-- **No CFG needed**: guidance_scale = 1.0
-- **Scheduler**: LCM Scheduler
-- **License**: CreativeML OpenRAIL-M
-- **Based on**: Dreamshaper v7 fine-tune of SD 1.5
-- **Auto-download**: Yes (from HuggingFace)
+The 2.5 and 2.5-Flash models also support image-to-image edits in the provider API. `t2i` currently generates text-to-image requests only.
 
-### SDXL Turbo (Available)
+### GPT Image notes
 
-- **Class**: `SdxlTurbo`
-- **HuggingFace repo**: [`elbruno/sdxl-turbo-ONNX`](https://huggingface.co/elbruno/sdxl-turbo-ONNX)
-- **Resolution**: 512×512 (native) to 1024×1024
-- **Key advantage**: 1-4 inference steps
-- **VRAM requirement**: ~8 GB minimum
-- **Architecture**: Dual text encoder (CLIP + OpenCLIP); pipeline uses primary encoder
-- **License**: Stability AI Community License
-- **Auto-download**: Yes (from HuggingFace)
+GPT-Image-1.5 and GPT-Image-2 are Azure OpenAI image models, not DALL-E 3 deployments. DALL-E 3 was retired for Azure OpenAI deployments on March 4, 2026. Check your region, access level, and deployment availability before configuring either GPT Image provider.
 
-### SD 2.1 Base (Available)
+## Official references
 
-- **Class**: `StableDiffusion21`
-- **HuggingFace repo**: [`elbruno/stable-diffusion-2-1-ONNX`](https://huggingface.co/elbruno/stable-diffusion-2-1-ONNX)
-- **Resolution**: 512×512 (base) or 768×768
-- **Embedding dimension**: 1024 (uses OpenCLIP ViT-H)
-- **License**: CreativeML OpenRAIL-M
-- **Auto-download**: Yes (from HuggingFace)
-
-### FLUX.2 (Cloud API)
-
-- **Class**: `Flux2Generator`
-- **Provider**: Microsoft Foundry
-- **Default model**: `FLUX.2-pro` (photorealistic image generation)
-- **Resolution**: 1024×1024 (default)
-- **Variants**:
-  - **FLUX.2 Pro** (`FLUX.2-pro`) — Photorealistic and cinematic-quality image generation.
-  - **FLUX.2 Flex** (`FLUX.2-flex`) — Best-in-class text rendering, logos, UI copy, product packaging. $0.05/megapixel.
-- **No local model needed**: Runs via REST API
-- **Authentication**: API key from Microsoft Foundry
-- **Announcement**: [Meet FLUX.2 Flex on Microsoft Foundry](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/meet-flux-2-flex-for-text%E2%80%91heavy-design-and-ui-prototyping-now-available-on-micro/4496041)
-- **Setup guide**: [flux2-setup-guide.md](flux2-setup-guide.md)
-
-### MAI-Image-2 (Cloud API)
-
-- **Class**: `MaiImage2Generator`
-- **Provider**: Microsoft Foundry
-- **Default model**: `MAI-Image-2`
-- **Resolution**: 1024×1024 (default), min 768px per dimension, max 1M total pixels
-- **Synchronous API** — no polling needed (unlike FLUX.2's 202 + retry pattern)
-- **Authentication**: API key from Microsoft Foundry
-- **Prompt limit**: 32,000 characters
-- **Announcement**: [Introducing MAI-Image-2](https://microsoft.ai/news/introducing-MAI-Image-2/)
-- **Setup guide**: [mai-image-2-setup-guide.md](mai-image-2-setup-guide.md)
-
-### MAI-Image-2.5 / MAI-Image-2.5-Flash (Cloud API)
-
-- **Class**: `MaiImage25Generator` (both variants, selected via `modelId`)
-- **Provider**: Microsoft Foundry
-- **Models**: `MAI-Image-2.5` (quality) and `MAI-Image-2.5-Flash` (speed-optimized)
-- **API**: OpenAI-compatible `/openai/v1/images/generations` endpoint
-- **Resolution**: fixed sizes — `1024x1024`, `1024x1536`, `1536x1024` (default `1024x1024`)
-- **Synchronous API** — no polling needed
-- **Authentication**: API key from Microsoft Foundry
-- **Prompt limit**: 32,000 characters
-- **CLI providers**: `foundry-mai25`, `foundry-mai25-flash`
-- **Setup guide**: [mai-image-2.5-setup-guide.md](mai-image-2.5-setup-guide.md)
-
-## Execution Providers
-
-| Provider | GPU Required | Platform | Notes |
-|----------|-------------|----------|-------|
-| **CPU** | No | All | Works everywhere, slower |
-| **CUDA** | NVIDIA GPU | All | Fastest for NVIDIA GPUs |
-| **DirectML** | Any GPU | Windows | AMD, Intel, NVIDIA on Windows |
-
-> FLUX.2 does not use execution providers — it runs on Azure cloud infrastructure.
-
-## Default Options
-
-### Local Models
-
-| Option | Default | Range | Description |
-|--------|---------|-------|-------------|
-| `NumInferenceSteps` | 20 | 1-100 | More steps = better quality, slower |
-| `GuidanceScale` | 7.5 | 1.0-20.0 | Higher = follows prompt more closely |
-| `Width` | 512 | Multiple of 8 | Image width in pixels |
-| `Height` | 512 | Multiple of 8 | Image height in pixels |
-| `Seed` | random | Any int | For reproducible generation |
-
-### Cloud Models (FLUX.2)
-
-| Option | Default | Notes |
-|--------|---------|-------|
-| `Width` | 1024 | Recommended: 1024 |
-| `Height` | 1024 | Recommended: 1024 |
-| Response format | `b64_json` | Also supports URL |
-
-### Cloud Models (MAI-Image-2)
-
-| Option | Default | Notes |
-|--------|---------|-------|
-| Width | 1024 | Min 768, max constrained by total pixel limit |
-| Height | 1024 | Min 768, max constrained by total pixel limit |
-| Total pixels | — | Max 1,048,576 (width × height) |
-
-### Cloud Models (MAI-Image-2.5 / Flash)
-
-| Option | Default | Notes |
-|--------|---------|-------|
-| Size | `1024x1024` | Fixed sizes: `1024x1024`, `1024x1536`, `1536x1024` |
-| Output format | `png` | Sent as `output_format` |
-| Response format | `b64_json` | Also supports URL |
+- [Deploy and use MAI image models in Microsoft Foundry](https://learn.microsoft.com/azure/foundry/foundry-models/how-to/use-foundry-models-mai)
+- [Azure OpenAI image generation models](https://learn.microsoft.com/azure/foundry/openai/how-to/dall-e)
+- [FLUX.2 setup guide](flux2-setup-guide.md)
+- [MAI-Image-2 setup guide](mai-image-2-setup-guide.md)

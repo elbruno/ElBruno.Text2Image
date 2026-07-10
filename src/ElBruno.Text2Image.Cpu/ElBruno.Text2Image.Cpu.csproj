@@ -5,7 +5,7 @@
 
     <!-- NuGet Package Metadata -->
     <PackageId>ElBruno.Text2Image.Cpu</PackageId>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <Authors>Bruno Capuano</Authors>
     <Description>CPU runtime for ElBruno.Text2Image. Includes all text-to-image generation functionality with CPU-based inference via ONNX Runtime. Install this for environments without a GPU.</Description>
     <PackageTags>text-to-image;stable-diffusion;image-generation;onnx;onnxruntime;cpu;ai</PackageTags>

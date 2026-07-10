@@ -8,7 +8,7 @@ using Microsoft.Extensions.AI;
 namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
-/// GPT-Image-1.5 (Azure OpenAI DALL-E 3) image generator.
+/// GPT-Image-1.5 Azure OpenAI image generator.
 /// Generates images via Azure OpenAI Service with support for fixed sizes: 1024×1024, 1024×1536, 1536×1024.
 /// </summary>
 public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator

@@ -2,6 +2,24 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.4.0] — 2026-07-10
+
+### Added
+- `t2i upgrade` refreshes only managed GitHub Copilot and Claude Code skill files, preserving
+  user-owned skills and never creating missing targets.
+- A Foundry batch-generation sample (`scenario-17-foundry-batch`).
+
+### Changed
+- MAI-Image-2.5 and MAI-Image-2.5-Flash now use the Microsoft Foundry
+  `/mai/v1/images/generations` endpoint and its 1024×1024 maximum output size.
+- Cloud provider commands accept an endpoint override, which takes precedence over configured
+  and legacy secret-store endpoints.
+- CLI skill and provider documentation now reflects current models, commands, and setup guidance.
+
+### Fixed
+- Config and secret-store behavior is isolated per process, preventing cross-test configuration
+  leakage.
+
 ## [1.3.0] — 2026-06-02
 
 ### Added

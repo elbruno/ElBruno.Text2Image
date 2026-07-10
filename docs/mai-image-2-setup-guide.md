@@ -12,7 +12,7 @@ MAI-Image-2 is Microsoft's cloud-based text-to-image model available through [Mi
 
 - **High-quality generation** — Produces detailed, high-fidelity images from text prompts
 - **Synchronous API** — Returns results directly (no 202 polling needed, unlike FLUX.2)
-- **Large prompt support** — Up to 32,000 characters per prompt
+- **Large prompt support** — Up to 32,000 tokens per prompt
 - **Flexible dimensions** — Min 768px per dimension, max 1,048,576 total pixels (width × height)
 
 ## Prerequisites
@@ -243,7 +243,7 @@ The `MaiImage2Generator` sends HTTP POST requests to the Microsoft Foundry endpo
 - Maximum total pixels: 1,048,576 (width × height)
 - Default: 1024×1024
 
-**Prompt limit:** 32,000 characters
+**Prompt limit:** 32,000 tokens
 
 > 💡 **Note:** Unlike FLUX.2, MAI-Image-2 uses a **synchronous API** — the response contains the generated image directly, with no 202 polling required.
 

@@ -25,13 +25,13 @@ internal static class MaiImage25FakeResponses
 }
 
 // ============================================================
-// Request body — OpenAI-style fields
+// Request body
 // ============================================================
 
 public class MaiImage25GeneratorRequestTests
 {
     [Fact]
-    public async Task GenerateAsync_Request_ContainsOpenAiStyleFields()
+    public async Task GenerateAsync_Request_ContainsExpectedFields()
     {
         var handler = new FakeHttpHandler(_ => MaiImage25FakeResponses.CreateSuccessResponse());
         using var httpClient = new HttpClient(handler);
@@ -68,10 +68,10 @@ public class MaiImage25GeneratorRequestTests
 
     [Theory]
     [InlineData(1024, 1024, "1024x1024")]
-    [InlineData(1536, 1024, "1536x1024")]
-    [InlineData(1024, 1536, "1024x1536")]
-    [InlineData(1920, 1080, "1536x1024")] // wide aspect → landscape
-    [InlineData(1080, 1920, "1024x1536")] // tall aspect → portrait
+    [InlineData(1536, 1024, "1024x1024")]
+    [InlineData(1024, 1536, "1024x1024")]
+    [InlineData(1920, 1080, "1024x1024")]
+    [InlineData(1080, 1920, "1024x1024")]
     public async Task GenerateAsync_MapsDimensionsToSupportedSize(int width, int height, string expectedSize)
     {
         var handler = new FakeHttpHandler(_ => MaiImage25FakeResponses.CreateSuccessResponse());
@@ -228,23 +228,37 @@ public class MaiImage25GeneratorValidationTests
 public class MaiImage25GeneratorEndpointTests
 {
     [Fact]
-    public void Constructor_BaseUrl_AppendsOpenAiImagesPath()
+    public void Constructor_BaseUrl_AppendsMaiImagesPath()
     {
         using var httpClient = new HttpClient();
         using var generator = new MaiImage25Generator(
             "https://myresource.services.ai.azure.com", "test-key", httpClient);
 
-        Assert.Contains("/openai/v1/images/generations", generator.Endpoint);
+        Assert.Contains("/mai/v1/images/generations", generator.Endpoint);
     }
 
     [Fact]
     public void Constructor_FullUrl_UsesAsIs()
     {
         using var httpClient = new HttpClient();
-        const string full = "https://myresource.services.ai.azure.com/openai/v1/images/generations";
+        const string full = "https://myresource.services.ai.azure.com/mai/v1/images/generations";
         using var generator = new MaiImage25Generator(full, "test-key", httpClient);
 
         Assert.Equal(full, generator.Endpoint);
+    }
+
+    [Fact]
+    public void Constructor_LegacyOpenAiPath_NormalizesToMaiImagesPath()
+    {
+        using var httpClient = new HttpClient();
+        using var generator = new MaiImage25Generator(
+            "https://myresource.services.ai.azure.com/openai/v1/images/generations",
+            "test-key",
+            httpClient);
+
+        Assert.Equal(
+            "https://myresource.services.ai.azure.com/mai/v1/images/generations",
+            generator.Endpoint);
     }
 
     [Fact]
@@ -256,7 +270,7 @@ public class MaiImage25GeneratorEndpointTests
 
         Assert.Contains(".services.ai.azure.com", generator.Endpoint);
         Assert.DoesNotContain(".openai.azure.com", generator.Endpoint);
-        Assert.Contains("/openai/v1/images/generations", generator.Endpoint);
+        Assert.Contains("/mai/v1/images/generations", generator.Endpoint);
     }
 
     [Fact]
@@ -267,7 +281,7 @@ public class MaiImage25GeneratorEndpointTests
             "https://myresource.services.ai.azure.com/", "test-key", httpClient);
 
         Assert.Equal(
-            "https://myresource.services.ai.azure.com/openai/v1/images/generations",
+            "https://myresource.services.ai.azure.com/mai/v1/images/generations",
             generator.Endpoint);
     }
 

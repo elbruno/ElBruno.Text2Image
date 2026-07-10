@@ -8,7 +8,7 @@ namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
 /// MAI-Image-2.5 / MAI-Image-2.5-Flash text-to-image generator using the Microsoft Foundry
-/// OpenAI-compatible images API (<c>/openai/v1/images/generations</c>).
+/// MAI image generations API (<c>/mai/v1/images/generations</c>).
 /// This is a cloud API model — no local ONNX models are needed.
 /// A single instance targets one model variant, selected via <see cref="ModelId"/>
 /// (e.g. <c>MAI-Image-2.5</c> or <c>MAI-Image-2.5-Flash</c>).
@@ -46,9 +46,9 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     /// <param name="endpoint">
     /// The endpoint URL. Can be either:
     /// <list type="bullet">
-    /// <item><description>A .services.ai.azure.com base URL (e.g., "https://myresource.services.ai.azure.com") — OpenAI images path appended automatically.</description></item>
+    /// <item><description>A .services.ai.azure.com base URL (e.g., "https://myresource.services.ai.azure.com") — MAI image generations path appended automatically.</description></item>
     /// <item><description>A .openai.azure.com base URL (e.g., "https://myresource.openai.azure.com") — auto-converted to .services.ai.azure.com.</description></item>
-    /// <item><description>A full OpenAI images URL (e.g., "https://myresource.services.ai.azure.com/openai/v1/images/generations") — used as-is.</description></item>
+    /// <item><description>A full MAI image generations URL (e.g., "https://myresource.services.ai.azure.com/mai/v1/images/generations") — used as-is.</description></item>
     /// </list>
     /// </param>
     /// <param name="apiKey">The API key for authentication.</param>
@@ -88,34 +88,36 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     }
 
     /// <summary>
-    /// Builds the full API endpoint URL for the OpenAI-compatible images API.
+    /// Builds the full API endpoint URL for the MAI image generations API.
     /// </summary>
     private static string BuildEndpointUrl(string endpoint)
     {
         endpoint = endpoint.TrimEnd('/');
         var uri = new Uri(endpoint);
 
-        // If the URL already contains the OpenAI images path, use as-is.
-        if (uri.AbsolutePath.Contains("/openai/v1/images/generations", StringComparison.OrdinalIgnoreCase))
+        // If the URL already contains the MAI image generations path, use as-is.
+        if (uri.AbsolutePath.Contains("/mai/v1/images/generations", StringComparison.OrdinalIgnoreCase))
         {
             return endpoint;
         }
 
-        // If base URL (path is empty or just "/"), build the full OpenAI images path.
+        // If base URL (path is empty or just "/"), build the full MAI image generations path.
         if (string.IsNullOrEmpty(uri.AbsolutePath) || uri.AbsolutePath == "/")
         {
             var baseUrl = ConvertToServicesEndpoint(endpoint);
-            return $"{baseUrl}/openai/v1/images/generations";
+            return $"{baseUrl}/mai/v1/images/generations";
         }
 
-        // If the path is a partial /openai prefix (e.g. ".../openai" or ".../openai/v1"),
+        // If the path is a partial /mai or legacy /openai prefix,
         // strip back to the host and rebuild the full path.
-        if (uri.AbsolutePath.Equals("/openai", StringComparison.OrdinalIgnoreCase) ||
+        if (uri.AbsolutePath.Equals("/mai", StringComparison.OrdinalIgnoreCase) ||
+            uri.AbsolutePath.StartsWith("/mai/", StringComparison.OrdinalIgnoreCase) ||
+            uri.AbsolutePath.Equals("/openai", StringComparison.OrdinalIgnoreCase) ||
             uri.AbsolutePath.StartsWith("/openai/", StringComparison.OrdinalIgnoreCase))
         {
             var baseUrl = $"{uri.Scheme}://{uri.Host}";
             baseUrl = ConvertToServicesEndpoint(baseUrl);
-            return $"{baseUrl}/openai/v1/images/generations";
+            return $"{baseUrl}/mai/v1/images/generations";
         }
 
         // Otherwise use as-is (user provided a complete custom URL).
@@ -124,7 +126,7 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
 
     /// <summary>
     /// Converts an .openai.azure.com hostname to .services.ai.azure.com,
-    /// which hosts the OpenAI-compatible API path used by MAI-Image-2.5.
+    /// which hosts the MAI API path used by MAI-Image-2.5.
     /// </summary>
     private static string ConvertToServicesEndpoint(string endpoint)
     {
@@ -147,12 +149,12 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
 
         if (includeEndpoint)
         {
-            return "\n\nHint: The endpoint URL may be incorrect. MAI-Image-2.5 uses the OpenAI-compatible API at /openai/v1/images/generations.\n" +
+            return "\n\nHint: The endpoint URL may be incorrect. MAI-Image-2.5 uses the MAI image generations API at /mai/v1/images/generations.\n" +
                    $"The resolved endpoint was: {_endpoint}\n" +
                    "Ensure you provide either:\n" +
                    "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
                    "  - A .openai.azure.com URL (auto-converted to .services.ai.azure.com)\n" +
-                   "  - A full OpenAI images URL (e.g., https://your-resource.services.ai.azure.com/openai/v1/images/generations)";
+                   "  - A full MAI image generations URL (e.g., https://your-resource.services.ai.azure.com/mai/v1/images/generations)";
         }
 
         return "\n\nHint: Failed to connect to image generation service. " +
@@ -177,26 +179,16 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     }
 
     /// <summary>
-    /// Maps the requested width/height to a supported MAI-Image-2.5 size string.
-    /// Supported sizes are 1024×1024 (square), 1024×1536 (portrait) and 1536×1024 (landscape).
+    /// Maps requests to the MAI-Image-2.5 maximum supported size (1024×1024).
     /// </summary>
     private static string MapToSizeString(int width, int height)
     {
-        if (width == 1024 && height == 1024) return "1024x1024";
-        if (width == 1024 && height == 1536) return "1024x1536";
-        if (width == 1536 && height == 1024) return "1536x1024";
-
-        double aspectRatio = (double)width / height;
-        if (aspectRatio > 1.2) return "1536x1024";
-        if (aspectRatio < 0.85) return "1024x1536";
         return "1024x1024";
     }
 
     private static (int width, int height) ParseSizeString(string size) => size switch
     {
         "1024x1024" => (1024, 1024),
-        "1024x1536" => (1024, 1536),
-        "1536x1024" => (1536, 1024),
         _ => (1024, 1024)
     };
 

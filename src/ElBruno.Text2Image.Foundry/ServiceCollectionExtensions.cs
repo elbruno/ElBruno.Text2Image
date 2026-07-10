@@ -71,7 +71,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds a MAI-Image-2.5 cloud API image generator to the service collection.
     /// Requires a Microsoft Foundry deployment endpoint and API key.
-    /// Uses the OpenAI-compatible images API and IHttpClientFactory for connection pooling.
+    /// Uses the MAI image generations API and IHttpClientFactory for connection pooling.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>
@@ -101,7 +101,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds a MAI-Image-2.5-Flash (speed-optimized) cloud API image generator to the service collection.
     /// Requires a Microsoft Foundry deployment endpoint and API key.
-    /// Uses the OpenAI-compatible images API and IHttpClientFactory for connection pooling.
+    /// Uses the MAI image generations API and IHttpClientFactory for connection pooling.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="endpoint">The Microsoft Foundry endpoint URL (base URL or full URL).</param>

@@ -16,7 +16,7 @@ internal abstract class FoundryMaiImage25AdapterBase : IProviderAdapter
     private readonly SecretResolver _secretResolver;
     private readonly ConfigStore _configStore;
 
-    private const int MaxTotalPixels = 1_572_864; // 1024×1536
+    private const int MaxTotalPixels = 1_048_576; // 1024×1024
 
     public abstract string Id { get; }
     public abstract string DisplayName { get; }
@@ -93,7 +93,9 @@ internal abstract class FoundryMaiImage25AdapterBase : IProviderAdapter
         var config = await _configStore.LoadAsync(ct);
         var providerCfg = config.Providers.GetValueOrDefault(Id);
 
-        var endpoint = providerCfg?.Endpoint;
+        // Command-line endpoint takes precedence over config and legacy secret storage.
+        req.ExtraOptions.TryGetValue("endpoint", out var endpoint);
+        endpoint ??= providerCfg?.Endpoint;
         if (string.IsNullOrWhiteSpace(endpoint))
         {
             endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);

@@ -95,8 +95,9 @@ internal sealed class FoundryMaiImage2Adapter : IProviderAdapter
         var config = await _configStore.LoadAsync(ct);
         var providerCfg = config.Providers.GetValueOrDefault(Id);
         
-        // Read endpoint from config first, fallback to secrets for backward compat
-        var endpoint = providerCfg?.Endpoint;
+        // Command-line endpoint takes precedence over config and legacy secret storage.
+        req.ExtraOptions.TryGetValue("endpoint", out var endpoint);
+        endpoint ??= providerCfg?.Endpoint;
         if (string.IsNullOrWhiteSpace(endpoint))
         {
             endpoint = await _secretResolver.ResolveAsync(Id, "endpoint", null, ct);

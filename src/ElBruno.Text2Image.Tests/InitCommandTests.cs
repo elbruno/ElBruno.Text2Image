@@ -323,6 +323,87 @@ public class InitCommandTests : IDisposable
         Assert.Contains("text-to-image", githubContent, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Init_WritesCurrentProviderAndCommandSpecifications()
+    {
+        var command = new InitCommand();
+        var exitCode = command.Execute(CreateContext(), new InitCommand.Settings { Target = "github" });
+
+        Assert.Equal(0, exitCode);
+
+        var content = File.ReadAllText(Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md"));
+        Assert.Contains("foundry-gpt-image-1p5", content);
+        Assert.Contains("foundry-gpt-image-2", content);
+        Assert.Contains("`--out`, `-o`", content);
+        Assert.Contains("t2i upgrade", content);
+        Assert.Contains("binary updates", content);
+        Assert.Contains("<!-- t2i:managed-skill -->", content);
+    }
+
+    [Fact]
+    public void Upgrade_RefreshesExistingT2iSkill_WithoutCreatingMissingOrUnrelatedFiles()
+    {
+        var githubSkillPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var claudeSkillPath = Path.Combine(_testDir, ".claude", "skills", "t2i", "SKILL.md");
+        var unrelatedPath = Path.Combine(_testDir, ".github", "skills", "other", "SKILL.md");
+
+        Directory.CreateDirectory(Path.GetDirectoryName(githubSkillPath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(unrelatedPath)!);
+        File.WriteAllText(
+            githubSkillPath,
+            "---\nname: t2i\n---\n# t2i — Text-to-Image CLI Skill\n\nOUTDATED T2I SKILL");
+        File.WriteAllText(unrelatedPath, "USER-OWNED SKILL");
+
+        var command = new UpgradeCommand();
+        var exitCode = command.Execute(CreateContext(), new UpgradeCommand.Settings { Target = "all" });
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("OUTDATED T2I SKILL", File.ReadAllText(githubSkillPath));
+        Assert.Contains("foundry-gpt-image-2", File.ReadAllText(githubSkillPath));
+        Assert.False(File.Exists(claudeSkillPath));
+        Assert.Equal("USER-OWNED SKILL", File.ReadAllText(unrelatedPath));
+    }
+
+    [Fact]
+    public void Upgrade_SkipsUnmanagedT2iSkill()
+    {
+        var githubSkillPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(githubSkillPath)!);
+        File.WriteAllText(githubSkillPath, "USER-OWNED T2I SKILL");
+
+        var command = new UpgradeCommand();
+        var exitCode = command.Execute(CreateContext(), new UpgradeCommand.Settings { Target = "github" });
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("USER-OWNED T2I SKILL", File.ReadAllText(githubSkillPath));
+    }
+
+    [Fact]
+    public void Upgrade_DoesNotRewriteCurrentManagedSkill()
+    {
+        var initCommand = new InitCommand();
+        Assert.Equal(0, initCommand.Execute(CreateContext(), new InitCommand.Settings { Target = "github" }));
+
+        var githubSkillPath = Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md");
+        var knownTimestamp = new DateTime(2020, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        File.SetLastWriteTimeUtc(githubSkillPath, knownTimestamp);
+
+        var upgradeCommand = new UpgradeCommand();
+        var exitCode = upgradeCommand.Execute(CreateContext(), new UpgradeCommand.Settings { Target = "github" });
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(knownTimestamp, File.GetLastWriteTimeUtc(githubSkillPath));
+    }
+
+    [Fact]
+    public void Upgrade_ReturnsError_WhenTargetIsInvalid()
+    {
+        var command = new UpgradeCommand();
+        var exitCode = command.Execute(CreateContext(), new UpgradeCommand.Settings { Target = "invalid-target" });
+
+        Assert.Equal(1, exitCode);
+    }
+
     private static CommandContext CreateContext()
     {
         var remaining = new FakeRemainingArguments();

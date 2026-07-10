@@ -619,6 +619,78 @@ public class ProviderAdapterTests : IDisposable
 
     #endregion
 
+    #region MAI-2.5 Adapter Tests
+
+    [Fact]
+    public async Task MaiImage25Adapter_GenerateAsync_UsesEndpointOverride()
+    {
+        string? requestedEndpoint = null;
+        var (adapter, secretStore, configStore) = CreateMaiImage25AdapterWithDependencies(request =>
+        {
+            requestedEndpoint = request.RequestUri!.ToString();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{"data":[{"b64_json":"iVBORw=="}]}""",
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var config = new AppConfig();
+        config.Providers["foundry-mai25"] = new ProviderConfig
+        {
+            Endpoint = "https://configured.services.ai.azure.com",
+            Model = "MAI-Image-2.5"
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync("foundry-mai25", "apiKey", "test-key", CancellationToken.None);
+
+        var request = new GenerationRequest(
+            "test",
+            1024,
+            1024,
+            20,
+            Path.Combine(_tempDir, "override.png"),
+            new Dictionary<string, string?>
+            {
+                ["endpoint"] = "https://override.services.ai.azure.com"
+            });
+
+        var result = await adapter.GenerateAsync(request, null, CancellationToken.None);
+
+        Assert.StartsWith("https://override.services.ai.azure.com/mai/v1/images/generations", requestedEndpoint);
+        Assert.Equal("https://override.services.ai.azure.com", result.Metadata["endpoint"]);
+    }
+
+    [Fact]
+    public async Task MaiImage25Adapter_GenerateAsync_RejectsPixelCountAboveMaximum()
+    {
+        var (adapter, secretStore, configStore) = CreateMaiImage25AdapterWithDependencies();
+
+        var config = new AppConfig();
+        config.Providers["foundry-mai25"] = new ProviderConfig
+        {
+            Endpoint = "https://configured.services.ai.azure.com",
+            Model = "MAI-Image-2.5"
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync("foundry-mai25", "apiKey", "test-key", CancellationToken.None);
+
+        var request = new GenerationRequest(
+            "test",
+            1025,
+            1024,
+            20,
+            Path.Combine(_tempDir, "too-large.png"),
+            new Dictionary<string, string?>());
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => adapter.GenerateAsync(request, null, CancellationToken.None));
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private IProviderAdapter CreateFlux2Adapter()
@@ -703,6 +775,18 @@ public class ProviderAdapterTests : IDisposable
         
         var adapter = new FoundryGptImage2Adapter(httpClientFactory, secretResolver, configStore);
         return (adapter, secretResolver, secretStore, configStore);
+    }
+
+    private (FoundryMaiImage25Adapter Adapter, FakeSecretStore SecretStore, ConfigStore ConfigStore)
+        CreateMaiImage25AdapterWithDependencies(Func<HttpRequestMessage, HttpResponseMessage>? createHttpHandler = null)
+    {
+        var httpClientFactory = new FakeHttpClientFactory(createHttpHandler);
+        var secretStore = new FakeSecretStore();
+        var secretResolver = new SecretResolver(new List<ISecretStore> { secretStore });
+        var configStore = new ConfigStore();
+
+        var adapter = new FoundryMaiImage25Adapter(httpClientFactory, secretResolver, configStore);
+        return (adapter, secretStore, configStore);
     }
 
     private SecretResolver CreateSecretResolver()

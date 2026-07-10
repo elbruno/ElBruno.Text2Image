@@ -1,7 +1,7 @@
 ---
 name: t2i
-version: 1.2.1
-description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry providers (FLUX.2, MAI-Image-2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+version: 1.3.0
+description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2/2.5, GPT-Image-1.5/2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
 author: Bruno Capuano <bruno@elbruno.com>
 license: MIT
 tags:
@@ -14,7 +14,7 @@ tags:
   - dotnet
 inputs:
   - prompt: string, required, text description of the image to generate
-  - provider: string, optional, image generation provider (foundry-flux2 or foundry-mai2), default foundry-flux2
+  - provider: string, optional, configured image generation provider (foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, or foundry-gpt-image-2)
   - output: string, optional, output file path for the generated image
   - width: integer, optional, image width in pixels, default 512
   - height: integer, optional, image height in pixels, default 512
@@ -23,10 +23,12 @@ outputs:
   - image: PNG file saved to specified output path or auto-generated filename
   - status: generation success/failure with error details on failure
 requirements:
-  - dotnet-tool: ElBruno.Text2Image.Cli >=1.2.0
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.3.0
   - runtime: '.NET 8.0 or .NET 10.0'
 entrypoint: t2i
 ---
+
+<!-- t2i:managed-skill -->
 
 # t2i — Text-to-Image CLI Skill
 
@@ -48,7 +50,7 @@ Activate this skill when:
 
 | Command | Purpose | Key Flags |
 |---------|---------|-----------|
-| `t2i "<prompt>"` | Generate image from text | `--provider`, `--output`, `--width`, `--height`, `--steps` |
+| `t2i "<prompt>"` | Generate image from text | `--provider`, `--out`, `--width`, `--height`, `--steps` |
 | `t2i config` | Interactive setup wizard | `show`, `set`, `remove`, `path` |
 | `t2i providers` | List available providers | None |
 | `t2i secrets set <provider>` | Configure API credentials | `--field` |
@@ -57,15 +59,16 @@ Activate this skill when:
 | `t2i secrets test <provider>` | Test provider connectivity | None |
 | `t2i doctor` | Run full diagnostics | None |
 | `t2i init` | Setup skill files in repo | `--target`, `--keep-existing` |
-| `t2i update` | Check for and install updates | `--auto` |
+| `t2i upgrade` | Refresh existing t2i skill files only | `--target` |
+| `t2i update` | Check for and install t2i binary updates | `--auto` |
 | `t2i version` | Show version info | None |
 
 ### Generate Command Flags
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--provider` | Provider to use (foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash) | foundry-flux2 |
-| `--output`, `-o` | Output file path | `generated-<timestamp>.png` |
+| `--provider` | Configured provider to use | From configuration |
+| `--out`, `-o` | Output file path | `<prompt-slug>-<timestamp>.png` |
 | `--width`, `-w` | Image width in pixels | 512 |
 | `--height` | Image height in pixels | 512 |
 | `--steps`, `-s` | Number of inference steps | 20 |
@@ -96,24 +99,29 @@ t2i secrets test <provider>      # Test provider connection
 ### Init Command Targets
 
 ```bash
-t2i init                 # Create or update skill files for GitHub and Claude (default: update existing)
+t2i init                 # Create or update skill files for GitHub and Claude
 t2i init --target github # Create/update .github/skills/t2i/SKILL.md only
 t2i init --target claude # Create/update .claude/skills/t2i/SKILL.md only
 t2i init --keep-existing # Skip files that already exist (do not update)
+
+t2i upgrade                 # Refresh only existing t2i skill files
+t2i upgrade --target github # Refresh only the existing GitHub skill
 ```
 
 ## Providers
 
-Two cloud providers available in the **Lite** edition:
+Six cloud providers are available in the **Lite** edition:
 
 | Provider | Model | URL | Best For |
 |----------|-------|-----|----------|
 | `foundry-flux2` | FLUX.2 Pro | Microsoft Foundry | High-quality images, fine-grained control, batch jobs, production use |
 | `foundry-mai2` | MAI-Image-2 | Microsoft Foundry | Fast iteration, rich prompt understanding, synchronous API, rapid prototyping |
-| `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | Latest high-quality generation, synchronous OpenAI-compatible API |
-| `foundry-mai25-flash` | MAI-Image-2.5-Flash | Microsoft Foundry | Speed-optimized, low-latency generation for real-time / prototyping |
+| `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | Latest high-quality generation via the MAI image generations API (up to 1,048,576 pixels) |
+| `foundry-mai25-flash` | MAI-Image-2.5-Flash | Microsoft Foundry | Speed-optimized MAI image generation (up to 1,048,576 pixels) |
+| `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | High-quality Azure OpenAI image generation |
+| `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | Latest Azure OpenAI image generation |
 
-**Default:** `foundry-flux2` if user doesn't specify `--provider`.
+**Default:** Configure a default provider with `t2i config`; otherwise pass `--provider`.
 
 ### Provider Decision Tree
 
@@ -129,9 +137,13 @@ Two cloud providers available in the **Lite** edition:
 - Your prompts are conversational or complex
 - You prefer synchronous API responses
 
+**Choose a GPT-Image provider if:**
+- Your Azure OpenAI deployment uses `gpt-image-1.5` or `gpt-image-2`
+- You need Azure OpenAI's image-generation service
+
 ### Required Configuration
 
-Both providers require:
+All providers require:
 - **endpoint** — Microsoft Foundry API endpoint (set via `t2i config set <provider>.endpoint <url>`)
 - **apiKey** — API key for authentication (set securely via `t2i secrets set <provider>`)
 
@@ -144,7 +156,7 @@ Both providers require:
 t2i config
 
 # Step 2: Enter API credentials when prompted
-# (CLI stores securely via DPAPI on Windows, encrypted on macOS/Linux)
+# (CLI stores via DPAPI on Windows and a permissions-restricted local file on macOS/Linux)
 
 # Step 3: Verify connection
 t2i doctor
@@ -162,21 +174,21 @@ t2i "a robot painting a landscape"
 t2i "a cyberpunk city at night, neon lights"
 
 # With custom filename
-t2i "a robot waving" --output my-robot.png
+t2i "a robot waving" --out my-robot.png
 
 # Specific provider and dimensions
 t2i "minimalist line art of a cat" \
   --provider foundry-mai2 \
   --width 1024 \
   --height 1024 \
-  --output cat.png
+  --out cat.png
 
 # High-quality image with more inference steps
 t2i "photorealistic mountain landscape" \
   --steps 50 \
   --width 1920 \
   --height 1080 \
-  --output landscape.png
+  --out landscape.png
 ```
 
 **Output:** Images are saved to the specified path or auto-generated filename `<prompt-slug>-<timestamp>.png`
@@ -195,7 +207,7 @@ prompts=(
 for i in "${!prompts[@]}"; do
   prompt="${prompts[$i]}"
   echo "Generating $((i+1))/${#prompts[@]}: $prompt"
-  t2i "$prompt" --output "image-$(printf '%02d' $((i+1))).png"
+  t2i "$prompt" --out "image-$(printf '%02d' $((i+1))).png"
   sleep 2  # rate limiting
 done
 ```
@@ -212,7 +224,7 @@ for ($i = 0; $i -lt $prompts.Count; $i++) {
     $prompt = $prompts[$i]
     Write-Host "Generating $($i+1)/$($prompts.Count): $prompt"
     $index = ($i + 1).ToString("D2")
-    & t2i $prompt --output "image-$index.png"
+    & t2i $prompt --out "image-$index.png"
     Start-Sleep -Seconds 2  # rate limiting
 }
 ```
@@ -243,7 +255,7 @@ jobs:
           T2I_FOUNDRY_FLUX2_API_KEY: ${{ secrets.T2I_API_KEY }}
         run: |
           t2i "futuristic tech product hero image" \
-            --output assets/hero.png \
+            --out assets/hero.png \
             --width 1920 \
             --height 1080
 
@@ -314,10 +326,10 @@ t2i doctor  # Check current status
 - Store locally via DPAPI (Windows) or encrypted files (macOS/Linux)
 
 ### 3. Use Predictable Filenames in Scripts
-When scripting batch jobs, always specify `--output`:
+When scripting batch jobs, always specify `--out`:
 ```bash
 # GOOD: predictable, parseable filenames
-t2i "prompt" --output "image-01.png"
+t2i "prompt" --out "image-01.png"
 
 # BAD: random filenames are hard to track
 t2i "prompt"  # generates "prompt-slug-20240315-143022.png"
@@ -338,14 +350,17 @@ t2i doctor  # One command checks everything:
             # - Secret store health
 ```
 
-### 6. Suggest `t2i init` for New Repos & Updates
-When onboarding a new project or updating skill files:
+### 6. Suggest `t2i init` for New Repos and `t2i upgrade` for Updates
+When onboarding a new project:
 ```bash
-t2i init  # Creates or updates skill files for AI agents
+t2i init  # Creates skill files for AI agents
           # - .github/skills/t2i/SKILL.md
           # - .claude/skills/t2i/SKILL.md
-          # By default, existing files are updated with latest content
+          # Existing t2i skills are updated by default
           # Use --keep-existing to preserve existing files
+
+# Refresh existing t2i skills only; unrelated files are never modified
+t2i upgrade
 ```
 
 ### 7. Respect Rate Limits
@@ -353,7 +368,7 @@ When generating multiple images:
 ```bash
 # Add delays between requests
 for prompt in prompts; do
-  t2i "$prompt" --output "image-$i.png"
+  t2i "$prompt" --out "image-$i.png"
   sleep 2  # 2 second delay
 done
 ```
@@ -367,7 +382,7 @@ Once you run `t2i init`, GitHub Copilot CLI can discover and use this skill auto
 **Example prompts:**
 ```text
 "Generate a logo image and save it as logo.png"
-→ Copilot will run: t2i "company logo, modern design" --output logo.png
+→ Copilot will run: t2i "company logo, modern design" --out logo.png
 
 "Create test images for my gallery using different styles"
 → Copilot will batch generate with various prompts
@@ -452,7 +467,7 @@ jobs:
         env:
           T2I_FOUNDRY_FLUX2_ENDPOINT: ${{ secrets.T2I_ENDPOINT }}
           T2I_FOUNDRY_FLUX2_API_KEY: ${{ secrets.T2I_API_KEY }}
-        run: t2i "test image" --output output.png
+        run: t2i "test image" --out output.png
 ```
 
 **Azure Pipelines:**
@@ -464,7 +479,7 @@ steps:
     custom: 'tool'
     arguments: 'install -g ElBruno.Text2Image.Cli'
 
-- script: t2i "azure logo" --output logo.png
+- script: t2i "azure logo" --out logo.png
   env:
     T2I_FOUNDRY_FLUX2_ENDPOINT: $(T2I_ENDPOINT)
     T2I_FOUNDRY_FLUX2_API_KEY: $(T2I_API_KEY)
@@ -525,7 +540,7 @@ t2i secrets set foundry-flux2
 **Solution:**
 ```bash
 t2i providers  # List all available providers
-# Valid providers: foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash
+# Valid providers: foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2
 ```
 
 #### Error: "Missing secret 'apiKey' for provider"
@@ -572,7 +587,7 @@ ls -la output-dir/  # Linux/macOS
 Get-Acl output-dir\  # Windows
 
 # Use absolute path
-t2i "prompt" --output "/full/path/to/image.png"
+t2i "prompt" --out "/full/path/to/image.png"
 ```
 
 ### Diagnostic Commands
@@ -659,7 +674,7 @@ User: "Create a logo for my startup"
 Agent: 
 1. Checks: "Have you configured t2i? Run 't2i doctor' to verify."
 2. User confirms setup is done
-3. Agent runs: t2i "modern startup logo, minimalist design" --output logo.png
+3. Agent runs: t2i "modern startup logo, minimalist design" --out logo.png
 4. Verifies output exists: ls -la logo.png
 ```
 
@@ -677,7 +692,7 @@ Agent:
 ```text
 User: "Generate 5 test images"
 Agent:
-1. Creates script with --output for each image
+1. Creates script with --out for each image
 2. Adds sleep delays between requests
 3. Runs script and verifies all outputs exist
 4. Reports: "Generated 5 images: image-01.png through image-05.png"
@@ -711,7 +726,7 @@ t2i secrets set foundry-flux2
 
 # ✓ Specify output paths
 for i in {1..10}; do
-  t2i "prompt" --output "image-$(printf '%02d' $i).png"
+  t2i "prompt" --out "image-$(printf '%02d' $i).png"
   sleep 2
 done
 
@@ -720,7 +735,7 @@ t2i doctor && t2i "prompt"
 
 # ✓ Add delays
 for prompt in prompts; do
-  t2i "$prompt" --output "img-$i.png"
+  t2i "$prompt" --out "img-$i.png"
   sleep 2
 done
 ```

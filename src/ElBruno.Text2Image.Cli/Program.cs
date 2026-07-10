@@ -53,7 +53,7 @@ app.Configure(config =>
 
     // Update command
     config.AddCommand<UpdateCommand>("update")
-        .WithDescription("Check for and install updates to the t2i tool")
+        .WithDescription("Check for and install binary updates to the t2i tool")
         .WithExample(new[] { "update" })
         .WithExample(new[] { "update", "--auto" });
 
@@ -63,6 +63,12 @@ app.Configure(config =>
         .WithExample(new[] { "init" })
         .WithExample(new[] { "init", "--target", "github" })
         .WithExample(new[] { "init", "--keep-existing" });
+
+    // Skill upgrade command
+    config.AddCommand<UpgradeCommand>("upgrade")
+        .WithDescription("Refresh existing t2i skill files without creating new files")
+        .WithExample(new[] { "upgrade" })
+        .WithExample(new[] { "upgrade", "--target", "github" });
 });
 
 return await app.RunAsync(args);

@@ -53,8 +53,7 @@
 | **FLUX.2 Pro/Flex** | Microsoft Foundry | Photorealistic + text-heavy design |
 | **MAI-Image-2** | Microsoft Foundry | High-quality generation |
 | **MAI-Image-2.5 / 2.5-Flash** | Microsoft Foundry | High-quality + speed-optimized |
-| **GPT-Image-1.5** | Azure OpenAI (DALL-E 3) | Creative & reliable |
-| **GPT-Image-2** | Azure OpenAI | Next-gen quality |
+| **GPT-Image-1.5** | Azure OpenAI | High-fidelity image generation |
 | **GPT-Image-2** | Azure OpenAI | Next-gen quality |
 
 ### 🖥️ Local Models (ONNX Runtime, works offline)
@@ -137,8 +136,8 @@ t2i --provider foundry-mai25 "a photograph of a red fox in an autumn forest"
 # MAI-Image-2.5-Flash (speed-optimized)
 t2i --provider foundry-mai25-flash "a quick concept sketch of a city skyline"
 
-# GPT-Image-1.5 (DALL-E 3 via Azure OpenAI)
-t2i --provider azure-openai-gpt-image-15 "an impressionist painting of a garden"
+# GPT-Image-1.5 via Azure OpenAI
+t2i --provider foundry-gpt-image-1p5 "an impressionist painting of a garden"
 
 # GPT-Image-2 (next-gen model, may take 3-4 minutes)
 t2i --provider gpt-image-2 "a sci-fi space station in orbit" --timeout 300
@@ -291,7 +290,7 @@ await result.SaveAsync("mai-image25-output.png");
 using ElBruno.Text2Image;
 using ElBruno.Text2Image.Foundry;
 
-// Create a GPT-Image-1.5 (DALL-E 3) generator using Azure OpenAI
+// Create a GPT-Image-1.5 generator using Azure OpenAI
 using var httpClient = new HttpClient();
 using var generator = new GptImage1p5Generator(
     endpoint: "https://your-resource.openai.azure.com/",
@@ -303,10 +302,10 @@ using var generator = new GptImage1p5Generator(
 var result = await generator.GenerateAsync("a serene mountain landscape at sunset, oil painting style");
 await result.SaveAsync("gpt-image-1p5-output.png");
 
-// Request specific size (1024×1024, 1792×1024, or 1024×1792)
+// Request a specific size supported by your deployment.
 var landscape = await generator.GenerateAsync(
     "a panoramic view of a futuristic cityscape",
-    new ImageGenerationOptions { Width = 1792, Height = 1024 });
+    new ImageGenerationOptions { Width = 1536, Height = 1024 });
 ```
 
 ### Basic Usage — Cloud (GPT-Image-2 via Azure OpenAI)
@@ -453,7 +452,7 @@ public class MyService(IImageGenerator generator)
 | **MAI-Image-2** | `MaiImage2Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2.5** | `MaiImage25Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2.5-Flash** | `MaiImage25Generator` | Microsoft Foundry | Excellent (fast) | ✅ Available |
-| **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI (DALL-E 3) | Excellent | ✅ Available |
+| **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI | Excellent | ✅ Available |
 | **GPT-Image-2** | `GptImage2Generator` | Azure OpenAI | Excellent | ✅ Available |
 See [docs/model-support.md](docs/model-support.md) for detailed model comparison.
 
@@ -475,7 +474,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-11-gpu-diagnostics](src/samples/scenario-11-gpu-diagnostics/) | Show CPU vs GPU provider detection and diagnostics |
 | [scenario-13-mai-image2-cloud](src/samples/scenario-13-mai-image2-cloud/) | MAI-Image-2 cloud API via Microsoft Foundry |
 | [scenario-18-mai-image25-cloud](src/samples/scenario-18-mai-image25-cloud/) | MAI-Image-2.5 / MAI-Image-2.5-Flash cloud API via Microsoft Foundry |
-| [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 (DALL-E 3) cloud API via Azure OpenAI |
+| [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 cloud API via Azure OpenAI |
 | [scenario-16-gpt-image-2-cloud](src/samples/scenario-16-gpt-image-2-cloud/) | GPT-Image-2 cloud API via Azure OpenAI |
 
 ### Run a Sample
@@ -508,7 +507,7 @@ See [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) for full Foundry setu
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/mai-image-2-setup-guide.md](docs/mai-image-2-setup-guide.md) — Microsoft Foundry MAI-Image-2 setup
 - [docs/mai-image-2.5-setup-guide.md](docs/mai-image-2.5-setup-guide.md) — Microsoft Foundry MAI-Image-2.5 / 2.5-Flash setup
-- [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 (DALL-E 3) setup
+- [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
