@@ -92,9 +92,11 @@ public class SecretResolverTests
         Assert.Contains(inspection, i => i.Field == "apiKey" && i.Store == "file");
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task SetAsync_PrefersDpapi_WhenAvailable_AndNoExplicitChoice()
     {
+        Skip.IfNot(OperatingSystem.IsWindows(), "Windows DPAPI is not available in this environment");
+
         var dpapiStore = new FakeSecretStore { Name = "dpapi", IsAvailable = true };
         var fileStore = new FakeSecretStore { Name = "file" };
 

@@ -777,9 +777,11 @@ public class CommandExecutionTests : IDisposable
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task ConfigCommand_SetAll_ApiKey_AppliesToAllCloudProvidersAsSecret()
     {
+        Skip.IfNot(OperatingSystem.IsWindows(), "Windows DPAPI is not available in this environment");
+
         var httpClientFactory = new FakeHttpClientFactory();
         var fakeStore = new FakeSecretStore { Name = "dpapi" };
         var resolver = new SecretResolver(new List<ISecretStore> { fakeStore });
