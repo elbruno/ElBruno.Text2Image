@@ -13,6 +13,18 @@
 
 ---
 
+## What's New
+
+| Release | Highlights |
+|---------|------------|
+| **1.5.0 (planned)** | Planned: add the `ElBruno.Text2Image.BlazorComponents` Razor Class Library and interactive Blazor sample |
+| **1.4.0** | Added MAI-Image-2.5 and MAI-Image-2.5-Flash support |
+| **1.4.0** | Added Foundry batch-generation sample and current cloud-provider setup guidance |
+| **1.4.0** | Added `t2i upgrade` for refreshing managed Copilot and Claude Code skill files |
+
+See the [Blazor components guide](docs/blazor-components.md) and
+[sample documentation](src/samples/BlazorText2ImageDemo/README.md).
+
 ## 📦 NuGet Packages
 
 | Package | Version | Downloads |
@@ -23,6 +35,7 @@
 | **ElBruno.Text2Image.Cuda** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cuda?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cuda?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cuda) |
 | **ElBruno.Text2Image.DirectML** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.DirectML?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.DirectML) |
 | **ElBruno.Text2Image.Cli** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.Cli?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.Cli) |
+| **ElBruno.Text2Image.BlazorComponents** | [![NuGet](https://img.shields.io/nuget/vpre/ElBruno.Text2Image.BlazorComponents?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.BlazorComponents) | [![Downloads](https://img.shields.io/nuget/dt/ElBruno.Text2Image.BlazorComponents?style=flat-square)](https://www.nuget.org/packages/ElBruno.Text2Image.BlazorComponents) |
 
 ---
 
@@ -74,7 +87,8 @@
 ✅ **Cross-platform** — Windows, Linux, macOS  
 ✅ **Auto GPU detection** — CUDA → DirectML → CPU fallback  
 ✅ **Unified interface** — Same API for cloud and local models  
-✅ **Microsoft.Extensions.AI** — Implements `IImageGenerator` standard  
+✅ **Native `IImageGenerator`** — One API for local and cloud generators
+✅ **Blazor UI building blocks** — Prompt, gallery, progress, backend, and caption components
 
 ---
 
@@ -199,6 +213,9 @@ dotnet add package ElBruno.Text2Image.DirectML
 
 # FLUX.2 cloud via Microsoft Foundry (no GPU needed)
 dotnet add package ElBruno.Text2Image.Foundry
+
+# Reusable Blazor UI components (add to a Blazor app)
+dotnet add package ElBruno.Text2Image.BlazorComponents
 ```
 
 > **Note:** These are mutually exclusive — install only ONE, following the same pattern as `Microsoft.ML.OnnxRuntime` vs `Microsoft.ML.OnnxRuntime.Gpu`.
@@ -476,6 +493,7 @@ See [docs/model-support.md](docs/model-support.md) for detailed model comparison
 | [scenario-18-mai-image25-cloud](src/samples/scenario-18-mai-image25-cloud/) | MAI-Image-2.5 / MAI-Image-2.5-Flash cloud API via Microsoft Foundry |
 | [scenario-15-gpt-image-1p5-cloud](src/samples/scenario-15-gpt-image-1p5-cloud/) | GPT-Image-1.5 cloud API via Azure OpenAI |
 | [scenario-16-gpt-image-2-cloud](src/samples/scenario-16-gpt-image-2-cloud/) | GPT-Image-2 cloud API via Azure OpenAI |
+| [BlazorText2ImageDemo](src/samples/BlazorText2ImageDemo/) | Interactive gallery for the five Blazor components |
 
 ### Run a Sample
 
@@ -509,6 +527,7 @@ See [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) for full Foundry setu
 - [docs/mai-image-2.5-setup-guide.md](docs/mai-image-2.5-setup-guide.md) — Microsoft Foundry MAI-Image-2.5 / 2.5-Flash setup
 - [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
+- [docs/blazor-components.md](docs/blazor-components.md) — Blazor component API and integration guide
 - [docs/onnx-conversion-guide.md](docs/onnx-conversion-guide.md) — Step-by-step ONNX conversion guide
 - [docs/publishing.md](docs/publishing.md) — NuGet publishing guide (Trusted Publishing / OIDC)
 - [docs/version-management.md](docs/version-management.md) — **Version bumping and unified versioning workflow**

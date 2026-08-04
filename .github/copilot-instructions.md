@@ -37,6 +37,14 @@ When opening a PR:
 - If this is a 🟡 needs-review task, add to the PR description: `⚠️ This task was flagged as "needs review" — please have a squad member review before merging.`
 - Follow any project conventions in `.squad/decisions.md`
 
+## NuGet release documentation rule
+
+Before each NuGet release, validate that the package list, installation
+commands, feature links, and API examples in `README.md` match the shipped
+packages. Update the top-level **What's New** table with the notable release
+changes, keeping it capped at five entries, and update `CHANGELOG.md` (and any
+release notes intended for the release) in the same change.
+
 ## Decisions
 
 If you make a decision that affects other team members, write it to:

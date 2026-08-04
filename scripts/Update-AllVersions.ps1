@@ -10,6 +10,7 @@
   - ElBruno.Text2Image.Cuda
   - ElBruno.Text2Image.Cpu
   - ElBruno.Text2Image.DirectML
+  - ElBruno.Text2Image.BlazorComponents
   
   All packages MUST have identical version numbers. When one is updated, all are updated.
 
@@ -61,7 +62,8 @@ $projectFiles = @(
     "src\ElBruno.Text2Image.Foundry\ElBruno.Text2Image.Foundry.csproj",
     "src\ElBruno.Text2Image.Cuda\ElBruno.Text2Image.Cuda.csproj",
     "src\ElBruno.Text2Image.Cpu\ElBruno.Text2Image.Cpu.csproj",
-    "src\ElBruno.Text2Image.DirectML\ElBruno.Text2Image.DirectML.csproj"
+    "src\ElBruno.Text2Image.DirectML\ElBruno.Text2Image.DirectML.csproj",
+    "src\ElBruno.Text2Image.BlazorComponents\ElBruno.Text2Image.BlazorComponents.csproj"
 )
 
 Write-Host "🔄 Updating all packages to version $Version..." -ForegroundColor Cyan

@@ -1,0 +1,14 @@
+@if (Images.Count == 0) { <div class="alert alert-secondary">No generated images yet.</div> }
+else {
+<div class="row g-3 t2i-gallery">
+@foreach (var image in Images) { <div class="@($"col-12 col-md-{Math.Max(1, 12 / Math.Clamp(Columns, 1, 6))}")"><div class="card h-100 shadow-sm"><button class="btn p-0 border-0" @onclick="() => _selected = image"><img class="card-img-top" src="@GetSource(image)" alt="@image.Prompt" /></button>@if (ShowMetadata) { <div class="card-body small"><div>@image.Prompt</div><div class="text-muted">Seed: @image.Seed · @image.InferenceTimeMs ms · @image.ModelName</div></div>}<a class="btn btn-sm btn-outline-primary m-2" href="@GetSource(image)" download="generated-image.png">Download</a></div></div> }
+</div>
+}
+@if (_selected is not null) { <div class="modal d-block t2i-modal" tabindex="-1" @onclick="() => _selected = null"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content" @onclick:stopPropagation><div class="modal-body"><img class="img-fluid" src="@GetSource(_selected)" alt="@_selected.Prompt" /></div><button class="btn btn-secondary m-3" @onclick="() => _selected = null">Close</button></div></div></div> }
+@code {
+    [Parameter] public IReadOnlyList<ImageGenerationResult> Images { get; set; } = Array.Empty<ImageGenerationResult>();
+    [Parameter] public int Columns { get; set; } = 3;
+    [Parameter] public bool ShowMetadata { get; set; } = true;
+    private ImageGenerationResult? _selected;
+    private static string GetSource(ImageGenerationResult image) => $"data:image/png;base64,{Convert.ToBase64String(image.ImageBytes)}";
+}

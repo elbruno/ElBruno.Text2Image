@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <RootNamespace>ElBruno.Text2Image.BlazorComponents</RootNamespace>
+    <PackageId>ElBruno.Text2Image.BlazorComponents</PackageId>
+    <Version>1.5.0</Version>
+    <Authors>Bruno Capuano</Authors>
+    <Description>Reusable Blazor components for ElBruno.Text2Image generation experiences.</Description>
+    <PackageTags>blazor;text-to-image;image-generation;ai;stable-diffusion</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/elbruno/ElBruno.Text2Image</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elbruno/ElBruno.Text2Image</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />
+  </ItemGroup>
+</Project>

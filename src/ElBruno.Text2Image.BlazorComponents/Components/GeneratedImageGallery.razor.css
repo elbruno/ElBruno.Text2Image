@@ -1,0 +1,2 @@
+.t2i-gallery img { aspect-ratio: 1; object-fit: cover; cursor: pointer; }
+.t2i-modal { background: rgba(0,0,0,.65); }

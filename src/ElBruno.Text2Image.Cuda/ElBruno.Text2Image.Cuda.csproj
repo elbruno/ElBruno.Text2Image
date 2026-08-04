@@ -5,7 +5,7 @@
 
     <!-- NuGet Package Metadata -->
     <PackageId>ElBruno.Text2Image.Cuda</PackageId>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Authors>Bruno Capuano</Authors>
     <Description>NVIDIA CUDA GPU acceleration for ElBruno.Text2Image. Install this package instead of ElBruno.Text2Image to enable CUDA-based inference for Stable Diffusion image generation on NVIDIA GPUs.</Description>
     <PackageTags>text-to-image;stable-diffusion;image-generation;onnx;onnxruntime;cuda;gpu;nvidia;ai</PackageTags>

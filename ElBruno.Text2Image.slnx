@@ -6,6 +6,8 @@
     <Project Path="src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj" />
     <Project Path="src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj" />
     <Project Path="src/ElBruno.Text2Image.Foundry/ElBruno.Text2Image.Foundry.csproj" />
+    <Project Path="src/ElBruno.Text2Image.BlazorComponents/ElBruno.Text2Image.BlazorComponents.csproj" />
+    <Project Path="src/ElBruno.Text2Image.BlazorComponents.Tests/ElBruno.Text2Image.BlazorComponents.Tests.csproj" />
     <Project Path="src/ElBruno.Text2Image.Tests/ElBruno.Text2Image.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
@@ -23,5 +25,6 @@
     <Project Path="src/samples/scenario-13-mai-image2-cloud/scenario-13-mai-image2-cloud.csproj" />
     <Project Path="src/samples/scenario-14-gpu-stress-test/scenario-14-gpu-stress-test.csproj" />
     <Project Path="src/samples/scenario-18-mai-image25-cloud/scenario-18-mai-image25-cloud.csproj" />
+    <Project Path="src/samples/BlazorText2ImageDemo/BlazorText2ImageDemo.csproj" />
   </Folder>
 </Solution>

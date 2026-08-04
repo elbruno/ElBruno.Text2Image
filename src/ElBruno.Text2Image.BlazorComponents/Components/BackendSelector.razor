@@ -1,0 +1,12 @@
+<fieldset class="t2i-backend-selector"><legend class="form-label">Execution provider</legend>@foreach (var option in Options) { <div class="form-check"><input class="form-check-input" type="radio" name="@_name" id="@($"{_name}-{option}")" value="@option" checked="@(Selected == option)" disabled="@(!IsAvailable(option))" @onchange="() => Select(option)" /><label class="form-check-label" for="@($"{_name}-{option}")">@option @if (ShowAvailabilityBadge) { <span class="badge @(IsAvailable(option) ? "text-bg-success" : "text-bg-secondary")">@(IsAvailable(option) ? "available" : "unavailable")</span> }</label></div>}</fieldset>
+@code {
+    [Inject] public Services.Text2ImageState State { get; set; } = default!;
+    [Parameter] public EventCallback<ExecutionProvider> OnBackendChanged { get; set; }
+    [Parameter] public bool ShowAvailabilityBadge { get; set; } = true;
+    private ExecutionProvider Selected => State.Backend;
+    private readonly string _name = $"backend-{Guid.NewGuid():N}";
+    private static readonly ExecutionProvider[] Options = Enum.GetValues<ExecutionProvider>();
+    [Parameter] public IReadOnlySet<ExecutionProvider>? AvailableProviders { get; set; }
+    private bool IsAvailable(ExecutionProvider backend) => AvailableProviders?.Contains(backend) ?? backend is ExecutionProvider.Auto or ExecutionProvider.Cpu;
+    private async Task Select(ExecutionProvider backend) { if (!IsAvailable(backend)) return; State.Backend = backend; await OnBackendChanged.InvokeAsync(backend); }
+}
