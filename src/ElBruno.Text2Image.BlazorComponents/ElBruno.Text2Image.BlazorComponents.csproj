@@ -3,7 +3,7 @@
     <TargetFrameworks>net8.0</TargetFrameworks>
     <RootNamespace>ElBruno.Text2Image.BlazorComponents</RootNamespace>
     <PackageId>ElBruno.Text2Image.BlazorComponents</PackageId>
-    <Version>1.5.0</Version>
+    <Version>1.5.1</Version>
     <Authors>Bruno Capuano</Authors>
     <Description>Reusable Blazor components for ElBruno.Text2Image generation experiences.</Description>
     <PackageTags>blazor;text-to-image;image-generation;ai;stable-diffusion</PackageTags>
