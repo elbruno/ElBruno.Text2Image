@@ -127,11 +127,13 @@ public class ErrorRecoveryTests
 
     #region Disk Full / Permission Errors
 
-    [Fact]
+    [SkippableFact]
     public void DiskFull_ConfigSave_ThrowsIOException()
     {
         // Simulate disk full by writing to invalid path (e.g., root with no permissions)
         var invalidPath = OperatingSystem.IsWindows() ? "C:\\Windows\\System32\\test-config.json" : "/root/test-config.json";
+        Skip.If(CanWriteToDirectory(invalidPath),
+            $"The test environment can write to '{Path.GetDirectoryName(invalidPath)}'; protected-directory assumptions do not apply.");
 
         var exception = Assert.Throws<UnauthorizedAccessException>(() =>
         {
@@ -203,7 +205,7 @@ public class ErrorRecoveryTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task DiskFull_ImageSave_ThrowsIOException()
     {
         var handler = new FakeHttpHandler(_ => CreateSuccessResponse());
@@ -214,6 +216,8 @@ public class ErrorRecoveryTests
 
         // Attempting to write to invalid path should throw
         var invalidPath = OperatingSystem.IsWindows() ? "C:\\Windows\\System32\\test.png" : "/root/test.png";
+        Skip.If(CanWriteToDirectory(invalidPath),
+            $"The test environment can write to '{Path.GetDirectoryName(invalidPath)}'; protected-directory assumptions do not apply.");
 
         var exception = Assert.Throws<UnauthorizedAccessException>(() =>
         {
@@ -224,6 +228,44 @@ public class ErrorRecoveryTests
     }
 
     #endregion
+
+    private static bool CanWriteToDirectory(string targetPath)
+    {
+        var directory = Path.GetDirectoryName(targetPath);
+        if (string.IsNullOrEmpty(directory))
+        {
+            return false;
+        }
+
+        var probePath = Path.Combine(directory, $".t2i-write-probe-{Guid.NewGuid():N}");
+        try
+        {
+            File.WriteAllText(probePath, "probe");
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(probePath))
+                {
+                    File.Delete(probePath);
+                }
+            }
+            catch
+            {
+                // Best effort cleanup; write access was already established.
+            }
+        }
+    }
 
     #region Malformed API Response Recovery
 

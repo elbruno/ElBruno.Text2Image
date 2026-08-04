@@ -1,0 +1,26 @@
+<div class="t2i-caption-viewer">
+    @if (!string.IsNullOrWhiteSpace(ImageUrl))
+    {
+        <img class="img-fluid rounded" src="@ImageUrl" alt="@Caption" />
+    }
+    <div class="mt-2">
+        @if (Caption is not null)
+        {
+            <p>@Caption</p>
+        }
+        @if (OnRecaption.HasDelegate)
+        {
+            <button class="btn btn-outline-secondary" disabled="@_busy" @onclick="Recaption">
+                @(_busy ? "Captioning…" : "Re-Caption")
+            </button>
+        }
+    </div>
+</div>
+@code {
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public EventCallback<string> OnRecaption { get; set; }
+    [Parameter] public bool AutoCaption { get; set; } = false;
+    private bool _busy;
+    private async Task Recaption() { if (!OnRecaption.HasDelegate || string.IsNullOrWhiteSpace(ImageUrl)) return; _busy = true; try { await OnRecaption.InvokeAsync(ImageUrl); } finally { _busy = false; } }
+}

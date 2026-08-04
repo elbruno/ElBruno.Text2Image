@@ -1,0 +1,3 @@
+@page "/backend"
+<h2>BackendSelector</h2><BackendSelector OnBackendChanged="value => _selected = value" /><p class="mt-2">Selected: @_selected</p>
+@code { private ExecutionProvider _selected = ExecutionProvider.Auto; }

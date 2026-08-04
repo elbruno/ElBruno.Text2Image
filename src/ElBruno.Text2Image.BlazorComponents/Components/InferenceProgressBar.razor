@@ -1,0 +1,13 @@
+@implements IDisposable
+<div class="t2i-progress"><div class="progress" role="progressbar" aria-valuenow="@(Percent >= 0 ? Percent : null)" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar progress-bar-striped progress-bar-animated @(Percent < 0 ? "indeterminate" : "")" style="@(Percent >= 0 ? $"width:{Percent}%" : "width:100%")">@(Percent >= 0 ? $"{Current} / {Total}" : "Generating…")</div></div>@if (ShowEta && Progress.EstimatedRemaining is not null) { <small class="text-muted">About @Progress.EstimatedRemaining.Value.TotalSeconds.ToString("0")s remaining</small> }</div>
+@code {
+    [Inject] public Services.Text2ImageState State { get; set; } = default!;
+    [Parameter] public bool ShowEta { get; set; } = true;
+    private InferenceProgress Progress => State.Progress;
+    private int? Current => Progress.CurrentStep;
+    private int? Total => Progress.TotalSteps;
+    private int Percent => Current is null || Total is null || Total == 0 ? -1 : Math.Clamp(Current.Value * 100 / Total.Value, 0, 100);
+    protected override void OnInitialized() => State.Changed += Refresh;
+    private void Refresh() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.Changed -= Refresh;
+}

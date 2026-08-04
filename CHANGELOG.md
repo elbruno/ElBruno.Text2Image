@@ -2,6 +2,20 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.5.0] — Planned (release date TBD)
+
+### Added
+- `ElBruno.Text2Image.BlazorComponents`, a .NET 8 Razor Class Library with five
+  reusable components for image-generation interfaces, plus the
+  `BlazorText2ImageDemo` sample.
+
+### Documentation
+- Added the Blazor component API guide, including native `IImageGenerator`
+  integration and optional caption/progress behavior.
+- Added a release-documentation rule requiring validation of package/API
+  guidance and an updated, five-entry maximum What's New table for every
+  NuGet release.
+
 ## [1.4.0] — 2026-07-10
 
 ### Added
