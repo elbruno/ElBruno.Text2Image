@@ -1,6 +1,6 @@
 ---
 name: t2i
-version: 1.5.1
+version: 1.5.2
 description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2.5/2.5-Flash, GPT-Image-1.5/2/2.5). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
 author: Bruno Capuano <bruno@elbruno.com>
 license: MIT
