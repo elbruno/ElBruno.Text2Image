@@ -1,6 +1,10 @@
 # t2i skill integration
 
 `t2i init` makes the CLI discoverable to GitHub Copilot and Claude Code by writing the same `SKILL.md` guidance to their workspace skill directories.
+The repository's portable skill strategy uses `.github/skills/t2i/` and
+`.claude/skills/t2i/`; `.agents/skills/` is not generated because this project
+does not have an established `.agents` consumer. The embedded CLI skill is the
+authoritative source for both managed copies.
 
 ## Install
 

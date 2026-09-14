@@ -1,7 +1,7 @@
 ---
 name: t2i
-version: 1.3.0
-description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2/2.5, GPT-Image-1.5/2). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+version: 1.5.1
+description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2.5/2.5-Flash, GPT-Image-1.5/2/2.5). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
 author: Bruno Capuano <bruno@elbruno.com>
 license: MIT
 tags:
@@ -14,7 +14,7 @@ tags:
   - dotnet
 inputs:
   - prompt: string, required, text description of the image to generate
-  - provider: string, optional, configured image generation provider (foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, or foundry-gpt-image-2)
+  - provider: string, optional, configured image generation provider (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, or foundry-gpt-image-25-flare)
   - output: string, optional, output file path for the generated image
   - width: integer, optional, image width in pixels, default 512
   - height: integer, optional, image height in pixels, default 512
@@ -23,7 +23,7 @@ outputs:
   - image: PNG file saved to specified output path or auto-generated filename
   - status: generation success/failure with error details on failure
 requirements:
-  - dotnet-tool: ElBruno.Text2Image.Cli >=1.3.0
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.5.1
   - runtime: '.NET 8.0 or .NET 10.0'
 entrypoint: t2i
 ---
@@ -110,16 +110,18 @@ t2i upgrade --target github # Refresh only the existing GitHub skill
 
 ## Providers
 
-Six cloud providers are available in the **Lite** edition:
+Seven current cloud providers are available in the **Lite** edition. One retired provider ID remains only as a migration entry:
 
 | Provider | Model | URL | Best For |
 |----------|-------|-----|----------|
 | `foundry-flux2` | FLUX.2 Pro | Microsoft Foundry | High-quality images, fine-grained control, batch jobs, production use |
-| `foundry-mai2` | MAI-Image-2 | Microsoft Foundry | Fast iteration, rich prompt understanding, synchronous API, rapid prototyping |
+| `foundry-mai2` | MAI-Image-2 (retired) | Microsoft Foundry | Migration entry only; fails clearly; do not use |
 | `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | Latest high-quality generation via the MAI image generations API (up to 1,048,576 pixels) |
 | `foundry-mai25-flash` | MAI-Image-2.5-Flash | Microsoft Foundry | Speed-optimized MAI image generation (up to 1,048,576 pixels) |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | High-quality Azure OpenAI image generation |
-| `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | Latest Azure OpenAI image generation |
+| `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | Compatibility provider |
+| `foundry-gpt-image-25-sunburst` | GPT-Image-2.5-Sunburst | Azure OpenAI | Latest high-fidelity generation |
+| `foundry-gpt-image-25-flare` | GPT-Image-2.5-Flare | Azure OpenAI | Latest high-fidelity generation |
 
 **Default:** Configure a default provider with `t2i config`; otherwise pass `--provider`.
 
@@ -131,7 +133,7 @@ Six cloud providers are available in the **Lite** edition:
 - Fine-grained control over generation parameters is important
 - You can wait 10-30 seconds for results
 
-**Choose `foundry-mai2` if:**
+**Do not choose `foundry-mai2`:** it is retired; migrate to `foundry-mai25` or `foundry-mai25-flash`.
 - You need fast iteration (< 10 seconds)
 - You're prototyping or experimenting
 - Your prompts are conversational or complex
@@ -140,6 +142,18 @@ Six cloud providers are available in the **Lite** edition:
 **Choose a GPT-Image provider if:**
 - Your Azure OpenAI deployment uses `gpt-image-1.5` or `gpt-image-2`
 - You need Azure OpenAI's image-generation service
+
+**Choose `foundry-gpt-image-25-sunburst` if:**
+- Your Azure OpenAI deployment uses `gpt-image-2.5-sunburst`
+- You want the newest GPT-Image quality for detailed, high-fidelity final assets
+- You can wait longer per request than GPT-Image-1.5 (allow up to 300 seconds)
+
+**Choose `foundry-gpt-image-25-flare` if:**
+- Your Azure OpenAI deployment uses `gpt-image-2.5-flare`
+- You want GPT-Image-2.5 quality tuned for faster, iterative generation
+- You are producing drafts or variations before a final Sunburst render
+
+**GPT-Image-2.5 availability caveat:** Sunburst and Flare are preview models with limited region and access-level availability. Confirm your region, access level, and deployment name in the Azure OpenAI portal before configuring them, and keep `foundry-gpt-image-1p5` available as a fallback provider.
 
 ### Required Configuration
 
@@ -178,7 +192,7 @@ t2i "a robot waving" --out my-robot.png
 
 # Specific provider and dimensions
 t2i "minimalist line art of a cat" \
-  --provider foundry-mai2 \
+  --provider foundry-mai25 \
   --width 1024 \
   --height 1024 \
   --out cat.png
@@ -338,7 +352,7 @@ t2i "prompt"  # generates "prompt-slug-20240315-143022.png"
 ### 4. Default to foundry-flux2
 If the user doesn't specify a provider:
 - Use `foundry-flux2` for best quality
-- Only suggest `foundry-mai2` if speed is critical or user prefers it
+- Suggest `foundry-mai25-flash` when speed is critical
 
 ### 5. Run `t2i doctor` for Diagnostics
 If the user reports generation failures or API errors:
@@ -495,7 +509,7 @@ steps:
   ```gitignore
   # Windows
   %LOCALAPPDATA%/t2i/secrets.dpapi
-  
+
   # macOS/Linux
   ~/.config/t2i/secrets.json
   ```
@@ -540,7 +554,7 @@ t2i secrets set foundry-flux2
 **Solution:**
 ```bash
 t2i providers  # List all available providers
-# Valid providers: foundry-flux2, foundry-mai2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2
+# Valid current providers: foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare
 ```
 
 #### Error: "Missing secret 'apiKey' for provider"
@@ -671,7 +685,7 @@ If you're still stuck:
 **Example 1: User asks to generate an image**
 ```text
 User: "Create a logo for my startup"
-Agent: 
+Agent:
 1. Checks: "Have you configured t2i? Run 't2i doctor' to verify."
 2. User confirms setup is done
 3. Agent runs: t2i "modern startup logo, minimalist design" --out logo.png
@@ -746,3 +760,6 @@ done
 - **GitHub repository:** [elbruno/ElBruno.Text2Image](https://github.com/elbruno/ElBruno.Text2Image)
 - **Package:** [NuGet: ElBruno.Text2Image.Cli](https://www.nuget.org/packages/ElBruno.Text2Image.Cli/)
 - **Report issues:** [GitHub Issues](https://github.com/elbruno/ElBruno.Text2Image/issues)
+
+
+`foundry-mai2` is retained only as a migration entry. MAI-Image-2 and MAI-Image-2e are retired and fail with a migration message; they never silently fall back.

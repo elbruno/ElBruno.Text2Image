@@ -1,4 +1,5 @@
 #if NET10_0_OR_GREATER
+using System.ComponentModel;
 using System.Net;
 using System.Text;
 using Xunit;
@@ -60,6 +61,27 @@ public class CommandExecutionTests : IDisposable
     }
 
     #region VersionCommand Tests
+
+    [Fact]
+    public void GenerateCommand_ProviderHelpListsAllRegisteredProviders()
+    {
+        var description = typeof(GenerateCommand.Settings)
+            .GetProperty(nameof(GenerateCommand.Settings.Provider))!
+            .GetCustomAttributes(typeof(DescriptionAttribute), inherit: true)
+            .Cast<DescriptionAttribute>()
+            .Single()
+            .Description;
+
+        Assert.NotNull(description);
+        Assert.Contains("foundry-flux2", description);
+        Assert.Contains("foundry-mai25", description);
+        Assert.Contains("foundry-mai25-flash", description);
+        Assert.Contains("foundry-gpt-image-1p5", description);
+        Assert.Contains("foundry-gpt-image-2", description);
+        Assert.Contains("foundry-gpt-image-25-sunburst", description);
+        Assert.Contains("foundry-gpt-image-25-flare", description);
+        Assert.Contains("foundry-mai2 (retired; migration only)", description);
+    }
 
     [Fact]
     public void VersionCommand_ReturnsSuccess()

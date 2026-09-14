@@ -123,7 +123,8 @@ public class ProviderSpecificTests : IDisposable
         var adapter = CreateMaiImage2Adapter(configStore, secretStore);
         var health = await adapter.CheckAsync(CancellationToken.None);
 
-        Assert.True(health.Ok);
+        Assert.False(health.Ok);
+        Assert.Contains("retired", health.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -151,8 +152,8 @@ public class ProviderSpecificTests : IDisposable
         var adapter = CreateMaiImage2Adapter(configStore, secretStore);
         var health = await adapter.CheckAsync(CancellationToken.None);
 
-        // Should still pass - model defaults are internal
-        Assert.True(health.Ok);
+        Assert.False(health.Ok);
+        Assert.Contains("retired", health.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -167,7 +168,7 @@ public class ProviderSpecificTests : IDisposable
         config.Providers["foundry-gpt-image-1p5"] = new ProviderConfig
         {
             Endpoint = "https://eastus.api.cognitive.microsoft.com",
-            Model = "dall-e-3"
+            Model = "gpt-image-1.5"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
         await secretStore.SetAsync("foundry-gpt-image-1p5", "apiKey", "test-key", CancellationToken.None);
@@ -186,7 +187,7 @@ public class ProviderSpecificTests : IDisposable
         config.Providers["foundry-gpt-image-2"] = new ProviderConfig
         {
             Endpoint = "https://westus.api.cognitive.microsoft.com",
-            Model = "dall-e-3-hd"
+            Model = "gpt-image-2"
         };
         await configStore.SaveAsync(config, CancellationToken.None);
         await secretStore.SetAsync("foundry-gpt-image-2", "apiKey", "test-key", CancellationToken.None);

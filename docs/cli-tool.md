@@ -16,11 +16,12 @@ Update with either `dotnet tool update --global ElBruno.Text2Image.Cli` or `t2i 
 | Provider ID | Default model | Service |
 |---|---|---|
 | `foundry-flux2` | `FLUX.2-pro` | Microsoft Foundry |
-| `foundry-mai2` | `MAI-Image-2` | Microsoft Foundry |
+| `foundry-mai2` | `MAI-Image-2` (retired) | Microsoft Foundry |
 | `foundry-mai25` | `MAI-Image-2.5` | Microsoft Foundry |
 | `foundry-mai25-flash` | `MAI-Image-2.5-Flash` | Microsoft Foundry |
+| `foundry-gpt-image-25-sunburst` | `GPT-Image-2.5-Sunburst` | Azure OpenAI |
+| `foundry-gpt-image-25-flare` | `GPT-Image-2.5-Flare` | Azure OpenAI |
 | `foundry-gpt-image-1p5` | `gpt-image-1.5` | Azure OpenAI |
-| `foundry-gpt-image-2` | `gpt-image-2` | Azure OpenAI |
 
 Run `t2i providers` to see the providers in the installed tool and their configuration status.
 
@@ -54,8 +55,8 @@ t2i "a robot painting a landscape" --out robot.png
 # Use a provider explicitly.
 t2i "a product landing page with readable headline text" --provider foundry-flux2 --width 1024 --height 1024 --out landing-page.png
 
-# GPT-Image-2 can take several minutes.
-t2i "a space station in orbit" --provider foundry-gpt-image-2 --timeout 300 --out station.png
+# GPT-Image-2.5-Sunburst can take several minutes.
+t2i "a space station in orbit" --provider foundry-gpt-image-25-sunburst --timeout 300 --out station.png
 ```
 
 The generation command is the default command: there is no `t2i generate` subcommand. `--out` (or `-o`) sets the output path. Without it, `t2i` creates a timestamped PNG name from the prompt.
@@ -88,7 +89,9 @@ $env:T2I_FOUNDRY_FLUX2_APIKEY = "<api-key>"
 t2i "a poster for a developer conference" --provider foundry-flux2 --out poster.png
 ```
 
-Provider names use underscores in environment variables, so the GPT-Image-2 key is `T2I_FOUNDRY_GPT_IMAGE_2_APIKEY`.
+Provider names use underscores in environment variables, so the GPT-Image-2.5-Sunburst key is `T2I_FOUNDRY_GPT_IMAGE_25_SUNBURST_APIKEY`.
+Configure its endpoint with `T2I_FOUNDRY_GPT_IMAGE_25_SUNBURST_ENDPOINT`; use the corresponding
+`T2I_FOUNDRY_GPT_IMAGE_25_FLARE_ENDPOINT` and `T2I_FOUNDRY_GPT_IMAGE_25_FLARE_APIKEY` for Flare.
 
 On Windows, locally stored secrets use DPAPI; plaintext fallback is intentionally blocked. On Linux and macOS, they are stored in a user-owned plaintext file. Use environment variables or your CI system's secret store for unattended runs.
 
@@ -97,7 +100,7 @@ On Windows, locally stored secrets use DPAPI; plaintext fallback is intentionall
 ```bash
 t2i doctor
 t2i secrets list
-t2i secrets test foundry-mai2
+t2i secrets test foundry-mai25
 ```
 
 `doctor` is informational and exits with code `0`, including when a provider is not configured. FLUX and MAI provider checks normally validate local configuration; set `T2I_DETAILED_HEALTH_CHECKS=1` to enable their detailed network checks.

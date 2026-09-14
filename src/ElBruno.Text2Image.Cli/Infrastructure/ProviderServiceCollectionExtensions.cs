@@ -21,6 +21,8 @@ public static class ProviderServiceCollectionExtensions
         services.AddSingleton<IProviderAdapter, FoundryMaiImage25FlashAdapter>();
         services.AddSingleton<IProviderAdapter, FoundryGptImage1p5Adapter>();
         services.AddSingleton<IProviderAdapter, FoundryGptImage2Adapter>();
+        services.AddSingleton<IProviderAdapter, FoundryGptImage25SunburstAdapter>();
+        services.AddSingleton<IProviderAdapter, FoundryGptImage25FlareAdapter>();
         
         services.AddSingleton<ProviderRegistry>();
         

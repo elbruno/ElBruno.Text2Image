@@ -53,6 +53,9 @@ internal sealed class FoundryGptImage1p5Adapter : IProviderAdapter
                 Reason: "Missing endpoint/apiKey — run: t2i config");
         }
 
+        if (!IsHttpsEndpoint(endpoint))
+            return new ProviderHealth(false, "Azure OpenAI endpoint must be an absolute HTTPS URL.");
+
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
@@ -100,6 +103,8 @@ internal sealed class FoundryGptImage1p5Adapter : IProviderAdapter
             throw new InvalidOperationException(
                 "Missing endpoint/apiKey — run: t2i config");
         }
+        ValidateEndpoint(endpoint);
+        RejectRetiredModel(modelName);
 
         var sw = Stopwatch.StartNew();
 
@@ -144,5 +149,22 @@ internal sealed class FoundryGptImage1p5Adapter : IProviderAdapter
                 ["provider"] = "foundry-gpt-image-1p5",
                 ["endpoint"] = endpoint
             });
+    }
+
+    private static void ValidateEndpoint(string endpoint)
+    {
+        if (!IsHttpsEndpoint(endpoint))
+            throw new ArgumentException("Azure OpenAI endpoint must be an absolute HTTPS URL.", nameof(endpoint));
+    }
+
+    private static bool IsHttpsEndpoint(string endpoint)
+        => Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) &&
+           string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+
+    private static void RejectRetiredModel(string modelName)
+    {
+        if (modelName.StartsWith("dall-e", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"'{modelName}' is retired. Configure an Azure OpenAI GPT-Image deployment instead.");
     }
 }

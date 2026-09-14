@@ -2,16 +2,34 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
-## [1.5.0] — Planned (release date TBD)
+## [1.5.2] — Candidate (2026-09-14)
+
+### Candidate release
+- Consolidates GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support, retired-provider
+  migration handling, GPT image sizing fixes, managed skill updates, and the
+  `ElBruno.Text2Image.BlazorComponents` Razor Class Library for the 1.5.2 candidate.
+
+## [1.5.1] — 2026-09-14
 
 ### Added
+- GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support through a shared
+  parameterized Azure OpenAI generator and CLI providers.
 - `ElBruno.Text2Image.BlazorComponents`, a .NET 8 Razor Class Library with five
   reusable components for image-generation interfaces, plus the
   `BlazorText2ImageDemo` sample.
 
+### Changed
+- Retired `foundry-mai2` as a migration-only provider that reports a clear
+  migration error instead of silently falling back.
+- GPT image requests now map requested dimensions to the supported square,
+  landscape, or portrait output sizes instead of sending unsupported sizes.
+
 ### Documentation
 - Added the Blazor component API guide, including native `IImageGenerator`
   integration and optional caption/progress behavior.
+- Updated the managed GitHub Copilot and Claude Code `t2i` skills to version
+  1.5.1 with current providers, lifecycle guidance, command reference, and
+  `t2i upgrade` workflows.
 - Added a release-documentation rule requiring validation of package/API
   guidance and an updated, five-entry maximum What's New table for every
   NuGet release.

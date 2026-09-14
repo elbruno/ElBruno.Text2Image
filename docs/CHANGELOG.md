@@ -1,8 +1,36 @@
 # Changelog
 
+## [1.5.2] - Candidate (2026-09-14)
+
+### Candidate release
+- Consolidates GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support, retired-provider
+  migration handling, GPT image sizing fixes, managed skill updates, and the
+  `ElBruno.Text2Image.BlazorComponents` Razor Class Library for the 1.5.2 candidate.
+
+## [1.5.1] - 2026-09-14
+
+### Added
+- GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support through a shared,
+  parameterized Azure OpenAI generator and CLI providers.
+- `ElBruno.Text2Image.BlazorComponents`, a .NET 8 Razor Class Library with five
+  reusable components for image-generation interfaces, plus the
+  `BlazorText2ImageDemo` sample.
+
+### Changed
+- Retired `foundry-mai2` as a migration-only provider that reports a clear
+  migration error instead of silently falling back.
+- GPT image requests now map requested dimensions to the supported square,
+  landscape, or portrait output sizes instead of sending unsupported sizes.
+
+### Documentation
+- Updated the managed GitHub Copilot and Claude Code `t2i` skills to version
+  1.5.1 with current providers, lifecycle guidance, command reference, and
+  `t2i upgrade` workflows.
+
 ## [1.1.0] - 2026-04-22
 
 ### Added
+- GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support through a shared parameterized Azure OpenAI generator and CLI providers.
 - **Comprehensive test coverage expansion** — 206 new tests across 12 test suites
   - Phase 3A: 102 CLI command, provider adapter, and end-to-end integration tests
   - Phase 3B: 54 provider-specific, secret storage, config validation, TUI, and utility tests
@@ -69,6 +97,7 @@
 ## [0.10.0] - 2025-04-20
 
 ### Added
+- GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support through a shared parameterized Azure OpenAI generator and CLI providers.
 - **GPT-Image-1.5 (DALL-E 3) image generation support** via Azure OpenAI Service
   - New `GptImage1p5Generator` class for Foundry library
   - New `FoundryGptImage1p5Adapter` for CLI integration
@@ -92,6 +121,11 @@
 - DPAPI secret storage on Windows for secure credential handling
 - Health check validation for Azure OpenAI connectivity
 - Clear error messages for authentication, deployment, and network failures
+
+### Changed
+- GPT image requests now send mapped portrait or landscape sizes instead of always sending 1024x1024.
+- MAI-Image-2 and MAI-Image-2e are retired. The legacy `foundry-mai2` entry reports a migration error and never falls back silently.
+- DALL-E deployment names are rejected by GPT compatibility providers.
 
 ### Documentation
 - Added "Choosing a model" section in README with CLI examples

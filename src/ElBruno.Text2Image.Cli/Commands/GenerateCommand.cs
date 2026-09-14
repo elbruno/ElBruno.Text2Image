@@ -33,7 +33,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         public string Prompt { get; init; } = string.Empty;
 
         [CommandOption("--provider")]
-        [Description("Provider to use (foundry-flux2, foundry-mai2)")]
+        [Description("Provider to use (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare, or foundry-mai2 (retired; migration only))")]
         public string? Provider { get; init; }
 
         [CommandOption("--out|-o")]

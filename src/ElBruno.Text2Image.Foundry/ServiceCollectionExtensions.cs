@@ -157,4 +157,48 @@ public static class ServiceCollectionExtensions
         });
         return services;
     }
+
+    /// <summary>
+    /// Adds a parameterized GPT-Image-2.5 generator. Use a deployment for
+    /// GPT-Image-2.5-Sunburst or GPT-Image-2.5-Flare.
+    /// </summary>
+    public static IServiceCollection AddGptImage25Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? deploymentName = null)
+    {
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+            return new GptImage25Generator(endpoint, apiKey, httpClient, modelName, deploymentName);
+        });
+        return services;
+    }
+
+    /// <summary>Adds a GPT-Image-2.5-Sunburst generator.</summary>
+    public static IServiceCollection AddGptImage25SunburstGenerator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? deploymentName = null)
+        => services.AddGptImage25Generator(
+            endpoint,
+            apiKey,
+            "GPT-Image-2.5-Sunburst",
+            deploymentName ?? "gpt-image-2.5-sunburst");
+
+    /// <summary>Adds a GPT-Image-2.5-Flare generator.</summary>
+    public static IServiceCollection AddGptImage25FlareGenerator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? deploymentName = null)
+        => services.AddGptImage25Generator(
+            endpoint,
+            apiKey,
+            "GPT-Image-2.5-Flare",
+            deploymentName ?? "gpt-image-2.5-flare");
 }

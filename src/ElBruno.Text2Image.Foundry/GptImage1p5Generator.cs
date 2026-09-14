@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Azure;
 using Azure.AI.OpenAI;
+using System.ClientModel.Primitives;
 using OpenAI.Images;
 using ElBruno.Text2Image;
 using Microsoft.Extensions.AI;
@@ -67,7 +68,13 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
             _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds.Value);
         }
         
-        var client = new AzureOpenAIClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
+        var client = new AzureOpenAIClient(
+            new Uri(_endpoint),
+            new AzureKeyCredential(_apiKey),
+            new AzureOpenAIClientOptions
+            {
+                Transport = new HttpClientPipelineTransport(httpClient)
+            });
         _imageClient = client.GetImageClient(_deploymentName);
     }
 
@@ -96,16 +103,6 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         progress?.Report(new DownloadProgress { Stage = DownloadStage.Complete, PercentComplete = 100, Message = "Cloud model" });
         return Task.CompletedTask;
     }
-    private static string MapToSizeString(int width, int height)
-    {
-        if (width == 1024 && height == 1024) return "1024x1024";
-        if (width == 1024 && height == 1536) return "1024x1536";
-        if (width == 1536 && height == 1024) return "1536x1024";
-        double aspectRatio = (double)width / height;
-        if (aspectRatio > 1.2) return "1536x1024";
-        if (aspectRatio < 0.85) return "1024x1536";
-        return "1024x1024";
-    }
     /// <summary>
     /// Generates an image based on the provided prompt and options.
     /// </summary>
@@ -121,14 +118,11 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
         if (prompt.Length > MaxPromptLength)
             throw new ArgumentOutOfRangeException(nameof(prompt), $"Prompt must be {MaxPromptLength} characters or fewer");
         options ??= new ImageGenerationOptions();
-        int width = options.Width > 0 ? options.Width : 1024;
-        int height = options.Height > 0 ? options.Height : 1024;
-        var mappedSizeString = MapToSizeString(width, height);
-        var (mappedWidth, mappedHeight) = ParseSizeString(mappedSizeString);
+        var mapped = GptImageSupport.MapSize(options.Width, options.Height);
         
         var generationOptions = new OpenAI.Images.ImageGenerationOptions
         {
-            Size = GeneratedImageSize.W1024xH1024
+            Size = mapped.Size
         };
         
         var sw = Stopwatch.StartNew();
@@ -143,12 +137,11 @@ public sealed class GptImage1p5Generator : IImageGenerator, Microsoft.Extensions
             ModelName = _modelDisplayName,
             Prompt = prompt,
             Seed = options.Seed ?? 0,
-            Width = mappedWidth,
-            Height = mappedHeight,
+            Width = mapped.Width,
+            Height = mapped.Height,
             InferenceTimeMs = sw.ElapsedMilliseconds
         };
     }
-    private static (int width, int height) ParseSizeString(string size) => size switch { "1024x1024" => (1024, 1024), "1024x1536" => (1024, 1536), "1536x1024" => (1536, 1024), _ => (1024, 1024) };
     async Task<ImageGenerationResponse> Microsoft.Extensions.AI.IImageGenerator.GenerateAsync(ImageGenerationRequest imageRequest, Microsoft.Extensions.AI.ImageGenerationOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(imageRequest);

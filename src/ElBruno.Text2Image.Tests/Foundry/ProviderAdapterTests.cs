@@ -164,7 +164,7 @@ public class ProviderAdapterTests : IDisposable
 
         Assert.False(health.Ok);
         Assert.NotNull(health.Reason);
-        Assert.Contains("Missing", health.Reason);
+        Assert.Contains("retired", health.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -183,7 +183,8 @@ public class ProviderAdapterTests : IDisposable
 
         var health = await adapter.CheckAsync(CancellationToken.None);
 
-        Assert.True(health.Ok);
+        Assert.False(health.Ok);
+        Assert.Contains("retired", health.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -192,7 +193,7 @@ public class ProviderAdapterTests : IDisposable
         var adapter = CreateMai2Adapter();
 
         Assert.Equal("foundry-mai2", adapter.Id);
-        Assert.Equal("MAI-Image-2 (Cloud)", adapter.DisplayName);
+        Assert.Equal("MAI-Image-2 (retired)", adapter.DisplayName);
         Assert.Equal(ProviderKind.Cloud, adapter.Kind);
         Assert.Contains("apiKey", adapter.RequiredSecrets);
         Assert.Contains("endpoint", adapter.RequiredFields);
@@ -210,7 +211,7 @@ public class ProviderAdapterTests : IDisposable
             OutputPath: Path.Combine(_tempDir, "test.png"),
             ExtraOptions: new Dictionary<string, string?>());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<NotSupportedException>(
             async () => await adapter.GenerateAsync(request, null, CancellationToken.None));
     }
 
@@ -302,6 +303,140 @@ public class ProviderAdapterTests : IDisposable
         Assert.Equal("GPT-Image-2 (Azure OpenAI)", adapter.DisplayName);
         Assert.Equal(ProviderKind.Cloud, adapter.Kind);
         Assert.Contains("apiKey", adapter.RequiredSecrets);
+    }
+
+    #endregion
+
+    #region GPT Image 2.5 Adapter Tests
+
+    [Theory]
+    [InlineData("foundry-gpt-image-25-sunburst", "GPT-Image-2.5-Sunburst", "gpt-image-2.5-sunburst")]
+    [InlineData("foundry-gpt-image-25-flare", "GPT-Image-2.5-Flare", "gpt-image-2.5-flare")]
+    public void GptImage25Adapters_HaveCorrectMetadata(
+        string providerId,
+        string displayName,
+        string defaultModel)
+    {
+        var adapter = CreateGptImage25Adapter(providerId);
+
+        Assert.Equal(providerId, adapter.Id);
+        Assert.Equal(displayName + " (Azure OpenAI)", adapter.DisplayName);
+        Assert.Equal(defaultModel, adapter.DefaultModel);
+        Assert.Equal(ProviderKind.Cloud, adapter.Kind);
+        Assert.Contains("apiKey", adapter.RequiredSecrets);
+        Assert.Contains("endpoint", adapter.RequiredFields);
+    }
+
+    [Theory]
+    [InlineData("foundry-gpt-image-25-sunburst")]
+    [InlineData("foundry-gpt-image-25-flare")]
+    public async Task GptImage25Adapters_CheckAsync_ResolveEndpointAndApiKeyFromSecrets(string providerId)
+    {
+        var (adapter, secretStore, configStore) = CreateGptImage25AdapterWithDependencies(providerId);
+        var config = new AppConfig();
+        config.Providers[providerId] = new ProviderConfig
+        {
+            Model = providerId.EndsWith("sunburst", StringComparison.Ordinal)
+                ? "gpt-image-2.5-sunburst"
+                : "gpt-image-2.5-flare"
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync(providerId, "endpoint", "https://test.example.com/api", CancellationToken.None);
+        await secretStore.SetAsync(providerId, "apiKey", "test-key", CancellationToken.None);
+
+        var health = await adapter.CheckAsync(CancellationToken.None);
+
+        Assert.True(health.Ok);
+    }
+
+    [Theory]
+    [InlineData("foundry-gpt-image-25-sunburst")]
+    [InlineData("foundry-gpt-image-25-flare")]
+    public async Task GptImage25Adapters_CheckAsync_ResolveEndpointAndApiKeyFromEnvironment(string providerId)
+    {
+        var endpointVariable = "T2I_" + providerId.Replace("-", "_").ToUpperInvariant() + "_ENDPOINT";
+        var apiKeyVariable = "T2I_" + providerId.Replace("-", "_").ToUpperInvariant() + "_APIKEY";
+        var originalEndpoint = Environment.GetEnvironmentVariable(endpointVariable);
+        var originalApiKey = Environment.GetEnvironmentVariable(apiKeyVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(endpointVariable, "https://test.example.com/api");
+            Environment.SetEnvironmentVariable(apiKeyVariable, "test-key");
+
+            var configStore = new ConfigStore();
+            var resolver = new SecretResolver(new ISecretStore[] { new EnvVarSecretStore() });
+            var adapter = CreateGptImage25Adapter(providerId, resolver, configStore);
+
+            var health = await adapter.CheckAsync(CancellationToken.None);
+
+            Assert.True(health.Ok);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(endpointVariable, originalEndpoint);
+            Environment.SetEnvironmentVariable(apiKeyVariable, originalApiKey);
+        }
+    }
+
+    [Theory]
+    [InlineData("foundry-gpt-image-25-sunburst")]
+    [InlineData("foundry-gpt-image-25-flare")]
+    public async Task GptImage25Adapters_GenerateAsync_ResolveEndpointAndApiKeyFromSecrets(string providerId)
+    {
+        var (adapter, secretStore, configStore) = CreateGptImage25AdapterWithDependencies(
+            providerId,
+            _ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{"created":1234,"data":[{"b64_json":"iVBORw0KGgo="}]}""",
+                    Encoding.UTF8,
+                    "application/json")
+            });
+        await secretStore.SetAsync(providerId, "endpoint", "https://test.example.com/api", CancellationToken.None);
+        await secretStore.SetAsync(providerId, "apiKey", "test-key", CancellationToken.None);
+
+        var request = new GenerationRequest(
+            "test",
+            1024,
+            1024,
+            20,
+            Path.Combine(_tempDir, providerId + "-generated.png"),
+            new Dictionary<string, string?>());
+
+        var result = await adapter.GenerateAsync(request, null, CancellationToken.None);
+
+        Assert.Equal(request.OutputPath, result.OutputPath);
+        Assert.True(File.Exists(request.OutputPath));
+    }
+
+    [Theory]
+    [InlineData("foundry-gpt-image-25-sunburst")]
+    [InlineData("foundry-gpt-image-25-flare")]
+    public async Task GptImage25Adapters_GenerateAsync_RejectRetiredDallEDeployment(string providerId)
+    {
+        var (adapter, secretStore, configStore) = CreateGptImage25AdapterWithDependencies(providerId);
+        var config = new AppConfig();
+        config.Providers[providerId] = new ProviderConfig
+        {
+            Endpoint = "https://test.example.com/api",
+            Model = "dall-e-3"
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync(providerId, "apiKey", "test-key", CancellationToken.None);
+
+        var request = new GenerationRequest(
+            "test",
+            1024,
+            1024,
+            20,
+            Path.Combine(_tempDir, providerId + ".png"),
+            new Dictionary<string, string?>());
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => adapter.GenerateAsync(request, null, CancellationToken.None));
+
+        Assert.Contains("retired", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -763,6 +898,42 @@ public class ProviderAdapterTests : IDisposable
         var configStore = new ConfigStore();
         
         return new FoundryGptImage2Adapter(httpClientFactory, secretResolver, configStore);
+    }
+
+    private IProviderAdapter CreateGptImage25Adapter(
+        string providerId,
+        SecretResolver? secretResolver = null,
+        ConfigStore? configStore = null,
+        Func<HttpRequestMessage, HttpResponseMessage>? createHttpHandler = null)
+    {
+        var httpClientFactory = new FakeHttpClientFactory(createHttpHandler);
+        secretResolver ??= CreateSecretResolver();
+        configStore ??= new ConfigStore();
+
+        return providerId switch
+        {
+            "foundry-gpt-image-25-sunburst" =>
+                new FoundryGptImage25SunburstAdapter(httpClientFactory, secretResolver, configStore),
+            "foundry-gpt-image-25-flare" =>
+                new FoundryGptImage25FlareAdapter(httpClientFactory, secretResolver, configStore),
+            _ => throw new ArgumentException("Unknown GPT-Image-2.5 provider.", nameof(providerId))
+        };
+    }
+
+    private (IProviderAdapter Adapter, FakeSecretStore SecretStore, ConfigStore ConfigStore)
+        CreateGptImage25AdapterWithDependencies(
+            string providerId,
+            Func<HttpRequestMessage, HttpResponseMessage>? createHttpHandler = null)
+    {
+        var secretStore = new FakeSecretStore();
+        var secretResolver = new SecretResolver(new ISecretStore[] { secretStore });
+        var configStore = new ConfigStore();
+        var adapter = CreateGptImage25Adapter(
+            providerId,
+            secretResolver,
+            configStore,
+            createHttpHandler);
+        return (adapter, secretStore, configStore);
     }
 
     private (IProviderAdapter Adapter, SecretResolver Resolver, FakeSecretStore SecretStore, ConfigStore ConfigStore) 

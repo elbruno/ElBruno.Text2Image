@@ -16,13 +16,15 @@ Local inference is available through the library's CPU, CUDA, and DirectML packa
 | CLI provider | Model | Service | Default model ID |
 |---|---|---|---|
 | `foundry-flux2` | FLUX.2 Pro/Flex | Microsoft Foundry | `FLUX.2-pro` |
-| `foundry-mai2` | MAI-Image-2 | Microsoft Foundry | `MAI-Image-2` |
+| `foundry-mai2` | MAI-Image-2 (retired) | Microsoft Foundry | Migration entry only |
 | `foundry-mai25` | MAI-Image-2.5 (Preview) | Microsoft Foundry | `MAI-Image-2.5` |
 | `foundry-mai25-flash` | MAI-Image-2.5-Flash (Preview) | Microsoft Foundry | `MAI-Image-2.5-Flash` |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | `gpt-image-1.5` |
-| `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | `gpt-image-2` |
+| `foundry-gpt-image-2` | GPT-Image-2 (compatibility) | Azure OpenAI | `gpt-image-2` |
+| `foundry-gpt-image-25-sunburst` | GPT-Image-2.5-Sunburst | Azure OpenAI | `gpt-image-2.5-sunburst` |
+| `foundry-gpt-image-25-flare` | GPT-Image-2.5-Flare | Azure OpenAI | `gpt-image-2.5-flare` |
 
-All MAI image models are currently Preview. Microsoft Foundry documents `MAI-Image-2`, `MAI-Image-2e`, `MAI-Image-2.5`, and `MAI-Image-2.5-Flash` through its MAI Image API. The CLI exposes the six providers shown above (including MAI-Image-2, 2.5, and 2.5-Flash); use a provider's `model` setting to select a deployed model compatible with that provider.
+All MAI image models are currently Preview. Microsoft Foundry documents the active `MAI-Image-2.5` and `MAI-Image-2.5-Flash` models through its MAI Image API. The CLI exposes the active providers shown above. `foundry-mai2` remains only as a compatibility migration entry; it fails clearly and never falls back. use a provider's `model` setting to select a deployed model compatible with that provider.
 
 ### MAI Image request limits
 
