@@ -8,7 +8,7 @@ Cross-platform CLI for AI text-to-image generation. This is the **Lite edition**
 ## Quick Install
 
 ```bash
-dotnet tool install --global ElBruno.Text2Image.Cli
+dotnet tool install --global ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 ```
 
 Verify installation:

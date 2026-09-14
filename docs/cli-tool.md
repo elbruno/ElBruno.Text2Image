@@ -5,11 +5,18 @@
 ## Install
 
 ```bash
-dotnet tool install --global ElBruno.Text2Image.Cli
+dotnet tool install --global ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 t2i version
 ```
 
-Update with either `dotnet tool update --global ElBruno.Text2Image.Cli` or `t2i update`.
+If the tool is already installed, use `update` rather than `install`:
+
+```bash
+dotnet tool update --global ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
+```
+
+The explicit NuGet.org source is useful on machines whose NuGet configuration enables only an organizational or offline feed.
+You can omit `--source` after enabling `https://api.nuget.org/v3/index.json` in your NuGet configuration.
 
 ## Providers
 

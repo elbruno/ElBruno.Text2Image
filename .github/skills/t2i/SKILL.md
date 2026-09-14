@@ -23,7 +23,7 @@ outputs:
   - image: PNG file saved to specified output path or auto-generated filename
   - status: generation success/failure with error details on failure
 requirements:
-  - dotnet-tool: ElBruno.Text2Image.Cli >=1.5.1
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.5.2
   - runtime: '.NET 8.0 or .NET 10.0'
 entrypoint: t2i
 ---
@@ -261,7 +261,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install t2i
-        run: dotnet tool install -g ElBruno.Text2Image.Cli
+        run: dotnet tool install -g ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 
       - name: Generate hero image
         env:
@@ -475,7 +475,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install t2i
-        run: dotnet tool install -g ElBruno.Text2Image.Cli
+        run: dotnet tool install -g ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 
       - name: Generate
         env:
@@ -491,7 +491,7 @@ steps:
   inputs:
     command: 'custom'
     custom: 'tool'
-    arguments: 'install -g ElBruno.Text2Image.Cli'
+    arguments: 'install -g ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json'
 
 - script: t2i "azure logo" --out logo.png
   env:

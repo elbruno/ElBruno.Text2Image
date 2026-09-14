@@ -113,13 +113,13 @@ See the [Blazor components guide](docs/blazor-components.md) and
 Install the cross-platform CLI:
 
 ```bash
-dotnet tool install --global ElBruno.Text2Image.Cli
+dotnet tool install --global ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 ```
 
 Update to the latest version:
 
 ```bash
-dotnet tool update --global ElBruno.Text2Image.Cli
+dotnet tool update --global ElBruno.Text2Image.Cli --source https://api.nuget.org/v3/index.json
 ```
 
 **Note:** All packages are released with matching versions for consistency. Use `t2i doctor` to verify your CLI version and configuration.
