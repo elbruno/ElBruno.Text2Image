@@ -64,6 +64,10 @@ t2i "a product landing page with readable headline text" --provider foundry-flux
 
 # GPT-Image-2.5-Sunburst can take several minutes.
 t2i "a space station in orbit" --provider foundry-gpt-image-25-sunburst --timeout 300 --out station.png
+
+# Image-to-image: guide generation with one or more reference images.
+t2i "turn this sketch into a watercolor painting" --provider foundry-flux2 --image sketch.png --out watercolor.png
+t2i "combine these products into one lifestyle shot" --provider foundry-gpt-image-2 -i bottle.png -i box.jpg --input-fidelity high --out combo.png
 ```
 
 The generation command is the default command: there is no `t2i generate` subcommand. `--out` (or `-o`) sets the output path. Without it, `t2i` creates a timestamped PNG name from the prompt.
@@ -78,8 +82,23 @@ The generation command is the default command: there is no `t2i generate` subcom
 | `--timeout` | Request timeout in seconds | 300 |
 | `--endpoint` | Listed endpoint override; configure the endpoint with `t2i config set` for reliable use | Configured endpoint |
 | `--api-key` | One-command API-key override | Resolved secret |
+| `--image`, `-i` | Reference image (local PNG/JPEG/WebP file, HTTPS URL, or data URI). Repeat for multiple images | None |
+| `--mask` | PNG mask (≤ 4 MB) for inpainting; transparent pixels mark the area to edit. Requires `--image` | None |
+| `--input-fidelity` | `low` or `high` fidelity to the reference images. Requires `--image` | Provider default |
 
 Provider APIs can constrain or adjust image dimensions. In particular, MAI Image models require each dimension to be at least 768 pixels and the total must not exceed 1,048,576 pixels. See [model support](model-support.md).
+
+### Reference images (image-to-image)
+
+Pass `--image` (or `-i`) one or more times to edit or guide generation from existing images. Local files are read and validated (PNG, JPEG, WebP; up to 50 MB each); HTTPS URLs and `data:` URIs are passed through. Plain `http://` URLs are rejected. Validation happens before any secret lookup or network call, so unsupported combinations fail fast with exit code 2.
+
+| Provider | Reference images | Mask | Input fidelity | How it is sent |
+|---|---|---|---|---|
+| `foundry-flux2` | Up to 8 (PNG/JPEG/WebP) | — | — | `referenceImages` in the FLUX.2 request |
+| `foundry-gpt-image-1p5`, `foundry-gpt-image-2`, `foundry-gpt-image-25-sunburst`, `foundry-gpt-image-25-flare` | Up to 16 (PNG/JPEG/WebP) | ✅ PNG | ✅ | Azure OpenAI `images/edits` (multipart) |
+| `foundry-mai25`, `foundry-mai25-flash` | Up to 5 (PNG/JPEG) | — | — | `/mai/v1/images/edits` (multipart) |
+
+`t2i providers` and `t2i doctor` show each provider's reference-image support. The retired `foundry-mai2` provider does not support reference images.
 
 ## Secrets and environment variables
 

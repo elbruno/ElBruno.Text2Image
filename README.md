@@ -17,11 +17,11 @@
 
 | Release | Highlights |
 |---------|------------|
+| **1.6.0** | Added reference-image (image-to-image) support: `t2i --image`/`--mask`/`--input-fidelity` for FLUX.2, GPT-Image (`images/edits`), and MAI-Image-2.5 (`/mai/v1/images/edits`) |
 | **1.5.2 (candidate)** | Candidate release with GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.5.1** | Added GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.4.0** | Added MAI-Image-2.5 and MAI-Image-2.5-Flash support |
 | **1.4.0** | Added Foundry batch-generation sample and current cloud-provider setup guidance |
-| **1.4.0** | Added `t2i upgrade` for refreshing managed Copilot and Claude Code skill files |
 
 See the [Blazor components guide](docs/blazor-components.md) and
 [sample documentation](src/samples/BlazorText2ImageDemo/README.md).
@@ -156,6 +156,10 @@ t2i --provider foundry-gpt-image-1p5 "an impressionist painting of a garden"
 # GPT-Image-2.5 variants via Azure OpenAI
 t2i --provider foundry-gpt-image-25-sunburst "a sci-fi space station in orbit" --timeout 300
 t2i --provider foundry-gpt-image-25-flare "a futuristic city at sunset" --timeout 300
+
+# Image-to-image with reference images (FLUX.2, GPT-Image, MAI-Image-2.5) — see docs/cli-tool.md
+t2i --provider foundry-flux2 "turn this sketch into a watercolor painting" --image sketch.png
+t2i --provider foundry-gpt-image-2 "replace the sky with a sunset" --image room.png --mask sky-mask.png
 ```
 
 **Model Configuration:**

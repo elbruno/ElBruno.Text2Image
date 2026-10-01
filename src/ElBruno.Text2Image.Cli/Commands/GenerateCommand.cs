@@ -67,6 +67,18 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         [Description("Request timeout in seconds (default: 300)")]
         [DefaultValue(300)]
         public int Timeout { get; init; } = 300;
+
+        [CommandOption("--image|-i")]
+        [Description("Reference image for image-to-image/edits: local file, HTTPS URL, or data URI. Repeat for multiple images (FLUX.2: 8, GPT-Image: 16, MAI-Image-2.5: 5)")]
+        public string[]? Images { get; init; }
+
+        [CommandOption("--mask")]
+        [Description("PNG mask for inpainting (GPT-Image providers only; applies to the first --image)")]
+        public string? Mask { get; init; }
+
+        [CommandOption("--input-fidelity")]
+        [Description("GPT-Image edit input fidelity: low or high")]
+        public string? InputFidelity { get; init; }
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -102,6 +114,14 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         if (provider == null)
         {
             ConsoleHelpers.PrintError($"Provider '{providerId}' not found. Run 't2i providers' to list available providers.");
+            return 2;
+        }
+
+        // 1b. Validate and load reference images / mask before contacting the provider
+        var (referenceInputs, referenceError) = ReferenceImageInputs.Prepare(provider, settings.Images, settings.Mask, settings.InputFidelity);
+        if (referenceError is not null)
+        {
+            ConsoleHelpers.PrintError(referenceError);
             return 2;
         }
 
@@ -159,7 +179,10 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
             settings.Height,
             settings.Steps,
             outputPath,
-            cliOverrides);
+            cliOverrides,
+            referenceInputs!.Images,
+            referenceInputs.Mask,
+            referenceInputs.InputFidelity);
 
         GenerationResult result;
         var sw = Stopwatch.StartNew();

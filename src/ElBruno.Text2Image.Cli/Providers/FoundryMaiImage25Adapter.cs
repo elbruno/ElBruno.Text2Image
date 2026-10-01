@@ -24,6 +24,8 @@ internal abstract class FoundryMaiImage25AdapterBase : IProviderAdapter
 
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
+
+    public ReferenceImageCapabilities ReferenceImageSupport { get; } = new(5, SupportsMask: false, SupportsInputFidelity: false, ReferenceImageCapabilities.PngJpeg);
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
 
     protected FoundryMaiImage25AdapterBase(
@@ -156,11 +158,11 @@ internal abstract class FoundryMaiImage25AdapterBase : IProviderAdapter
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
 
-        var result = await generator.GenerateAsync(req.Prompt, new ImageGenerationOptions
+        var result = await generator.GenerateAsync(req.Prompt, req.WithReferenceInputs(new ImageGenerationOptions
         {
             Width = width,
             Height = height
-        }, cancellationToken: ct);
+        }), cancellationToken: ct);
 
         await result.SaveAsync(req.OutputPath);
         sw.Stop();

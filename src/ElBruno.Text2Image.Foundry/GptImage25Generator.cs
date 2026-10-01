@@ -19,6 +19,7 @@ public sealed class GptImage25Generator : IImageGenerator, Microsoft.Extensions.
     private readonly ImageClient _imageClient;
     private readonly HttpClient _httpClient;
     private readonly string _endpoint;
+    private readonly string _apiKey;
     private readonly string _modelDisplayName;
     private readonly string _deploymentName;
     private readonly bool _ownsHttpClient;
@@ -47,6 +48,7 @@ public sealed class GptImage25Generator : IImageGenerator, Microsoft.Extensions.
             throw new ArgumentException("API endpoint must use HTTPS protocol", nameof(endpoint));
 
         _endpoint = NormalizeAzureOpenAiEndpoint(endpoint);
+        _apiKey = apiKey;
         _modelDisplayName = modelName ?? "GPT-Image-2.5-Sunburst";
         _deploymentName = deploymentName ?? "gpt-image-2.5-sunburst";
         _httpClient = httpClient;
@@ -103,6 +105,10 @@ public sealed class GptImage25Generator : IImageGenerator, Microsoft.Extensions.
             throw new ArgumentOutOfRangeException(nameof(prompt), $"Prompt must be {MaxPromptLength} characters or fewer");
 
         options ??= new ImageGenerationOptions();
+        if (options.ReferenceImages is { Count: > 0 })
+            return await GptImageSupport.EditAsync(_httpClient, _endpoint, _deploymentName, _apiKey, _modelDisplayName, prompt, options, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(options.MaskImage))
+            throw new ArgumentException("A mask image requires at least one reference image.", nameof(options));
         var mapped = GptImageSupport.MapSize(options.Width, options.Height);
         var generationOptions = new OpenAI.Images.ImageGenerationOptions { Size = mapped.Size };
 
@@ -135,6 +141,7 @@ public sealed class GptImage25Generator : IImageGenerator, Microsoft.Extensions.
             localOptions.Width = size.Width;
             localOptions.Height = size.Height;
         }
+        ImageGenerationOptionsConverter.ApplyEditInputs(localOptions, imageRequest, options);
 
         var result = await GenerateAsync(imageRequest.Prompt ?? string.Empty, localOptions, cancellationToken)
             .ConfigureAwait(false);

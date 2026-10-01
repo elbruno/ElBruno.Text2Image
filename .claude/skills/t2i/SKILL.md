@@ -1,6 +1,6 @@
 ---
 name: t2i
-version: 1.5.2
+version: 1.6.0
 description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2.5/2.5-Flash, GPT-Image-1.5/2/2.5). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
 author: Bruno Capuano <bruno@elbruno.com>
 license: MIT
@@ -19,11 +19,13 @@ inputs:
   - width: integer, optional, image width in pixels, default 512
   - height: integer, optional, image height in pixels, default 512
   - steps: integer, optional, number of inference steps, default 20
+  - image: string[], optional, reference image file paths, HTTPS URLs, or data URIs for image-to-image (FLUX.2, GPT-Image, MAI-Image-2.5)
+  - mask: string, optional, PNG inpainting mask (GPT-Image providers only)
 outputs:
   - image: PNG file saved to specified output path or auto-generated filename
   - status: generation success/failure with error details on failure
 requirements:
-  - dotnet-tool: ElBruno.Text2Image.Cli >=1.5.2
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.6.0
   - runtime: '.NET 8.0 or .NET 10.0'
 entrypoint: t2i
 ---
@@ -50,7 +52,7 @@ Activate this skill when:
 
 | Command | Purpose | Key Flags |
 |---------|---------|-----------|
-| `t2i "<prompt>"` | Generate image from text | `--provider`, `--out`, `--width`, `--height`, `--steps` |
+| `t2i "<prompt>"` | Generate image from text (or edit reference images) | `--provider`, `--out`, `--width`, `--height`, `--steps`, `--image` |
 | `t2i config` | Interactive setup wizard | `show`, `set`, `remove`, `path` |
 | `t2i providers` | List available providers | None |
 | `t2i secrets set <provider>` | Configure API credentials | `--field` |
@@ -74,6 +76,9 @@ Activate this skill when:
 | `--steps`, `-s` | Number of inference steps | 20 |
 | `--endpoint` | Override provider endpoint | From config |
 | `--api-key` | Override API key (NOT RECOMMENDED) | From secrets |
+| `--image`, `-i` | Reference image (file, HTTPS URL, or data URI); repeatable. FLUX.2 ≤ 8, GPT-Image ≤ 16, MAI-Image-2.5 ≤ 5 | None |
+| `--mask` | PNG inpainting mask (GPT-Image providers only; requires `--image`) | None |
+| `--input-fidelity` | `low` or `high` (GPT-Image providers only; requires `--image`) | Provider default |
 
 ### Config Command Actions
 
@@ -206,6 +211,21 @@ t2i "photorealistic mountain landscape" \
 ```
 
 **Output:** Images are saved to the specified path or auto-generated filename `<prompt-slug>-<timestamp>.png`
+
+### 2b. Edit or Restyle Existing Images (Image-to-Image)
+
+```bash
+# Restyle a sketch with FLUX.2 (reference images are sent as referenceImages)
+t2i "turn this sketch into a watercolor painting" --provider foundry-flux2 --image sketch.png --out watercolor.png
+
+# Combine multiple references with GPT-Image (Azure OpenAI images/edits)
+t2i "place this product on a marble kitchen counter" --provider foundry-gpt-image-2 -i product.png -i kitchen.jpg --input-fidelity high --out scene.png
+
+# Inpaint with a PNG mask (transparent pixels = area to edit; GPT-Image only)
+t2i "replace the sky with a sunset" --provider foundry-gpt-image-2 --image room.png --mask sky-mask.png --out sunset-room.png
+```
+
+Check `t2i providers` for the Reference Images column. Providers without support (or unsupported `--mask` / `--input-fidelity` combinations) fail fast with exit code 2 before any API call.
 
 ### 3. Batch Generate via Shell Loop
 

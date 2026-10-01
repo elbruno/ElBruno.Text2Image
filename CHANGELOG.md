@@ -2,6 +2,27 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.6.0] — 2026-09-15
+
+### Added
+- Reference-image (image-to-image) support in the `t2i` CLI: `--image`/`-i`
+  (repeatable; local PNG/JPEG/WebP files, HTTPS URLs, or data URIs), `--mask`,
+  and `--input-fidelity`. Unsupported providers and option combinations fail
+  fast with exit code 2 before any secret lookup or API call (#43).
+- FLUX.2 forwards reference images as `referenceImages`; GPT-Image-1.5/2/2.5
+  providers call the Azure OpenAI `images/edits` endpoint (up to 16 images,
+  optional PNG mask, `input_fidelity`); MAI-Image-2.5 and MAI-Image-2.5-Flash
+  call `/mai/v1/images/edits` (up to 5 PNG/JPEG images).
+- `ImageGenerationOptions.MaskImage`, `InputFidelity`, and
+  `SetMaskImageFromFile`; `ReferenceImageHelper` for validating and resolving
+  reference images; MEAI `mask_image`/`input_fidelity` additional properties and
+  `ImageGenerationRequest.OriginalImages` mapping.
+- `t2i providers` and `t2i doctor` show a Reference Images column.
+
+### Documentation
+- CLI guide, provider setup guides, and managed `t2i` skills (1.6.0) document
+  image-to-image usage and the provider support matrix.
+
 ## [1.5.2] — Candidate (2026-09-14)
 
 ### Candidate release
