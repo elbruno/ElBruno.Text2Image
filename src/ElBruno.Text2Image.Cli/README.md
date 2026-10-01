@@ -85,6 +85,10 @@ t2i "abstract art" --width 1024 --height 1024
 
 # Custom output path
 t2i "a sunset" --out sunset.png
+
+# Image-to-image with reference images (FLUX.2, GPT-Image, MAI-Image-2.5)
+t2i "make this photo look like a watercolor" --provider foundry-flux2 --image photo.jpg
+t2i "replace the sky with a sunset" --provider foundry-gpt-image-2 --image room.png --mask sky-mask.png
 ```
 
 ## Configuration

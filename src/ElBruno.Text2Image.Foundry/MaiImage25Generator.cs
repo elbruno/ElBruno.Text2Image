@@ -26,6 +26,24 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     private const int MaxErrorBodyLength = 1024;
     private const int MaxPromptLength = 32_000;
     private const long MaxResponseSizeBytes = 50 * 1024 * 1024; // 50MB limit for image responses
+    private const int MaxEditImages = 5;
+
+    /// <summary>
+    /// The MAI image edits endpoint (<c>/mai/v1/images/edits</c>) derived from <see cref="Endpoint"/>.
+    /// Used when reference images are supplied.
+    /// </summary>
+    public string EditsEndpoint
+    {
+        get
+        {
+            const string generationsPath = "/images/generations";
+            var idx = _endpoint.IndexOf(generationsPath, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
+                throw new NotSupportedException(
+                    $"Cannot derive the MAI image edits URL from custom endpoint path. Use a base resource URL or a URL ending in /mai/v1/images/generations to enable reference images.");
+            return string.Concat(_endpoint.AsSpan(0, idx), "/images/edits", _endpoint.AsSpan(idx + generationsPath.Length));
+        }
+    }
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
@@ -208,30 +226,59 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
         var height = options?.Height > 0 ? options.Height : 1024;
         options ??= new ImageGenerationOptions();
 
+        if (!string.IsNullOrWhiteSpace(options.MaskImage))
+            throw new NotSupportedException($"{_modelDisplayName} does not support mask images. Use a GPT-Image provider for masked edits.");
+
+        var isEdit = options.ReferenceImages is { Count: > 0 };
+        if (isEdit && options.ReferenceImages!.Count > MaxEditImages)
+            throw new ArgumentException($"{_modelDisplayName} supports at most {MaxEditImages} reference images (got {options.ReferenceImages.Count}).", nameof(options));
+
         var sizeString = MapToSizeString(width, height);
         var (mappedWidth, mappedHeight) = ParseSizeString(sizeString);
 
         var sw = Stopwatch.StartNew();
         var seed = options.Seed ?? Random.Shared.Next();
 
-        var requestBody = new MaiImage25Request
-        {
-            Model = _modelId,
-            Prompt = prompt,
-            Size = sizeString,
-            N = 1,
-            OutputFormat = "png",
-            OutputCompression = 100
-        };
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+        using var request = new HttpRequestMessage(HttpMethod.Post, isEdit ? EditsEndpoint : _endpoint);
         request.Headers.TryAddWithoutValidation("api-key", _apiKey);
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {_apiKey}");
 
-        // Serialize to bytes so Content-Length is set explicitly.
-        var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(requestBody, MaiImage25JsonContext.Default.MaiImage25Request);
-        request.Content = new ByteArrayContent(jsonBytes);
-        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+        if (isEdit)
+        {
+            var multipart = new MultipartFormDataContent
+            {
+                { new StringContent(_modelId), "model" },
+                { new StringContent(prompt), "prompt" }
+            };
+            var index = 0;
+            foreach (var reference in options.ReferenceImages!)
+            {
+                var (bytes, mediaType) = await ReferenceImageHelper.ResolveAsync(reference, _httpClient, cancellationToken).ConfigureAwait(false);
+                if (mediaType is not ("image/png" or "image/jpeg"))
+                    throw new ArgumentException($"{_modelDisplayName} image edits accept only PNG or JPEG reference images.", nameof(options));
+                var part = new ByteArrayContent(bytes);
+                part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType);
+                multipart.Add(part, "image", $"image{index++}{ReferenceImageHelper.GetFileExtension(mediaType)}");
+            }
+            request.Content = multipart;
+        }
+        else
+        {
+            var requestBody = new MaiImage25Request
+            {
+                Model = _modelId,
+                Prompt = prompt,
+                Size = sizeString,
+                N = 1,
+                OutputFormat = "png",
+                OutputCompression = 100
+            };
+
+            // Serialize to bytes so Content-Length is set explicitly.
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(requestBody, MaiImage25JsonContext.Default.MaiImage25Request);
+            request.Content = new ByteArrayContent(jsonBytes);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+        }
 
         var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -322,6 +369,7 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
             localOptions.Width = size.Width;
             localOptions.Height = size.Height;
         }
+        ImageGenerationOptionsConverter.ApplyEditInputs(localOptions, imageRequest, options);
 
         var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);

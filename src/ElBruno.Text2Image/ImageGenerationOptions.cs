@@ -74,12 +74,35 @@ public sealed class ImageGenerationOptions
     public int? Seed { get; set; }
 
     /// <summary>
-    /// Optional reference images for image-to-image generation.
-    /// Each entry can be a URL, base64-encoded string, or Data URI.
-    /// Supported by FLUX.2-pro (up to 8), FLUX.2-flex (up to 10),
-    /// and FLUX.1-kontext-pro. Defaults to null.
+    /// Optional reference images for image-to-image generation / image edits.
+    /// Each entry can be an HTTPS URL, base64-encoded string, or Data URI.
+    /// Supported by FLUX.2 (forwarded as <c>referenceImages</c>, up to 8 for FLUX.2-pro),
+    /// GPT-Image-1.5/2/2.5 (Azure OpenAI <c>images/edits</c>, up to 16) and
+    /// MAI-Image-2.5/2.5-Flash (<c>/mai/v1/images/edits</c>, up to 5). Defaults to null.
     /// </summary>
     public List<string>? ReferenceImages { get; set; }
+
+    /// <summary>
+    /// Optional PNG mask for inpainting/editing (HTTPS URL, base64-encoded string, or Data URI).
+    /// Fully transparent areas indicate where the first reference image should be edited.
+    /// Only supported by GPT-Image providers and requires at least one entry in <see cref="ReferenceImages"/>.
+    /// </summary>
+    public string? MaskImage { get; set; }
+
+    /// <summary>
+    /// Optional GPT-Image <c>input_fidelity</c> value (<c>low</c> or <c>high</c>) used for image edits.
+    /// Ignored by providers that do not support it.
+    /// </summary>
+    public string? InputFidelity { get; set; }
+
+    /// <summary>
+    /// Reads a PNG mask file from disk and stores it in <see cref="MaskImage"/> as a base64 Data URI.
+    /// </summary>
+    /// <param name="filePath">Path to a PNG mask file.</param>
+    public void SetMaskImageFromFile(string filePath)
+    {
+        MaskImage = ReferenceImageHelper.LoadFileAsDataUri(filePath, ReferenceImageHelper.MaxMaskImageBytes, ["image/png"]);
+    }
 
     /// <summary>
     /// Reads an image file from disk, converts it to a base64 Data URI,

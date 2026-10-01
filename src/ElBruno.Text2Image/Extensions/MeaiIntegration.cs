@@ -25,6 +25,12 @@ public static class Text2ImagePropertyNames
 
     /// <summary>Reference images for image-to-image generation (List&lt;string&gt;).</summary>
     public const string ReferenceImages = "reference_images";
+
+    /// <summary>PNG mask for image edits (string: HTTPS URL, Data URI, or base64).</summary>
+    public const string MaskImage = "mask_image";
+
+    /// <summary>GPT-Image edit input fidelity (string: "low" or "high").</summary>
+    public const string InputFidelity = "input_fidelity";
 }
 
 /// <summary>
@@ -70,9 +76,54 @@ public static class ImageGenerationOptionsConverter
 
             if (meaiOptions.AdditionalProperties.TryGetValue(Text2ImagePropertyNames.ReferenceImages, out var refImages) && refImages is List<string> refList)
                 options.ReferenceImages = refList;
+
+            if (meaiOptions.AdditionalProperties.TryGetValue(Text2ImagePropertyNames.MaskImage, out var mask) && mask is string maskStr)
+                options.MaskImage = maskStr;
+
+            if (meaiOptions.AdditionalProperties.TryGetValue(Text2ImagePropertyNames.InputFidelity, out var fidelity) && fidelity is string fidelityStr)
+                options.InputFidelity = fidelityStr;
         }
 
         return options;
+    }
+
+    /// <summary>
+    /// Applies image-edit related inputs (reference images, mask, input fidelity) from a M.E.AI request/options
+    /// onto <paramref name="target"/>. <see cref="ImageGenerationRequest.OriginalImages"/> entries that are
+    /// <see cref="DataContent"/> or HTTPS <see cref="UriContent"/> are appended as reference images.
+    /// </summary>
+    public static void ApplyEditInputs(
+        ImageGenerationOptions target,
+        ImageGenerationRequest? request,
+        Microsoft.Extensions.AI.ImageGenerationOptions? meaiOptions)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+
+        if (meaiOptions?.AdditionalProperties is { } props)
+        {
+            if (props.TryGetValue(Text2ImagePropertyNames.ReferenceImages, out var refImages) && refImages is IEnumerable<string> refList)
+                target.ReferenceImages = refList.ToList();
+            if (props.TryGetValue(Text2ImagePropertyNames.MaskImage, out var mask) && mask is string maskStr)
+                target.MaskImage = maskStr;
+            if (props.TryGetValue(Text2ImagePropertyNames.InputFidelity, out var fidelity) && fidelity is string fidelityStr)
+                target.InputFidelity = fidelityStr;
+        }
+
+        if (request?.OriginalImages is { } originals)
+        {
+            foreach (var content in originals)
+            {
+                string? value = content switch
+                {
+                    DataContent data => data.Uri,
+                    UriContent uri => uri.Uri.ToString(),
+                    _ => null
+                };
+                if (value is null) continue;
+                target.ReferenceImages ??= [];
+                target.ReferenceImages.Add(value);
+            }
+        }
     }
 
     /// <summary>

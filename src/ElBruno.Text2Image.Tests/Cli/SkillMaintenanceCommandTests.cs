@@ -50,7 +50,7 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             Assert.Contains("foundry-gpt-image-25-flare", content);
             Assert.Contains("GPT-Image-2.5-Flare", content);
             Assert.Contains("Seven current cloud providers", content);
-            Assert.Contains("ElBruno.Text2Image.Cli >=1.5.1", content);
+            Assert.Contains("ElBruno.Text2Image.Cli >=1.6.0", content);
             Assert.Contains("foundry-mai2", content);
             Assert.Contains("do not use", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("t2i upgrade", content);

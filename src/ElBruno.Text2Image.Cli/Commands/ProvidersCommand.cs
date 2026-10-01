@@ -33,6 +33,7 @@ internal sealed class ProvidersCommand : AsyncCommand
         table.AddColumn("Kind");
         table.AddColumn("Status");
         table.AddColumn("Config Status");
+        table.AddColumn("Reference Images");
 
         var config = await _configStore.LoadAsync(ct);
 
@@ -76,7 +77,8 @@ internal sealed class ProvidersCommand : AsyncCommand
                 Markup.Escape(provider.DisplayName),
                 provider.Kind.ToString(),
                 status,
-                configStatus);
+                configStatus,
+                Markup.Escape(provider.ReferenceImageSupport?.Summary ?? "—"));
         }
 
         AnsiConsole.Write(table);

@@ -22,6 +22,8 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
     public string DefaultModel => "FLUX.2-pro";
 
+    public ReferenceImageCapabilities ReferenceImageSupport { get; } = new(8, SupportsMask: false, SupportsInputFidelity: false, ReferenceImageCapabilities.PngJpegWebp);
+
     public FoundryFlux2Adapter(
         IHttpClientFactory httpClientFactory,
         SecretResolver secretResolver,
@@ -142,12 +144,12 @@ internal sealed class FoundryFlux2Adapter : IProviderAdapter
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Microsoft Foundry API..."));
 
-        var result = await generator.GenerateAsync(req.Prompt, new ImageGenerationOptions
+        var result = await generator.GenerateAsync(req.Prompt, req.WithReferenceInputs(new ImageGenerationOptions
         {
             Width = req.Width > 0 ? req.Width : 512,
             Height = req.Height > 0 ? req.Height : 512,
             NumInferenceSteps = req.Steps > 0 ? req.Steps : 20
-        }, cancellationToken: ct);
+        }), cancellationToken: ct);
 
         await result.SaveAsync(req.OutputPath);
         sw.Stop();

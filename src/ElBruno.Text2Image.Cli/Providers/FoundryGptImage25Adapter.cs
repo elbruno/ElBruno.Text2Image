@@ -18,6 +18,8 @@ internal abstract class FoundryGptImage25AdapterBase : IProviderAdapter
     public abstract string DefaultModel { get; }
     public ProviderKind Kind => ProviderKind.Cloud;
     public IReadOnlyList<string> RequiredSecrets => new[] { "apiKey" };
+
+    public ReferenceImageCapabilities ReferenceImageSupport { get; } = new(16, SupportsMask: true, SupportsInputFidelity: true, ReferenceImageCapabilities.PngJpegWebp);
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
 
     protected FoundryGptImage25AdapterBase(
@@ -106,11 +108,11 @@ internal abstract class FoundryGptImage25AdapterBase : IProviderAdapter
             timeoutSeconds);
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Azure OpenAI API..."));
-        var result = await generator.GenerateAsync(req.Prompt, new ImageGenerationOptions
+        var result = await generator.GenerateAsync(req.Prompt, req.WithReferenceInputs(new ImageGenerationOptions
         {
             Width = req.Width > 0 ? req.Width : 1024,
             Height = req.Height > 0 ? req.Height : 1024
-        }, ct);
+        }), ct);
         await result.SaveAsync(req.OutputPath);
         stopwatch.Stop();
 
