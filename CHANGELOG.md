@@ -2,6 +2,24 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.7.0] - 2026-10-23
+
+### Added
+- Microsoft Foundry MAI-Image-2.6 and MAI-Image-2.6-Flash text-to-image support,
+  including the 2.6 dimensions contract and opt-in aspect-ratio selection and web grounding.
+
+### Changed
+- Replaced ImageSharp with StbImageWriteSharp for local VAE PNG encoding, removing
+  the ImageSharp dependency from the core package without adding native runtime assets.
+
+### Documentation
+- Added MAI-Image-2.6 setup guidance and updated provider, CLI, and managed-skill documentation.
+- Updated architecture documentation for the managed PNG writer.
+
+### Tests
+- Added PNG encoding coverage for valid chunk checksums, dimensions, channel conversion,
+  clamping, rounding, and opaque alpha.
+
 ## [1.6.0] — 2026-09-15
 
 ### Added

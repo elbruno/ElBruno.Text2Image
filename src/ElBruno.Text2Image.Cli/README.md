@@ -31,7 +31,7 @@ Generate an image with your configured provider:
 t2i "a robot painting a landscape"
 ```
 
-The image is saved as `output.png` (or a timestamped file). Use `--provider` to switch between FLUX.2, MAI-Image-2.5, GPT-Image-1.5, or GPT-Image-2.5.
+The image is saved as `output.png` (or a timestamped file). Use `--provider` to switch between FLUX.2, MAI-Image-2.5/2.5-Flash, MAI-Image-2.6/2.6-Flash (Preview), GPT-Image-1.5, or GPT-Image-2.5.
 
 ## Providers (Lite Edition)
 
@@ -43,6 +43,8 @@ This **Lite edition** includes **cloud providers only**:
 | `foundry-flux2` (model: FLUX.2-flex) | FLUX.2 Flex (Text-Heavy Design) | Microsoft Foundry | Endpoint + API key |
 | `foundry-mai25` | MAI-Image-2.5 (High Quality) | Microsoft Foundry | Endpoint + API key |
 | `foundry-mai25-flash` | MAI-Image-2.5-Flash (Speed-optimized) | Microsoft Foundry | Endpoint + API key |
+| `foundry-mai26` | MAI-Image-2.6 (Preview) | Microsoft Foundry | Endpoint + API key |
+| `foundry-mai26-flash` | MAI-Image-2.6-Flash (Preview) | Microsoft Foundry | Endpoint + API key |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | Endpoint + API key |
 | `foundry-gpt-image-25-sunburst` | GPT-Image-2.5-Sunburst | Azure OpenAI | Endpoint + API key |
 | `foundry-gpt-image-25-flare` | GPT-Image-2.5-Flare | Azure OpenAI | Endpoint + API key |
@@ -69,9 +71,13 @@ t2i --provider foundry-flux2 "a robot painting a landscape"
 # FLUX.2 Flex (text-heavy design)
 t2i --provider foundry-flux2 --set foundry-flux2.model=FLUX.2-flex "a business card with modern design"
 
-# MAI-Image-2.5 (latest high-quality) and MAI-Image-2.5-Flash (speed-optimized)
+# MAI-Image-2.5 and 2.5-Flash
 t2i --provider foundry-mai25 "a photograph of a red fox in an autumn forest"
 t2i --provider foundry-mai25-flash "a quick concept sketch of a city skyline"
+
+# MAI-Image-2.6 and 2.6-Flash (Preview)
+t2i --provider foundry-mai26 "a product photo" --auto-aspect-ratio --web-grounding
+t2i --provider foundry-mai26-flash "a concept sketch"
 
 # GPT-Image-1.5 (Azure OpenAI)
 t2i --provider foundry-gpt-image-1p5 "an impressionist painting of a garden"

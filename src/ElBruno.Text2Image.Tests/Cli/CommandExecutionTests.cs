@@ -76,6 +76,8 @@ public class CommandExecutionTests : IDisposable
         Assert.Contains("foundry-flux2", description);
         Assert.Contains("foundry-mai25", description);
         Assert.Contains("foundry-mai25-flash", description);
+        Assert.Contains("foundry-mai26", description);
+        Assert.Contains("foundry-mai26-flash", description);
         Assert.Contains("foundry-gpt-image-1p5", description);
         Assert.Contains("foundry-gpt-image-2", description);
         Assert.Contains("foundry-gpt-image-25-sunburst", description);

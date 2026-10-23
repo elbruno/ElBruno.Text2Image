@@ -74,6 +74,16 @@ public sealed class ImageGenerationOptions
     public int? Seed { get; set; }
 
     /// <summary>
+    /// Lets MAI-Image-2.6 select an aspect ratio based on the prompt and image inputs.
+    /// </summary>
+    public bool? AutoAspectRatio { get; set; }
+
+    /// <summary>
+    /// Enables web grounding for MAI-Image-2.6 image generation.
+    /// </summary>
+    public bool? WebGrounding { get; set; }
+
+    /// <summary>
     /// Optional reference images for image-to-image generation / image edits.
     /// Each entry can be an HTTPS URL, base64-encoded string, or Data URI.
     /// Supported by FLUX.2 (forwarded as <c>referenceImages</c>, up to 8 for FLUX.2-pro),

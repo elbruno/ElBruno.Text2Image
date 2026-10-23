@@ -1,7 +1,7 @@
 ---
 name: t2i
-version: 1.6.0
-description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2.5/2.5-Flash, GPT-Image-1.5/2/2.5). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
+version: 1.7.0
+description: 'Use the t2i CLI to generate AI images from text prompts via Microsoft Foundry and Azure OpenAI providers (FLUX.2, MAI-Image-2.5/2.5-Flash, MAI-Image-2.6/2.6-Flash, GPT-Image-1.5/2/2.5). Activate when the user asks to generate images, automate image creation in scripts, or set up image generation for CI/CD.'
 author: Bruno Capuano <bruno@elbruno.com>
 license: MIT
 tags:
@@ -14,10 +14,12 @@ tags:
   - dotnet
 inputs:
   - prompt: string, required, text description of the image to generate
-  - provider: string, optional, configured image generation provider (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, or foundry-gpt-image-25-flare)
+  - provider: string, optional, configured image generation provider (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-mai26, foundry-mai26-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, or foundry-gpt-image-25-flare)
   - output: string, optional, output file path for the generated image
   - width: integer, optional, image width in pixels, default 512
   - height: integer, optional, image height in pixels, default 512
+  - auto_aspect_ratio: boolean, optional, let MAI-Image-2.6 choose the output aspect ratio
+  - web_grounding: boolean, optional, enable web grounding for MAI-Image-2.6
   - steps: integer, optional, number of inference steps, default 20
   - image: string[], optional, reference image file paths, HTTPS URLs, or data URIs for image-to-image (FLUX.2, GPT-Image, MAI-Image-2.5)
   - mask: string, optional, PNG inpainting mask (GPT-Image providers only)
@@ -25,7 +27,7 @@ outputs:
   - image: PNG file saved to specified output path or auto-generated filename
   - status: generation success/failure with error details on failure
 requirements:
-  - dotnet-tool: ElBruno.Text2Image.Cli >=1.6.0
+  - dotnet-tool: ElBruno.Text2Image.Cli >=1.7.0
   - runtime: '.NET 8.0 or .NET 10.0'
 entrypoint: t2i
 ---
@@ -73,6 +75,8 @@ Activate this skill when:
 | `--out`, `-o` | Output file path | `<prompt-slug>-<timestamp>.png` |
 | `--width`, `-w` | Image width in pixels | 512 |
 | `--height` | Image height in pixels | 512 |
+| `--auto-aspect-ratio` | Let MAI-Image-2.6 choose the output aspect ratio | Disabled |
+| `--web-grounding` | Enable web grounding for MAI-Image-2.6 | Disabled |
 | `--steps`, `-s` | Number of inference steps | 20 |
 | `--endpoint` | Override provider endpoint | From config |
 | `--api-key` | Override API key (NOT RECOMMENDED) | From secrets |
@@ -115,14 +119,16 @@ t2i upgrade --target github # Refresh only the existing GitHub skill
 
 ## Providers
 
-Seven current cloud providers are available in the **Lite** edition. One retired provider ID remains only as a migration entry:
+Nine current cloud providers are available in the **Lite** edition. One retired provider ID remains only as a migration entry:
 
 | Provider | Model | URL | Best For |
 |----------|-------|-----|----------|
 | `foundry-flux2` | FLUX.2 Pro | Microsoft Foundry | High-quality images, fine-grained control, batch jobs, production use |
 | `foundry-mai2` | MAI-Image-2 (retired) | Microsoft Foundry | Migration entry only; fails clearly; do not use |
-| `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | Latest high-quality generation via the MAI image generations API (up to 1,048,576 pixels) |
+| `foundry-mai25` | MAI-Image-2.5 | Microsoft Foundry | High-quality MAI image generation (up to 1,048,576 pixels) |
 | `foundry-mai25-flash` | MAI-Image-2.5-Flash | Microsoft Foundry | Speed-optimized MAI image generation (up to 1,048,576 pixels) |
+| `foundry-mai26` | MAI-Image-2.6 (Preview) | Microsoft Foundry | Latest high-quality generation (up to 2,359,296 pixels) |
+| `foundry-mai26-flash` | MAI-Image-2.6-Flash (Preview) | Microsoft Foundry | Faster 2.6 generation (up to 2,359,296 pixels) |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | High-quality Azure OpenAI image generation |
 | `foundry-gpt-image-2` | GPT-Image-2 | Azure OpenAI | Compatibility provider |
 | `foundry-gpt-image-25-sunburst` | GPT-Image-2.5-Sunburst | Azure OpenAI | Latest high-fidelity generation |
@@ -138,7 +144,9 @@ Seven current cloud providers are available in the **Lite** edition. One retired
 - Fine-grained control over generation parameters is important
 - You can wait 10-30 seconds for results
 
-**Do not choose `foundry-mai2`:** it is retired; migrate to `foundry-mai25` or `foundry-mai25-flash`.
+**Choose `foundry-mai26`** for the newest high-quality MAI model, or `foundry-mai26-flash` for lower-latency generation. Both are Preview models and may not be suitable for production workloads.
+
+**Do not choose `foundry-mai2`:** it is retired; migrate to `foundry-mai25`, `foundry-mai25-flash`, or a 2.6 provider when available to your Foundry deployment.
 - You need fast iteration (< 10 seconds)
 - You're prototyping or experimenting
 - Your prompts are conversational or complex
@@ -574,7 +582,7 @@ t2i secrets set foundry-flux2
 **Solution:**
 ```bash
 t2i providers  # List all available providers
-# Valid current providers: foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare
+# Valid current providers: foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-mai26, foundry-mai26-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare
 ```
 
 #### Error: "Missing secret 'apiKey' for provider"

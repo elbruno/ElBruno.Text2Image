@@ -33,7 +33,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         public string Prompt { get; init; } = string.Empty;
 
         [CommandOption("--provider")]
-        [Description("Provider to use (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare, or foundry-mai2 (retired; migration only))")]
+        [Description("Provider to use (foundry-flux2, foundry-mai25, foundry-mai25-flash, foundry-mai26, foundry-mai26-flash, foundry-gpt-image-1p5, foundry-gpt-image-2, foundry-gpt-image-25-sunburst, foundry-gpt-image-25-flare, or foundry-mai2 (retired; migration only))")]
         public string? Provider { get; init; }
 
         [CommandOption("--out|-o")]
@@ -67,6 +67,14 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         [Description("Request timeout in seconds (default: 300)")]
         [DefaultValue(300)]
         public int Timeout { get; init; } = 300;
+
+        [CommandOption("--auto-aspect-ratio")]
+        [Description("Let MAI-Image-2.6 select the output aspect ratio")]
+        public bool AutoAspectRatio { get; init; }
+
+        [CommandOption("--web-grounding")]
+        [Description("Enable web grounding for MAI-Image-2.6 generation")]
+        public bool WebGrounding { get; init; }
 
         [CommandOption("--image|-i")]
         [Description("Reference image for image-to-image/edits: local file, HTTPS URL, or data URI. Repeat for multiple images (FLUX.2: 8, GPT-Image: 16, MAI-Image-2.5: 5)")]
@@ -114,6 +122,13 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         if (provider == null)
         {
             ConsoleHelpers.PrintError($"Provider '{providerId}' not found. Run 't2i providers' to list available providers.");
+            return 2;
+        }
+
+        if ((settings.AutoAspectRatio || settings.WebGrounding) &&
+            provider.Id is not ("foundry-mai26" or "foundry-mai26-flash"))
+        {
+            ConsoleHelpers.PrintError("--auto-aspect-ratio and --web-grounding can only be used with foundry-mai26 or foundry-mai26-flash.");
             return 2;
         }
 
@@ -173,6 +188,10 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
 
         // 4. Generate image
         cliOverrides["timeout"] = settings.Timeout.ToString();
+        if (settings.AutoAspectRatio)
+            cliOverrides["auto-aspect-ratio"] = "true";
+        if (settings.WebGrounding)
+            cliOverrides["web-grounding"] = "true";
         var req = new GenerationRequest(
             settings.Prompt,
             settings.Width,

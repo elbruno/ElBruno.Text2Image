@@ -30,7 +30,7 @@ Users install **one** package depending on their hardware:
 - [ElBruno.HuggingFace.Downloader](https://github.com/elbruno/ElBruno.HuggingFace.Downloader) — Model download from HuggingFace
 - [Microsoft.ML.OnnxRuntime](https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime) — ONNX inference
 - [Microsoft.Extensions.AI.Abstractions](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions) — Standard AI interfaces (`IImageGenerator`)
-- [SixLabors.ImageSharp](https://www.nuget.org/packages/SixLabors.ImageSharp) — Cross-platform image processing
+- [StbImageWriteSharp](https://www.nuget.org/packages/StbImageWriteSharp) — Managed PNG encoding for local VAE output
 
 ## Local Pipeline (Stable Diffusion)
 

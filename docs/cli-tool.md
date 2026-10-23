@@ -26,6 +26,8 @@ You can omit `--source` after enabling `https://api.nuget.org/v3/index.json` in 
 | `foundry-mai2` | `MAI-Image-2` (retired) | Microsoft Foundry |
 | `foundry-mai25` | `MAI-Image-2.5` | Microsoft Foundry |
 | `foundry-mai25-flash` | `MAI-Image-2.5-Flash` | Microsoft Foundry |
+| `foundry-mai26` | `MAI-Image-2.6` (Preview) | Microsoft Foundry |
+| `foundry-mai26-flash` | `MAI-Image-2.6-Flash` (Preview) | Microsoft Foundry |
 | `foundry-gpt-image-25-sunburst` | `GPT-Image-2.5-Sunburst` | Azure OpenAI |
 | `foundry-gpt-image-25-flare` | `GPT-Image-2.5-Flare` | Azure OpenAI |
 | `foundry-gpt-image-1p5` | `gpt-image-1.5` | Azure OpenAI |
@@ -65,6 +67,9 @@ t2i "a product landing page with readable headline text" --provider foundry-flux
 # GPT-Image-2.5-Sunburst can take several minutes.
 t2i "a space station in orbit" --provider foundry-gpt-image-25-sunburst --timeout 300 --out station.png
 
+# MAI-Image-2.6 optional controls (Preview)
+t2i "a current city event poster" --provider foundry-mai26 --auto-aspect-ratio --web-grounding --out poster.png
+
 # Image-to-image: guide generation with one or more reference images.
 t2i "turn this sketch into a watercolor painting" --provider foundry-flux2 --image sketch.png --out watercolor.png
 t2i "combine these products into one lifestyle shot" --provider foundry-gpt-image-2 -i bottle.png -i box.jpg --input-fidelity high --out combo.png
@@ -80,13 +85,15 @@ The generation command is the default command: there is no `t2i generate` subcom
 | `--height` | Requested image height | 512 |
 | `--steps`, `-s` | Requested inference steps | 20 |
 | `--timeout` | Request timeout in seconds | 300 |
+| `--auto-aspect-ratio` | Let MAI-Image-2.6 select the image aspect ratio | Disabled |
+| `--web-grounding` | Enable current web context for MAI-Image-2.6 | Disabled |
 | `--endpoint` | Listed endpoint override; configure the endpoint with `t2i config set` for reliable use | Configured endpoint |
 | `--api-key` | One-command API-key override | Resolved secret |
 | `--image`, `-i` | Reference image (local PNG/JPEG/WebP file, HTTPS URL, or data URI). Repeat for multiple images | None |
 | `--mask` | PNG mask (≤ 4 MB) for inpainting; transparent pixels mark the area to edit. Requires `--image` | None |
 | `--input-fidelity` | `low` or `high` fidelity to the reference images. Requires `--image` | Provider default |
 
-Provider APIs can constrain or adjust image dimensions. In particular, MAI Image models require each dimension to be at least 768 pixels and the total must not exceed 1,048,576 pixels. See [model support](model-support.md).
+Provider APIs can constrain or adjust image dimensions. MAI-Image-2.5 CLI requests are mapped to 1024×1024 and limited to 1,048,576 pixels. MAI-Image-2.6 requests use the requested width and height, raise either dimension below 768 to 768, and enforce the 2,359,296-pixel limit. See [model support](model-support.md).
 
 ### Reference images (image-to-image)
 
@@ -97,6 +104,8 @@ Pass `--image` (or `-i`) one or more times to edit or guide generation from exis
 | `foundry-flux2` | Up to 8 (PNG/JPEG/WebP) | — | — | `referenceImages` in the FLUX.2 request |
 | `foundry-gpt-image-1p5`, `foundry-gpt-image-2`, `foundry-gpt-image-25-sunburst`, `foundry-gpt-image-25-flare` | Up to 16 (PNG/JPEG/WebP) | ✅ PNG | ✅ | Azure OpenAI `images/edits` (multipart) |
 | `foundry-mai25`, `foundry-mai25-flash` | Up to 5 (PNG/JPEG) | — | — | `/mai/v1/images/edits` (multipart) |
+
+The 2.6 providers currently do not expose image edits through `t2i`. `--auto-aspect-ratio` and `--web-grounding` are only accepted with `foundry-mai26` and `foundry-mai26-flash`.
 
 `t2i providers` and `t2i doctor` show each provider's reference-image support. The retired `foundry-mai2` provider does not support reference images.
 

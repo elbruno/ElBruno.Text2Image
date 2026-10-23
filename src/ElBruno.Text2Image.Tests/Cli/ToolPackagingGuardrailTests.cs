@@ -73,9 +73,25 @@ public class ToolPackagingGuardrailTests
         using var process = Process.Start(psi);
         Assert.NotNull(process);
 
-        var stdOut = await process.StandardOutput.ReadToEndAsync();
-        var stdErr = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        var stdOutTask = process.StandardOutput.ReadToEndAsync();
+        var stdErrTask = process.StandardError.ReadToEndAsync();
+        try
+        {
+            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromMinutes(2));
+        }
+        catch (TimeoutException)
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+
+            await process.WaitForExitAsync();
+            throw new TimeoutException($"Command timed out: {fileName} {arguments}");
+        }
+
+        var stdOut = await stdOutTask;
+        var stdErr = await stdErrTask;
 
         Assert.True(
             process.ExitCode == 0,

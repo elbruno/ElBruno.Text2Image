@@ -129,6 +129,49 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds a MAI-Image-2.6 cloud API image generator to the service collection.
+    /// </summary>
+    public static IServiceCollection AddMaiImage26Generator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? modelId = null)
+    {
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+            return new MaiImage26Generator(endpoint, apiKey, httpClient, modelName, modelId);
+        });
+        return services;
+    }
+
+    /// <summary>
+    /// Adds a MAI-Image-2.6-Flash cloud API image generator to the service collection.
+    /// </summary>
+    public static IServiceCollection AddMaiImage26FlashGenerator(
+        this IServiceCollection services,
+        string endpoint,
+        string apiKey,
+        string? modelName = null,
+        string? modelId = null)
+    {
+        services.AddHttpClient();
+        services.AddSingleton<IImageGenerator>(sp =>
+        {
+            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+            return new MaiImage26Generator(
+                endpoint,
+                apiKey,
+                httpClient,
+                modelName ?? "MAI-Image-2.6-Flash",
+                modelId ?? "MAI-Image-2.6-Flash");
+        });
+        return services;
+    }
+
+    /// <summary>
     /// Adds a GPT-Image-1.5 cloud API image generator to the service collection.
     /// Requires an Azure OpenAI deployment endpoint and API key.
     /// Uses IHttpClientFactory for connection pooling.

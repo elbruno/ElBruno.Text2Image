@@ -17,11 +17,11 @@
 
 | Release | Highlights |
 |---------|------------|
+| **1.7.0** | Added Microsoft Foundry MAI-Image-2.6 and 2.6-Flash providers, dynamic sizing, aspect-ratio selection, optional web grounding, and replaced ImageSharp with managed PNG encoding |
 | **1.6.0** | Added reference-image (image-to-image) support: `t2i --image`/`--mask`/`--input-fidelity` for FLUX.2, GPT-Image (`images/edits`), and MAI-Image-2.5 (`/mai/v1/images/edits`) |
 | **1.5.2 (candidate)** | Candidate release with GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.5.1** | Added GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.4.0** | Added MAI-Image-2.5 and MAI-Image-2.5-Flash support |
-| **1.4.0** | Added Foundry batch-generation sample and current cloud-provider setup guidance |
 
 See the [Blazor components guide](docs/blazor-components.md) and
 [sample documentation](src/samples/BlazorText2ImageDemo/README.md).
@@ -46,7 +46,7 @@ See the [Blazor components guide](docs/blazor-components.md) and
 
 ## What is This?
 
-**Text-to-image for .NET developers: use as library, CLI tool, or AI coding skill. Cloud (FLUX.2, MAI-Image-2.5, GPT-Image) + local ONNX (Stable Diffusion). No Python required.**
+**Text-to-image for .NET developers: use as library, CLI tool, or AI coding skill. Cloud (FLUX.2, MAI-Image-2.5/2.6, GPT-Image) + local ONNX (Stable Diffusion). No Python required.**
 
 ## Three Ways to Use It
 
@@ -67,6 +67,8 @@ See the [Blazor components guide](docs/blazor-components.md) and
 | **FLUX.2 Pro/Flex** | `foundry-flux2` | Microsoft Foundry | Photorealistic + text-heavy design | Available |
 | **MAI-Image-2.5** | `foundry-mai25` | Microsoft Foundry | High-quality generation | Available |
 | **MAI-Image-2.5-Flash** | `foundry-mai25-flash` | Microsoft Foundry | Speed-optimized generation | Available |
+| **MAI-Image-2.6** | `foundry-mai26` | Microsoft Foundry | Latest high-quality generation | Preview |
+| **MAI-Image-2.6-Flash** | `foundry-mai26-flash` | Microsoft Foundry | Faster 2.6 generation | Preview |
 | **GPT-Image-1.5** | `foundry-gpt-image-1p5` | Azure OpenAI | High-fidelity image generation | Available |
 | **GPT-Image-2** | `foundry-gpt-image-2` | Azure OpenAI | Compatibility provider | Available |
 | **GPT-Image-2.5-Sunburst** | `foundry-gpt-image-25-sunburst` | Azure OpenAI | Latest high-fidelity generation | Available |
@@ -144,11 +146,17 @@ t2i --provider foundry-flux2 "a futuristic cityscape with neon lights"
 t2i config set foundry-flux2.model FLUX.2-flex
 t2i "a business card design with modern minimalist style"
 
-# MAI-Image-2.5 (latest high-quality model)
+# MAI-Image-2.5
 t2i --provider foundry-mai25 "a photograph of a red fox in an autumn forest"
 
 # MAI-Image-2.5-Flash (speed-optimized)
 t2i --provider foundry-mai25-flash "a quick concept sketch of a city skyline"
+
+# MAI-Image-2.6 (Preview), optional dynamic aspect ratio and web grounding
+t2i --provider foundry-mai26 "a cinematic product photo" --auto-aspect-ratio --web-grounding
+
+# MAI-Image-2.6-Flash (Preview)
+t2i --provider foundry-mai26-flash "a quick concept image"
 
 # GPT-Image-1.5 via Azure OpenAI
 t2i --provider foundry-gpt-image-1p5 "an impressionist painting of a garden"
@@ -172,7 +180,7 @@ t2i config show
 t2i config set provider foundry-flux2
 
 # Set model variant
-`foundry-mai2` is retained only as a migration entry; use `foundry-mai25` or `foundry-mai25-flash`.
+`foundry-mai2` is retained only as a migration entry; use an active MAI provider such as `foundry-mai25`, `foundry-mai25-flash`, `foundry-mai26`, or `foundry-mai26-flash`.
 t2i config set foundry-flux2.model FLUX.2-flex
 
 # Provide credentials
@@ -193,8 +201,8 @@ See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 ## Features
 
 - 🎨 **Text-to-Image** — Generate images from text prompts using Stable Diffusion, FLUX.2, GPT-Image-1.5, and more
-- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2, MAI-Image-2.5, MAI-Image-2.5-Flash, GPT-Image-1.5, GPT-Image-2, GPT-Image-2.5-Sunburst, GPT-Image-2.5-Flare
-- ☁️ **Cloud APIs** — FLUX.2, MAI-Image-2.5, MAI-Image-2.5-Flash (Microsoft Foundry), GPT-Image-1.5, GPT-Image-2, GPT-Image-2.5-Sunburst, GPT-Image-2.5-Flare (Azure OpenAI)
+- 🤖 **Multiple Models** — Stable Diffusion 1.5, LCM Dreamshaper, SDXL Turbo, SD 2.1, FLUX.2, MAI-Image-2.5/2.5-Flash, MAI-Image-2.6/2.6-Flash, GPT-Image-1.5, GPT-Image-2, GPT-Image-2.5-Sunburst, GPT-Image-2.5-Flare
+- ☁️ **Cloud APIs** — FLUX.2, MAI-Image-2.5/2.5-Flash and MAI-Image-2.6/2.6-Flash (Microsoft Foundry), GPT-Image-1.5, GPT-Image-2, GPT-Image-2.5-Sunburst, GPT-Image-2.5-Flare (Azure OpenAI)
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
@@ -313,6 +321,28 @@ using var generator = new MaiImage25Generator(
 var result = await generator.GenerateAsync("A photograph of a red fox in an autumn forest");
 await result.SaveAsync("mai-image25-output.png");
 ```
+
+### MAI-Image-2.6 and 2.6-Flash (Preview)
+
+```csharp
+using var generator = new MaiImage26Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    httpClient: new HttpClient(),
+    modelName: "MAI-Image-2.6",
+    modelId: "your-deployment-name");
+
+var result = await generator.GenerateAsync("A detailed product photo", new ImageGenerationOptions
+{
+    Width = 1536,
+    Height = 1024,
+    AutoAspectRatio = true,
+    WebGrounding = true
+});
+await result.SaveAsync("mai-image26-output.png");
+```
+
+Use `modelName` for display and `modelId` for the Foundry deployment name. For the Flash variant, pass `MAI-Image-2.6-Flash` as `modelName` and its deployment name as `modelId`.
 
 ### Basic Usage — Cloud (GPT-Image-1.5 via Azure OpenAI)
 
@@ -452,6 +482,16 @@ services.AddMaiImage25FlashGenerator(
     endpoint: "https://your-resource.services.ai.azure.com",
     apiKey: "your-api-key");
 
+// MAI-Image-2.6 and 2.6-Flash cloud models (Preview)
+services.AddMaiImage26Generator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelId: "your-2.6-deployment-name");
+services.AddMaiImage26FlashGenerator(
+    endpoint: "https://your-resource.services.ai.azure.com",
+    apiKey: "your-api-key",
+    modelId: "your-2.6-flash-deployment-name");
+
 // Inject IImageGenerator anywhere
 public class MyService(IImageGenerator generator)
 {
@@ -483,6 +523,8 @@ public class MyService(IImageGenerator generator)
 | **MAI-Image-2 (retired)** | `MaiImage2Generator` | Microsoft Foundry | Retired | ⚠️ Migration entry only (`foundry-mai2`) |
 | **MAI-Image-2.5** | `MaiImage25Generator` | Microsoft Foundry | Excellent | ✅ Available |
 | **MAI-Image-2.5-Flash** | `MaiImage25Generator` | Microsoft Foundry | Excellent (fast) | ✅ Available |
+| **MAI-Image-2.6** | `MaiImage26Generator` | Microsoft Foundry | Latest generation | Preview |
+| **MAI-Image-2.6-Flash** | `MaiImage26Generator` | Microsoft Foundry | Faster generation | Preview |
 | **GPT-Image-1.5** | `GptImage1p5Generator` | Azure OpenAI | Excellent | ✅ Available |
 | **GPT-Image-2** | `GptImage2Generator` | Azure OpenAI | Excellent | ✅ Available |
 | **GPT-Image-2.5-Sunburst** | `GptImage25Generator` | Azure OpenAI | Excellent | ✅ Available (`foundry-gpt-image-25-sunburst`) |
@@ -541,6 +583,7 @@ See [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) for full Foundry setu
 - [docs/flux2-setup-guide.md](docs/flux2-setup-guide.md) — Microsoft Foundry FLUX.2 setup
 - [docs/mai-image-2-setup-guide.md](docs/mai-image-2-setup-guide.md) — Microsoft Foundry MAI-Image-2 setup
 - [docs/mai-image-2.5-setup-guide.md](docs/mai-image-2.5-setup-guide.md) — Microsoft Foundry MAI-Image-2.5 / 2.5-Flash setup
+- [docs/mai-image-2.6-setup-guide.md](docs/mai-image-2.6-setup-guide.md) — Microsoft Foundry MAI-Image-2.6 / 2.6-Flash setup (Preview)
 - [docs/gpt-image-1p5-setup-guide.md](docs/gpt-image-1p5-setup-guide.md) — Azure OpenAI GPT-Image-1.5 setup
 - [docs/model-support.md](docs/model-support.md) — Detailed model comparison
 - [docs/blazor-components.md](docs/blazor-components.md) — Blazor component API and integration guide

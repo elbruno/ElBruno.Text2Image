@@ -41,6 +41,10 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             Assert.Contains("MAI-Image-2.5", content);
             Assert.Contains("foundry-mai25-flash", content);
             Assert.Contains("MAI-Image-2.5-Flash", content);
+            Assert.Contains("foundry-mai26", content);
+            Assert.Contains("MAI-Image-2.6", content);
+            Assert.Contains("foundry-mai26-flash", content);
+            Assert.Contains("MAI-Image-2.6-Flash", content);
             Assert.Contains("foundry-gpt-image-1p5", content);
             Assert.Contains("GPT-Image-1.5", content);
             Assert.Contains("foundry-gpt-image-2", content);
@@ -49,8 +53,8 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             Assert.Contains("GPT-Image-2.5-Sunburst", content);
             Assert.Contains("foundry-gpt-image-25-flare", content);
             Assert.Contains("GPT-Image-2.5-Flare", content);
-            Assert.Contains("Seven current cloud providers", content);
-            Assert.Contains("ElBruno.Text2Image.Cli >=1.6.0", content);
+            Assert.Contains("Nine current cloud providers", content);
+            Assert.Contains("ElBruno.Text2Image.Cli >=1.7.0", content);
             Assert.Contains("foundry-mai2", content);
             Assert.Contains("do not use", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("t2i upgrade", content);

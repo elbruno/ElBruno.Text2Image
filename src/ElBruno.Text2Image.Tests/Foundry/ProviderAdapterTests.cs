@@ -453,6 +453,8 @@ public class ProviderAdapterTests : IDisposable
         Assert.Equal("MAI-Image-2", new FoundryMaiImage2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
         Assert.Equal("MAI-Image-2.5", new FoundryMaiImage25Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
         Assert.Equal("MAI-Image-2.5-Flash", new FoundryMaiImage25FlashAdapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("MAI-Image-2.6", new FoundryMaiImage26Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
+        Assert.Equal("MAI-Image-2.6-Flash", new FoundryMaiImage26FlashAdapter(httpClientFactory, secretResolver, configStore).DefaultModel);
         Assert.Equal("FLUX.2-pro", new FoundryFlux2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
         Assert.Equal("gpt-image-2", new FoundryGptImage2Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
         Assert.Equal("gpt-image-1.5", new FoundryGptImage1p5Adapter(httpClientFactory, secretResolver, configStore).DefaultModel);
@@ -824,6 +826,86 @@ public class ProviderAdapterTests : IDisposable
             () => adapter.GenerateAsync(request, null, CancellationToken.None));
     }
 
+    [Theory]
+    [InlineData("foundry-mai26", "MAI-Image-2.6")]
+    [InlineData("foundry-mai26-flash", "MAI-Image-2.6-Flash")]
+    public async Task MaiImage26Adapter_GenerateAsync_Uses26DimensionsAndOptInOptions(string providerId, string model)
+    {
+        string? requestBody = null;
+        var (adapter, secretStore, configStore) = CreateMaiImage26AdapterWithDependencies(providerId, request =>
+        {
+            requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{"data":[{"b64_json":"iVBORw=="}]}""",
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var config = new AppConfig();
+        config.Providers[providerId] = new ProviderConfig
+        {
+            Endpoint = "https://configured.services.ai.azure.com",
+            Model = model
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync(providerId, "apiKey", "test-key", CancellationToken.None);
+
+        var progressMessages = new List<string?>();
+        var progress = new InlineProgress<GenerationProgress>(item => progressMessages.Add(item.Message));
+        var request = new GenerationRequest(
+            "test",
+            512,
+            700,
+            20,
+            Path.Combine(_tempDir, $"{providerId}.png"),
+            new Dictionary<string, string?>
+            {
+                ["auto-aspect-ratio"] = "true",
+                ["web-grounding"] = "true"
+            });
+
+        await adapter.GenerateAsync(request, progress, CancellationToken.None);
+
+        using var document = System.Text.Json.JsonDocument.Parse(requestBody!);
+        var root = document.RootElement;
+        Assert.Equal(model, root.GetProperty("model").GetString());
+        Assert.Equal(768, root.GetProperty("width").GetInt32());
+        Assert.Equal(768, root.GetProperty("height").GetInt32());
+        Assert.True(root.GetProperty("auto_aspect_ratio").GetBoolean());
+        Assert.True(root.GetProperty("web_grounding").GetBoolean());
+        Assert.Contains(progressMessages, message => message?.Contains("minimum is 768px") == true);
+    }
+
+    [Theory]
+    [InlineData("foundry-mai26")]
+    [InlineData("foundry-mai26-flash")]
+    public async Task MaiImage26Adapter_GenerateAsync_RejectsPixelCountAboveMaximum(string providerId)
+    {
+        var (adapter, secretStore, configStore) = CreateMaiImage26AdapterWithDependencies(providerId);
+        var config = new AppConfig();
+        config.Providers[providerId] = new ProviderConfig
+        {
+            Endpoint = "https://configured.services.ai.azure.com",
+            Model = providerId == "foundry-mai26" ? "MAI-Image-2.6" : "MAI-Image-2.6-Flash"
+        };
+        await configStore.SaveAsync(config, CancellationToken.None);
+        await secretStore.SetAsync(providerId, "apiKey", "test-key", CancellationToken.None);
+
+        var request = new GenerationRequest(
+            "too large",
+            1600,
+            1480,
+            20,
+            Path.Combine(_tempDir, $"{providerId}-too-large.png"),
+            new Dictionary<string, string?>());
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => adapter.GenerateAsync(request, null, CancellationToken.None));
+    }
+
     #endregion
 
     #region Helper Methods
@@ -936,6 +1018,24 @@ public class ProviderAdapterTests : IDisposable
         return (adapter, secretStore, configStore);
     }
 
+    private (IProviderAdapter Adapter, FakeSecretStore SecretStore, ConfigStore ConfigStore)
+        CreateMaiImage26AdapterWithDependencies(
+            string providerId,
+            Func<HttpRequestMessage, HttpResponseMessage>? createHttpHandler = null)
+    {
+        var httpClientFactory = new FakeHttpClientFactory(createHttpHandler);
+        var secretStore = new FakeSecretStore();
+        var secretResolver = new SecretResolver(new ISecretStore[] { secretStore });
+        var configStore = new ConfigStore();
+        IProviderAdapter adapter = providerId switch
+        {
+            "foundry-mai26" => new FoundryMaiImage26Adapter(httpClientFactory, secretResolver, configStore),
+            "foundry-mai26-flash" => new FoundryMaiImage26FlashAdapter(httpClientFactory, secretResolver, configStore),
+            _ => throw new ArgumentException("Unknown MAI-Image-2.6 provider.", nameof(providerId))
+        };
+        return (adapter, secretStore, configStore);
+    }
+
     private (IProviderAdapter Adapter, SecretResolver Resolver, FakeSecretStore SecretStore, ConfigStore ConfigStore) 
         CreateGptImage2AdapterWithDependencies()
     {
@@ -984,6 +1084,11 @@ public class ProviderAdapterTests : IDisposable
             }));
             return new HttpClient(handler);
         }
+    }
+
+    private sealed class InlineProgress<T>(Action<T> onReport) : IProgress<T>
+    {
+        public void Report(T value) => onReport(value);
     }
 
     private sealed class FakeHttpHandler : HttpMessageHandler
