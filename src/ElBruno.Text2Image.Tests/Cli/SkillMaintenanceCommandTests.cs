@@ -35,6 +35,7 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             var content = await File.ReadAllTextAsync(path);
             Assert.Contains("references/providers.md", content);
             Assert.Contains("t2i upgrade", content);
+            Assert.Contains("ElBruno.Text2Image.Cli >=1.7.0", content);
         }
 
         foreach (var path in ProviderSkillPaths)
@@ -47,11 +48,21 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             Assert.Contains("foundry-mai25", content);
             Assert.Contains("MAI-Image-2.5", content);
             Assert.Contains("foundry-mai25-flash", content);
+            Assert.Contains("MAI-Image-2.5-Flash", content);
+            Assert.Contains("foundry-mai26", content);
+            Assert.Contains("MAI-Image-2.6", content);
+            Assert.Contains("foundry-mai26-flash", content);
+            Assert.Contains("MAI-Image-2.6-Flash", content);
             Assert.Contains("foundry-gpt-image-1p5", content);
             Assert.Contains("foundry-gpt-image-2", content);
             Assert.Contains("foundry-gpt-image-25-sunburst", content);
             Assert.Contains("foundry-gpt-image-25-flare", content);
-            Assert.Contains("do not select", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("GPT-Image-2.5-Flare", content);
+            Assert.True(
+                content.Contains("Nine current cloud providers", StringComparison.Ordinal),
+                $"Provider reference '{path}' is missing current provider data.{Environment.NewLine}{content}");
+            Assert.Contains("foundry-mai2", content);
+            Assert.Contains("do not use", content, StringComparison.OrdinalIgnoreCase);
         }
     }
 

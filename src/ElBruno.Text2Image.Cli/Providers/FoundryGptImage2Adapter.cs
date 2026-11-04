@@ -22,6 +22,8 @@ internal sealed class FoundryGptImage2Adapter : IProviderAdapter
     public IReadOnlyList<string> RequiredFields => new[] { "endpoint", "model" };
     public string DefaultModel => "gpt-image-2";
 
+    public ReferenceImageCapabilities ReferenceImageSupport { get; } = new(16, SupportsMask: true, SupportsInputFidelity: true, ReferenceImageCapabilities.PngJpegWebp);
+
     public FoundryGptImage2Adapter(
         IHttpClientFactory httpClientFactory,
         SecretResolver secretResolver,
@@ -129,11 +131,11 @@ internal sealed class FoundryGptImage2Adapter : IProviderAdapter
 
         progress?.Report(new GenerationProgress(0, 1, "Calling Azure OpenAI API..."));
 
-        var result = await generator.GenerateAsync(req.Prompt, new ImageGenerationOptions
+        var result = await generator.GenerateAsync(req.Prompt, req.WithReferenceInputs(new ImageGenerationOptions
         {
             Width = req.Width > 0 ? req.Width : 1024,
             Height = req.Height > 0 ? req.Height : 1024
-        }, cancellationToken: ct);
+        }), cancellationToken: ct);
 
         await result.SaveAsync(req.OutputPath);
         sw.Stop();

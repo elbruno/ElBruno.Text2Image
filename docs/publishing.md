@@ -6,7 +6,13 @@ This guide covers how to publish new versions of **ElBruno.Text2Image** to NuGet
 
 | Package | Project | Description |
 |---------|---------|-------------|
-| `ElBruno.Text2Image` | `src/ElBruno.Text2Image/` | Text-to-image generation using Stable Diffusion (ONNX) and FLUX.2 (cloud API) |
+| `ElBruno.Text2Image` | `src/ElBruno.Text2Image/` | Core API and local Stable Diffusion pipeline |
+| `ElBruno.Text2Image.Cpu` | `src/ElBruno.Text2Image.Cpu/` | Local CPU inference runtime |
+| `ElBruno.Text2Image.Cuda` | `src/ElBruno.Text2Image.Cuda/` | Local NVIDIA CUDA inference runtime |
+| `ElBruno.Text2Image.DirectML` | `src/ElBruno.Text2Image.DirectML/` | Local DirectML inference runtime for Windows |
+| `ElBruno.Text2Image.Foundry` | `src/ElBruno.Text2Image.Foundry/` | Microsoft Foundry and Azure OpenAI cloud generators |
+| `ElBruno.Text2Image.BlazorComponents` | `src/ElBruno.Text2Image.BlazorComponents/` | Reusable Blazor UI components |
+| `ElBruno.Text2Image.Cli` | `src/ElBruno.Text2Image.Cli/` | Cloud-first `t2i` .NET tool, including an inspectable Agent Skill under `skills/t2i/` |
 
 > **Maintenance rule:** If a new packable library is added under `src/`, update `.github/workflows/publish.yml` in the same PR so the new project is packed/pushed, and add a matching NuGet Trusted Publishing policy.
 
@@ -39,6 +45,9 @@ These steps only need to be done once.
    - **Name:** `NUGET_USER`
    - **Value:** `elbruno` (your NuGet.org profile name — **not** your email)
 
+Configure a Trusted Publishing policy for each package above, using this repository, the
+`publish.yml` workflow, and the `release` environment.
+
 ## Publishing a New Version
 
 ### ⚠️ UNIFIED VERSIONING RULE
@@ -51,17 +60,18 @@ These steps only need to be done once.
 - `src/ElBruno.Text2Image.Cuda/ElBruno.Text2Image.Cuda.csproj`
 - `src/ElBruno.Text2Image.Cpu/ElBruno.Text2Image.Cpu.csproj`
 - `src/ElBruno.Text2Image.DirectML/ElBruno.Text2Image.DirectML.csproj`
+- `src/ElBruno.Text2Image.BlazorComponents/ElBruno.Text2Image.BlazorComponents.csproj`
 
 **Use the provided script to update all at once:**
 
 ```powershell
-.\scripts\Update-AllVersions.ps1 -Version "1.2.2"
+.\scripts\Update-AllVersions.ps1 -Version "1.7.1"
 ```
 
 Add `-Commit` to auto-commit, and `-Tag` to auto-create the git tag:
 
 ```powershell
-.\scripts\Update-AllVersions.ps1 -Version "1.2.2" -Commit -Tag
+.\scripts\Update-AllVersions.ps1 -Version "1.7.1" -Commit -Tag
 ```
 
 A pre-commit hook (`.githooks/pre-commit-version-check`) will verify that all packages have matching versions before you commit. If versions don't match, you'll see an error — use the script above to fix them.
@@ -74,12 +84,10 @@ A pre-commit hook (`.githooks/pre-commit-version-check`) will verify that all pa
 
 This is the standard workflow — the version is derived from the release tag.
 
-1. **Update the version** in the csproj file:
+1. **Update all package versions** using the version script:
 
-   - `src/ElBruno.Text2Image/ElBruno.Text2Image.csproj`
-
-   ```xml
-   <Version>1.0.0</Version>
+   ```powershell
+   .\scripts\Update-AllVersions.ps1 -Version "1.7.1"
    ```
 
 2. **NuGet icon source** (already configured):
@@ -87,14 +95,14 @@ This is the standard workflow — the version is derived from the release tag.
    - `images/logo_01_nuget.png`
    - Packed into the `.nupkg` as `logo_01_nuget.png` via `<PackageIcon>logo_01_nuget.png</PackageIcon>`
 
-3. **Commit and push** the version change to `main`
+3. **Commit and push** the tested release changes and version bump to `main`
 4. **Create a GitHub Release:**
    - Go to the repo → **Releases** → **Draft a new release**
-   - Create a new tag: `v1.0.0` (must match the version in the csproj)
+   - Create a new tag: `v1.7.1` (must match the version in the csproj)
    - Fill in the release title and notes
    - Click **Publish release**
 5. The **Publish to NuGet** workflow runs automatically:
-   - Strips the `v` prefix from the tag → uses `1.0.0` as the package version
+   - Strips the `v` prefix from the tag → uses `1.7.1` as the package version
    - Builds, tests, packs, and pushes to NuGet.org
 
 ### Option B: Manual Dispatch

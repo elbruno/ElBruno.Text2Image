@@ -7,14 +7,14 @@ using Microsoft.Extensions.AI;
 namespace ElBruno.Text2Image.Foundry;
 
 /// <summary>
-/// MAI-Image-2.5 / MAI-Image-2.5-Flash text-to-image generator using the Microsoft Foundry
+/// MAI image text-to-image generator using the Microsoft Foundry
 /// MAI image generations API (<c>/mai/v1/images/generations</c>).
 /// This is a cloud API model — no local ONNX models are needed.
 /// A single instance targets one model variant, selected via <see cref="ModelId"/>
-/// (e.g. <c>MAI-Image-2.5</c> or <c>MAI-Image-2.5-Flash</c>).
+/// (for example <c>MAI-Image-2.5</c> or <c>MAI-Image-2.6-Flash</c>).
 /// The model responds synchronously (no 202 polling required).
 /// </summary>
-public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
+public class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.AI.IImageGenerator
 {
     private readonly HttpClient _httpClient;
     private readonly string _endpoint;
@@ -22,10 +22,29 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     private readonly string _modelDisplayName;
     private readonly string _modelId;
     private readonly bool _ownsHttpClient;
+    private readonly bool _use2Point6Contract;
 
     private const int MaxErrorBodyLength = 1024;
     private const int MaxPromptLength = 32_000;
     private const long MaxResponseSizeBytes = 50 * 1024 * 1024; // 50MB limit for image responses
+    private const int MaxEditImages = 5;
+
+    /// <summary>
+    /// The MAI image edits endpoint (<c>/mai/v1/images/edits</c>) derived from <see cref="Endpoint"/>.
+    /// Used when reference images are supplied.
+    /// </summary>
+    public string EditsEndpoint
+    {
+        get
+        {
+            const string generationsPath = "/images/generations";
+            var idx = _endpoint.IndexOf(generationsPath, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
+                throw new NotSupportedException(
+                    $"Cannot derive the MAI image edits URL from custom endpoint path. Use a base resource URL or a URL ending in /mai/v1/images/generations to enable reference images.");
+            return string.Concat(_endpoint.AsSpan(0, idx), "/images/edits", _endpoint.AsSpan(idx + generationsPath.Length));
+        }
+    }
 
     /// <inheritdoc />
     public string ModelName => _modelDisplayName;
@@ -66,6 +85,28 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
         string? modelName = null,
         string? modelId = null,
         int? timeoutSeconds = null)
+        : this(endpoint, apiKey, httpClient, modelName, modelId, timeoutSeconds, use2Point6Contract: false)
+    {
+    }
+
+    /// <summary>
+    /// Creates a MAI image generator with the requested API contract.
+    /// </summary>
+    /// <param name="endpoint">The Microsoft Foundry resource or generations endpoint.</param>
+    /// <param name="apiKey">The API key for authentication.</param>
+    /// <param name="httpClient">HTTP client used for API requests.</param>
+    /// <param name="modelName">Display name for the selected model.</param>
+    /// <param name="modelId">Foundry deployment name sent in the request.</param>
+    /// <param name="timeoutSeconds">Optional HTTP timeout.</param>
+    /// <param name="use2Point6Contract">Whether to use the MAI-Image-2.6 request contract.</param>
+    protected MaiImage25Generator(
+        string endpoint,
+        string apiKey,
+        HttpClient httpClient,
+        string? modelName,
+        string? modelId,
+        int? timeoutSeconds,
+        bool use2Point6Contract)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
@@ -80,6 +121,7 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
         _modelId = modelId ?? "MAI-Image-2.5";
         _httpClient = httpClient;
         _ownsHttpClient = false;
+        _use2Point6Contract = use2Point6Contract;
 
         if (timeoutSeconds.HasValue)
         {
@@ -149,7 +191,7 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
 
         if (includeEndpoint)
         {
-            return "\n\nHint: The endpoint URL may be incorrect. MAI-Image-2.5 uses the MAI image generations API at /mai/v1/images/generations.\n" +
+            return "\n\nHint: The endpoint URL may be incorrect. MAI image models use the MAI image generations API at /mai/v1/images/generations.\n" +
                    $"The resolved endpoint was: {_endpoint}\n" +
                    "Ensure you provide either:\n" +
                    "  - A base URL (e.g., https://your-resource.services.ai.azure.com)\n" +
@@ -202,36 +244,92 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
         if (prompt.Length > MaxPromptLength)
             throw new ArgumentOutOfRangeException(nameof(prompt), $"Prompt must be {MaxPromptLength} characters or fewer");
 
-        // Use MAI-Image-2.5 defaults (1024×1024) when caller provides no explicit options.
+        // Use a 1024×1024 default when caller provides no explicit options.
         // ImageGenerationOptions defaults to 512×512 which is for local ONNX models.
         var width = options?.Width > 0 ? options.Width : 1024;
         var height = options?.Height > 0 ? options.Height : 1024;
         options ??= new ImageGenerationOptions();
 
-        var sizeString = MapToSizeString(width, height);
-        var (mappedWidth, mappedHeight) = ParseSizeString(sizeString);
+        if (!string.IsNullOrWhiteSpace(options.MaskImage))
+            throw new NotSupportedException($"{_modelDisplayName} does not support mask images. Use a GPT-Image provider for masked edits.");
+
+        var isEdit = options.ReferenceImages is { Count: > 0 };
+        if (isEdit && options.ReferenceImages!.Count > MaxEditImages)
+            throw new ArgumentException($"{_modelDisplayName} supports at most {MaxEditImages} reference images (got {options.ReferenceImages.Count}).", nameof(options));
+        if (_use2Point6Contract && isEdit)
+            throw new NotSupportedException("MAI-Image-2.6 image editing is not exposed by this generator yet.");
+
+        if (_use2Point6Contract)
+        {
+            width = Math.Max(width, 768);
+            height = Math.Max(height, 768);
+        }
+
+        var mappedWidth = width;
+        var mappedHeight = height;
+        string? sizeString = null;
+        if (_use2Point6Contract)
+        {
+            if ((long)width * height > 2_359_296)
+                throw new ArgumentOutOfRangeException(nameof(options), "MAI-Image-2.6 maximum total pixels is 2,359,296");
+        }
+        else
+        {
+            sizeString = MapToSizeString(width, height);
+            (mappedWidth, mappedHeight) = ParseSizeString(sizeString);
+        }
 
         var sw = Stopwatch.StartNew();
         var seed = options.Seed ?? Random.Shared.Next();
 
-        var requestBody = new MaiImage25Request
-        {
-            Model = _modelId,
-            Prompt = prompt,
-            Size = sizeString,
-            N = 1,
-            OutputFormat = "png",
-            OutputCompression = 100
-        };
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+        using var request = new HttpRequestMessage(HttpMethod.Post, isEdit ? EditsEndpoint : _endpoint);
         request.Headers.TryAddWithoutValidation("api-key", _apiKey);
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {_apiKey}");
 
-        // Serialize to bytes so Content-Length is set explicitly.
-        var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(requestBody, MaiImage25JsonContext.Default.MaiImage25Request);
-        request.Content = new ByteArrayContent(jsonBytes);
-        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+        if (isEdit)
+        {
+            var multipart = new MultipartFormDataContent
+            {
+                { new StringContent(_modelId), "model" },
+                { new StringContent(prompt), "prompt" }
+            };
+            var index = 0;
+            foreach (var reference in options.ReferenceImages!)
+            {
+                var (bytes, mediaType) = await ReferenceImageHelper.ResolveAsync(reference, _httpClient, cancellationToken).ConfigureAwait(false);
+                if (mediaType is not ("image/png" or "image/jpeg"))
+                    throw new ArgumentException($"{_modelDisplayName} image edits accept only PNG or JPEG reference images.", nameof(options));
+                var part = new ByteArrayContent(bytes);
+                part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType);
+                multipart.Add(part, "image", $"image{index++}{ReferenceImageHelper.GetFileExtension(mediaType)}");
+            }
+            request.Content = multipart;
+        }
+        else
+        {
+            // Serialize to bytes so Content-Length is set explicitly.
+            var jsonBytes = _use2Point6Contract
+                ? JsonSerializer.SerializeToUtf8Bytes(new MaiImage26Request
+                {
+                    Model = _modelId,
+                    Prompt = prompt,
+                    Width = width,
+                    Height = height,
+                    AutoAspectRatio = options.AutoAspectRatio,
+                    WebGrounding = options.WebGrounding
+                }, MaiImage25JsonContext.Default.MaiImage26Request)
+                : JsonSerializer.SerializeToUtf8Bytes(new MaiImage25Request
+                {
+                    Model = _modelId,
+                    Prompt = prompt,
+                    Size = sizeString!,
+                    N = 1,
+                    OutputFormat = "png",
+                    OutputCompression = 100
+                }, MaiImage25JsonContext.Default.MaiImage25Request);
+            request.Content = new ByteArrayContent(jsonBytes);
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+        }
 
         var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -322,6 +420,7 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
             localOptions.Width = size.Width;
             localOptions.Height = size.Height;
         }
+        ImageGenerationOptionsConverter.ApplyEditInputs(localOptions, imageRequest, options);
 
         var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
@@ -336,6 +435,33 @@ public sealed class MaiImage25Generator : IImageGenerator, Microsoft.Extensions.
     {
         if (_ownsHttpClient)
             _httpClient.Dispose();
+    }
+}
+
+/// <summary>
+/// MAI-Image-2.6 and MAI-Image-2.6-Flash generator using the Microsoft Foundry MAI image API.
+/// </summary>
+public sealed class MaiImage26Generator : MaiImage25Generator
+{
+    /// <summary>
+    /// Creates a generator targeting a MAI-Image-2.6 Foundry deployment.
+    /// </summary>
+    public MaiImage26Generator(
+        string endpoint,
+        string apiKey,
+        HttpClient httpClient,
+        string? modelName = null,
+        string? modelId = null,
+        int? timeoutSeconds = null)
+        : base(
+            endpoint,
+            apiKey,
+            httpClient,
+            modelName ?? "MAI-Image-2.6",
+            modelId ?? "MAI-Image-2.6",
+            timeoutSeconds,
+            use2Point6Contract: true)
+    {
     }
 }
 
@@ -371,6 +497,29 @@ internal sealed class MaiImage25Response
     public List<MaiImage25ImageData>? Data { get; set; }
 }
 
+internal sealed class MaiImage26Request
+{
+    [JsonPropertyName("model")]
+    public required string Model { get; set; }
+
+    [JsonPropertyName("prompt")]
+    public required string Prompt { get; set; }
+
+    [JsonPropertyName("width")]
+    public int Width { get; set; }
+
+    [JsonPropertyName("height")]
+    public int Height { get; set; }
+
+    [JsonPropertyName("auto_aspect_ratio")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AutoAspectRatio { get; set; }
+
+    [JsonPropertyName("web_grounding")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? WebGrounding { get; set; }
+}
+
 internal sealed class MaiImage25ImageData
 {
     [JsonPropertyName("b64_json")]
@@ -384,6 +533,7 @@ internal sealed class MaiImage25ImageData
 }
 
 [JsonSerializable(typeof(MaiImage25Request))]
+[JsonSerializable(typeof(MaiImage26Request))]
 [JsonSerializable(typeof(MaiImage25Response))]
 internal sealed partial class MaiImage25JsonContext : JsonSerializerContext
 {

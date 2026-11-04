@@ -1,6 +1,6 @@
 # MAI-Image-2.5 and MAI-Image-2.5-Flash setup
 
-MAI-Image-2.5 and MAI-Image-2.5-Flash are Preview Microsoft Foundry models. Both support text-to-image generation and image-to-image edits in the Foundry MAI Image API. The `t2i` CLI supports text-to-image generation.
+MAI-Image-2.5 and MAI-Image-2.5-Flash are Preview Microsoft Foundry models. Both support text-to-image generation and image-to-image edits in the Foundry MAI Image API. The `t2i` CLI and `MaiImage25Generator` support both.
 
 ## Deploy a model
 
@@ -40,4 +40,16 @@ https://<resource-name>.services.ai.azure.com/mai/v1/images/generations
 
 It accepts a deployment name in `model`, plus `prompt`, `width`, and `height`. Both dimensions must be at least 768 pixels and their product cannot exceed 1,048,576 pixels. Responses are PNG images encoded as base64.
 
-MAI-Image-2.5 and MAI-Image-2.5-Flash also support image edits at `/mai/v1/images/edits`, but that API is not exposed by `t2i`.
+## Image edits (reference images)
+
+When reference images are supplied, the generator calls `/mai/v1/images/edits` (derived from the generations endpoint) with a multipart request containing `model`, `prompt`, and up to five `image` parts (PNG or JPEG). Masks are not supported.
+
+```bash
+t2i "restyle this figurine as a ceramic sculpture" --provider foundry-mai25 --image fox.png --out ceramic-fox.png
+```
+
+```csharp
+var options = new ImageGenerationOptions();
+options.AddReferenceImageFromFile("fox.png");
+var result = await generator.GenerateAsync("restyle as a ceramic sculpture", options);
+```

@@ -320,6 +320,14 @@ The `Flux2Generator` sends HTTP POST requests to the Microsoft Foundry endpoint:
 
 The generator supports both `b64_json` (inline base64) and `url` (download link) response formats.
 
+### Reference images
+
+Reference images set through `ImageGenerationOptions.ReferenceImages` / `AddReferenceImageFromFile` (or `t2i --image`) are forwarded as data URI / URL entries in the request's `referenceImages` array. The CLI accepts up to 8 PNG/JPEG/WebP images for FLUX.2. Masks are not supported and throw `NotSupportedException`.
+
+```bash
+t2i "turn this sketch into a watercolor painting" --provider foundry-flux2 --image sketch.png --out watercolor.png
+```
+
 ## Same Interface as Local Models
 
 `Flux2Generator` implements the same `IImageGenerator` interface as `StableDiffusion15` and `LcmDreamshaperV7`. This means you can swap between local and cloud models without changing your application code:

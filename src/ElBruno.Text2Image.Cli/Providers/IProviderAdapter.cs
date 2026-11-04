@@ -40,6 +40,12 @@ public interface IProviderAdapter
     string? DefaultModel => null;
 
     /// <summary>
+    /// Reference-image (image-to-image / edit) capabilities. Null when the provider
+    /// does not accept reference images.
+    /// </summary>
+    ReferenceImageCapabilities? ReferenceImageSupport => null;
+
+    /// <summary>
     /// Checks if the provider is ready to use (e.g., GPU available, API reachable).
     /// </summary>
     Task<ProviderHealth> CheckAsync(CancellationToken ct);
@@ -68,6 +74,26 @@ public enum ProviderKind
 public sealed record ProviderHealth(bool Ok, string? Reason);
 
 /// <summary>
+/// Describes how a provider accepts reference images.
+/// </summary>
+/// <param name="MaxImages">Maximum number of reference images per request.</param>
+/// <param name="SupportsMask">Whether a PNG inpainting mask is supported.</param>
+/// <param name="SupportsInputFidelity">Whether the GPT-Image <c>input_fidelity</c> option is supported.</param>
+/// <param name="AllowedMediaTypes">Accepted image media types (e.g. image/png, image/jpeg).</param>
+public sealed record ReferenceImageCapabilities(
+    int MaxImages,
+    bool SupportsMask,
+    bool SupportsInputFidelity,
+    IReadOnlyList<string> AllowedMediaTypes)
+{
+    internal static readonly IReadOnlyList<string> PngJpegWebp = ["image/png", "image/jpeg", "image/webp"];
+    internal static readonly IReadOnlyList<string> PngJpeg = ["image/png", "image/jpeg"];
+
+    /// <summary>Short human-readable summary, e.g. "up to 16 + mask".</summary>
+    public string Summary => $"up to {MaxImages}{(SupportsMask ? " + mask" : string.Empty)}";
+}
+
+/// <summary>
 /// Request for image generation.
 /// </summary>
 public sealed record GenerationRequest(
@@ -76,7 +102,25 @@ public sealed record GenerationRequest(
     int Height,
     int Steps,
     string OutputPath,
-    IReadOnlyDictionary<string, string?> ExtraOptions);
+    IReadOnlyDictionary<string, string?> ExtraOptions,
+    IReadOnlyList<string>? ReferenceImages = null,
+    string? MaskImage = null,
+    string? InputFidelity = null)
+{
+    /// <summary>
+    /// Copies reference image, mask and input fidelity values onto library generation options.
+    /// </summary>
+    internal ImageGenerationOptions WithReferenceInputs(ImageGenerationOptions options)
+    {
+        if (ReferenceImages is { Count: > 0 })
+            options.ReferenceImages = [.. ReferenceImages];
+        if (!string.IsNullOrWhiteSpace(MaskImage))
+            options.MaskImage = MaskImage;
+        if (!string.IsNullOrWhiteSpace(InputFidelity))
+            options.InputFidelity = InputFidelity;
+        return options;
+    }
+}
 
 /// <summary>
 /// Progress update during image generation.

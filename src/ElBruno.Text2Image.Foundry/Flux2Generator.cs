@@ -212,6 +212,8 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             throw new ArgumentOutOfRangeException(nameof(prompt), "Prompt must be 1000 characters or fewer");
 
         options ??= new ImageGenerationOptions();
+        if (!string.IsNullOrWhiteSpace(options.MaskImage))
+            throw new NotSupportedException("FLUX.2 does not support mask images. Use reference images only, or a GPT-Image provider for masked edits.");
 
         var sw = Stopwatch.StartNew();
         var seed = options.Seed ?? Random.Shared.Next();
@@ -479,11 +481,7 @@ public sealed class Flux2Generator : IImageGenerator, Microsoft.Extensions.AI.II
             localOptions.Height = size.Height;
         }
 
-        if (options?.AdditionalProperties?.TryGetValue(Text2ImagePropertyNames.ReferenceImages, out var refImages) == true
-            && refImages is List<string> refList)
-        {
-            localOptions.ReferenceImages = refList;
-        }
+        ImageGenerationOptionsConverter.ApplyEditInputs(localOptions, imageRequest, options);
 
         var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);

@@ -2,14 +2,63 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
-## [1.5.2] — Candidate (2026-09-14)
+## [1.7.1] — 2026-11-04
 
-### Candidate release
+### Added
+- The CLI NuGet package includes the Agent Skill and its provider, security,
+  automation, and troubleshooting references under `skills/t2i/` for explicit
+  package inspection by compatible tools.
+
+### Changed
+- `t2i init` installs the complete skill and reference set. `t2i upgrade`
+  refreshes managed references while preserving user-owned files and unrelated
+  skills. NuGet tool installation does not automatically activate the skill.
+
+## [1.7.0] - 2026-10-23
+
+### Added
+- Microsoft Foundry MAI-Image-2.6 and MAI-Image-2.6-Flash text-to-image support,
+  including the 2.6 dimensions contract and opt-in aspect-ratio selection and web grounding.
+
+### Changed
+- Replaced ImageSharp with StbImageWriteSharp for local VAE PNG encoding, removing
+  the ImageSharp dependency from the core package without adding native runtime assets.
+
+### Documentation
+- Added MAI-Image-2.6 setup guidance and updated provider, CLI, and managed-skill documentation.
+- Updated architecture documentation for the managed PNG writer.
+
+### Tests
+- Added PNG encoding coverage for valid chunk checksums, dimensions, channel conversion,
+  clamping, rounding, and opaque alpha.
+
+## [1.6.0] — 2026-09-15
+
+### Added
+- Reference-image (image-to-image) support in the `t2i` CLI: `--image`/`-i`
+  (repeatable; local PNG/JPEG/WebP files, HTTPS URLs, or data URIs), `--mask`,
+  and `--input-fidelity`. Unsupported providers and option combinations fail
+  fast with exit code 2 before any secret lookup or API call (#43).
+- FLUX.2 forwards reference images as `referenceImages`; GPT-Image-1.5/2/2.5
+  providers call the Azure OpenAI `images/edits` endpoint (up to 16 images,
+  optional PNG mask, `input_fidelity`); MAI-Image-2.5 and MAI-Image-2.5-Flash
+  call `/mai/v1/images/edits` (up to 5 PNG/JPEG images).
+- `ImageGenerationOptions.MaskImage`, `InputFidelity`, and
+  `SetMaskImageFromFile`; `ReferenceImageHelper` for validating and resolving
+  reference images; MEAI `mask_image`/`input_fidelity` additional properties and
+  `ImageGenerationRequest.OriginalImages` mapping.
+- `t2i providers` and `t2i doctor` show a Reference Images column.
+
+### Documentation
+- CLI guide, provider setup guides, and managed `t2i` skills (1.6.0) document
+  image-to-image usage and the provider support matrix.
+
+## [1.5.2] — 2026-09-14
+
+### Added
 - Consolidates GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support, retired-provider
   migration handling, GPT image sizing fixes, managed skill updates, and the
-  `ElBruno.Text2Image.BlazorComponents` Razor Class Library for the 1.5.2 candidate.
-- Packages the CLI Agent Skill and its references under `skills/t2i/` for explicit
-  NuGet package inspection, while preserving the `t2i init` and `t2i upgrade` flows.
+  `ElBruno.Text2Image.BlazorComponents` Razor Class Library.
 
 ## [1.5.1] — 2026-09-14
 

@@ -118,6 +118,10 @@ public sealed class GptImage2Generator : IImageGenerator, Microsoft.Extensions.A
         if (prompt.Length > MaxPromptLength)
             throw new ArgumentOutOfRangeException(nameof(prompt), $"Prompt must be {MaxPromptLength} characters or fewer");
         options ??= new ImageGenerationOptions();
+        if (options.ReferenceImages is { Count: > 0 })
+            return await GptImageSupport.EditAsync(_httpClient, _endpoint, _deploymentName, _apiKey, _modelDisplayName, prompt, options, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(options.MaskImage))
+            throw new ArgumentException("A mask image requires at least one reference image.", nameof(options));
         var mapped = GptImageSupport.MapSize(options.Width, options.Height);
         
         var generationOptions = new OpenAI.Images.ImageGenerationOptions
@@ -147,6 +151,7 @@ public sealed class GptImage2Generator : IImageGenerator, Microsoft.Extensions.A
         ArgumentNullException.ThrowIfNull(imageRequest);
         var localOptions = new ImageGenerationOptions();
         if (options?.ImageSize.HasValue == true) { localOptions.Width = options.ImageSize.Value.Width; localOptions.Height = options.ImageSize.Value.Height; }
+        ImageGenerationOptionsConverter.ApplyEditInputs(localOptions, imageRequest, options);
         var result = await GenerateAsync(imageRequest.Prompt ?? "", localOptions, cancellationToken).ConfigureAwait(false);
         return ImageGenerationOptionsConverter.ToMeaiResponse(result);
     }

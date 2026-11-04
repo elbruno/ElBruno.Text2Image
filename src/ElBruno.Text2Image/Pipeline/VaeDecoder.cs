@@ -1,7 +1,6 @@
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using StbImageWriteSharp;
 
 namespace ElBruno.Text2Image.Pipeline;
 
@@ -40,27 +39,26 @@ internal sealed class VaeDecoder : IDisposable
     /// <summary>
     /// Converts VAE decoder output tensor [1, 3, H, W] to PNG bytes.
     /// </summary>
-    private static byte[] ConvertToImage(DenseTensor<float> tensor, int width, int height)
+    internal static byte[] ConvertToImage(DenseTensor<float> tensor, int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        var pixels = new byte[checked(width * height * 4)];
 
-        image.ProcessPixelRows(accessor =>
+        for (int y = 0; y < height; y++)
         {
-            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
-                var row = accessor.GetRowSpan(y);
-                for (int x = 0; x < width; x++)
-                {
-                    var r = (byte)Math.Round(Math.Clamp((tensor[0, 0, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
-                    var g = (byte)Math.Round(Math.Clamp((tensor[0, 1, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
-                    var b = (byte)Math.Round(Math.Clamp((tensor[0, 2, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
-                    row[x] = new Rgba32(r, g, b, 255);
-                }
+                int offset = (y * width + x) * 4;
+                pixels[offset] = (byte)Math.Round(Math.Clamp((tensor[0, 0, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
+                pixels[offset + 1] = (byte)Math.Round(Math.Clamp((tensor[0, 1, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
+                pixels[offset + 2] = (byte)Math.Round(Math.Clamp((tensor[0, 2, y, x] / 2f + 0.5f), 0f, 1f) * 255f);
+                pixels[offset + 3] = 255;
             }
-        });
+        }
 
         using var ms = new MemoryStream();
-        image.SaveAsPng(ms);
+        new ImageWriter().WritePng(pixels, width, height, ColorComponents.RedGreenBlueAlpha, ms);
         return ms.ToArray();
     }
 

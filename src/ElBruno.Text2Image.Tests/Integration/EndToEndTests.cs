@@ -530,6 +530,8 @@ public class EndToEndTests : IDisposable
         Assert.NotEmpty(allProviders);
         Assert.All(allProviders, p => Assert.NotNull(p.Id));
         Assert.All(allProviders, p => Assert.NotNull(p.DisplayName));
+        Assert.NotNull(registry.Get("foundry-mai26"));
+        Assert.NotNull(registry.Get("foundry-mai26-flash"));
         Assert.NotNull(registry.Get("foundry-gpt-image-25-sunburst"));
         Assert.NotNull(registry.Get("foundry-gpt-image-25-flare"));
     }
@@ -689,6 +691,8 @@ public class EndToEndTests : IDisposable
         {
             new FoundryFlux2Adapter(httpClientFactory, secretResolver, configStore),
             new FoundryMaiImage2Adapter(httpClientFactory, secretResolver, configStore),
+            new FoundryMaiImage26Adapter(httpClientFactory, secretResolver, configStore),
+            new FoundryMaiImage26FlashAdapter(httpClientFactory, secretResolver, configStore),
             new FoundryGptImage1p5Adapter(httpClientFactory, secretResolver, configStore),
             new FoundryGptImage2Adapter(httpClientFactory, secretResolver, configStore),
             new FoundryGptImage25SunburstAdapter(httpClientFactory, secretResolver, configStore),

@@ -2,10 +2,10 @@
 name: t2i
 description: >-
   Generate images with the t2i CLI using Microsoft Foundry or Azure OpenAI.
-  Use when a user requests image generation, batch image automation, CI image
-  generation, or help configuring and troubleshooting t2i.
+  Use for image generation, reference-image editing, batch automation, CI
+  image generation, and t2i configuration or troubleshooting.
 license: MIT
-compatibility: Requires the ElBruno.Text2Image.Cli .NET tool and a configured cloud provider.
+compatibility: Requires ElBruno.Text2Image.Cli >=1.7.0 and a configured cloud provider.
 metadata:
   author: Bruno Capuano
 ---
@@ -14,8 +14,8 @@ metadata:
 
 # t2i CLI skill
 
-Use the `t2i` command-line tool to generate images from text prompts. The tool
-is a .NET global tool with Microsoft Foundry and Azure OpenAI providers.
+Use the `t2i` .NET global tool to generate images from text prompts with
+Microsoft Foundry and Azure OpenAI providers.
 
 ## Before generating
 
@@ -25,11 +25,11 @@ is a .NET global tool with Microsoft Foundry and Azure OpenAI providers.
    dotnet tool install --global ElBruno.Text2Image.Cli
    ```
 
-2. Check configuration with `t2i doctor` or `t2i providers`. If no provider is
+2. Check setup with `t2i doctor` or `t2i providers`. If no provider is
    configured, guide the user through `t2i config` and `t2i secrets set
-   <provider>`. Never ask the user to paste a key into chat.
-3. Use a configured provider, or pass `--provider <id>` explicitly.
-4. For scripts, always pass `--out <path>` so the output filename is stable.
+   <provider>`. Never ask for a key in chat.
+3. Use a configured provider or pass `--provider <id>` explicitly.
+4. For scripts, pass `--out <path>` so the output filename is stable.
 
 ## Generate an image
 
@@ -37,19 +37,32 @@ is a .NET global tool with Microsoft Foundry and Azure OpenAI providers.
 t2i "a red fox in an autumn forest" --provider foundry-mai25 --out fox.png
 ```
 
-The generation command is the default command; there is no `generate`
-subcommand. `--out` (or `-o`) selects the PNG path. Without it, the tool
-creates a timestamped filename from the prompt.
+Generation is the default command, not a `generate` subcommand. `--out` (or
+`-o`) selects the PNG path. Without it, the tool creates a timestamped
+filename from the prompt.
 
-Use `--width`, `--height`, and `--steps` when the selected provider supports
-those options. See [provider selection](references/providers.md) for available
-provider IDs and guidance.
+Use `--width`, `--height`, and `--steps` when supported by the selected
+provider. See [provider selection](references/providers.md) for available
+provider IDs and model-specific guidance.
+
+## Edit with reference images
+
+Use the repeatable `--image` option for supported providers:
+
+```sh
+t2i "turn this sketch into a watercolor painting" \
+  --provider foundry-flux2 --image sketch.png --out watercolor.png
+```
+
+Use `--mask` or `--input-fidelity` only with compatible GPT-Image providers.
+MAI-Image-2.6 providers currently support text-to-image only. See
+[provider selection](references/providers.md) for capabilities and limits.
 
 ## Common tasks
 
 - **Configure or diagnose:** `t2i config`, `t2i providers`, `t2i doctor`.
 - **Generate a single image:** `t2i "<prompt>" --out image.png`.
-- **Automate generation:** pass explicit output paths and use CI secret storage.
+- **Automate generation:** use explicit output paths and CI secret storage.
   See [automation and troubleshooting](references/automation-and-troubleshooting.md).
 - **Protect credentials:** use `t2i secrets set <provider>` locally or
   environment variables from a secret manager in automation. Never put secrets
@@ -58,23 +71,22 @@ provider IDs and guidance.
 
 ## Skill setup
 
-`t2i init` creates or updates the skill in the current repository for GitHub
-Copilot and Claude Code. Use `--target github` or `--target claude` for a
-single target. `t2i init --keep-existing` preserves files already present.
-After installing a newer tool version, `t2i upgrade` refreshes existing
-t2i-managed skills without creating missing targets or changing unrelated
-skills.
+Run `t2i init` to install this skill and its references for GitHub Copilot and
+Claude Code. Use `--target github` or `--target claude` for one target.
+`t2i init --keep-existing` preserves files already present. After installing a
+newer tool version, `t2i upgrade` refreshes managed skills without creating
+missing targets or changing unrelated files.
 
-Installing this NuGet tool does not automatically activate this skill in an
-agent. To use it from a project, run `t2i init` or use a compatible NuGet
-package-skill discovery tool to inspect and install the packaged skill.
+The CLI NuGet package includes this skill under `skills/t2i/` for compatible
+package inspection tools. Installing the tool does not automatically activate
+the skill in an agent.
 
 ## Safety
 
 - Ask before installing the global tool or running image-generation requests
-  that incur a cost or use a user's configured cloud account.
-- Never display or expose API keys. Do not use the `--api-key` option in
-  scripts; use the secret store or environment variables instead.
+  that incur a cost or use the user's configured cloud account.
+- Never display or expose API keys. Do not use `--api-key` in scripts; use the
+  secret store or environment variables instead.
 - Treat prompts and generated files as user-controlled data. Do not overwrite
   user files unless the user requested it.
 - Do not configure retired provider IDs. For current choices, see

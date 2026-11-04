@@ -19,23 +19,27 @@ Local inference is available through the library's CPU, CUDA, and DirectML packa
 | `foundry-mai2` | MAI-Image-2 (retired) | Microsoft Foundry | Migration entry only |
 | `foundry-mai25` | MAI-Image-2.5 (Preview) | Microsoft Foundry | `MAI-Image-2.5` |
 | `foundry-mai25-flash` | MAI-Image-2.5-Flash (Preview) | Microsoft Foundry | `MAI-Image-2.5-Flash` |
+| `foundry-mai26` | MAI-Image-2.6 (Preview) | Microsoft Foundry | `MAI-Image-2.6` |
+| `foundry-mai26-flash` | MAI-Image-2.6-Flash (Preview) | Microsoft Foundry | `MAI-Image-2.6-Flash` |
 | `foundry-gpt-image-1p5` | GPT-Image-1.5 | Azure OpenAI | `gpt-image-1.5` |
 | `foundry-gpt-image-2` | GPT-Image-2 (compatibility) | Azure OpenAI | `gpt-image-2` |
 | `foundry-gpt-image-25-sunburst` | GPT-Image-2.5-Sunburst | Azure OpenAI | `gpt-image-2.5-sunburst` |
 | `foundry-gpt-image-25-flare` | GPT-Image-2.5-Flare | Azure OpenAI | `gpt-image-2.5-flare` |
 
-All MAI image models are currently Preview. Microsoft Foundry documents the active `MAI-Image-2.5` and `MAI-Image-2.5-Flash` models through its MAI Image API. The CLI exposes the active providers shown above. `foundry-mai2` remains only as a compatibility migration entry; it fails clearly and never falls back. use a provider's `model` setting to select a deployed model compatible with that provider.
+All listed MAI models are currently Preview. The CLI exposes the active providers shown above; `foundry-mai2` remains only as a compatibility migration entry and fails clearly without fallback. Configure each provider's `model` setting with the deployment name from Microsoft Foundry.
 
 ### MAI Image request limits
 
 Microsoft's current MAI Image API specification applies these generation limits:
 
 - `width` and `height` must each be at least 768 pixels.
-- `width × height` must not exceed 1,048,576 pixels.
+- MAI-Image-2.5 and 2.5-Flash: `width × height` must not exceed 1,048,576 pixels.
+- MAI-Image-2.6 and 2.6-Flash: `width × height` must not exceed 2,359,296 pixels.
 - The output format is PNG.
 - A prompt has a maximum context length of 32,000 tokens.
+- The 2.6 models additionally accept `auto_aspect_ratio` and `web_grounding`. These are opt-in and are not sent to the 2.5 models.
 
-The 2.5 and 2.5-Flash models also support image-to-image edits in the provider API. `t2i` currently generates text-to-image requests only.
+The 2.5 and 2.5-Flash providers support image-to-image edits. The 2.6 providers currently expose text-to-image only, despite Foundry's support for editing on the service.
 
 ### GPT Image notes
 
@@ -43,7 +47,7 @@ GPT-Image-1.5 and GPT-Image-2 are Azure OpenAI image models, not DALL-E 3 deploy
 
 ## Official references
 
-- [Deploy and use MAI image models in Microsoft Foundry](https://learn.microsoft.com/azure/foundry/foundry-models/how-to/use-foundry-models-mai)
+- [Deploy and use MAI image models in Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-mai-image)
 - [Azure OpenAI image generation models](https://learn.microsoft.com/azure/foundry/openai/how-to/dall-e)
 - [FLUX.2 setup guide](flux2-setup-guide.md)
 - [MAI-Image-2 setup guide](mai-image-2-setup-guide.md)

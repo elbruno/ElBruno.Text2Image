@@ -71,6 +71,7 @@ internal sealed class DoctorCommand : AsyncCommand
         providerTable.AddColumn("Kind");
         providerTable.AddColumn("Status");
         providerTable.AddColumn("Reason");
+        providerTable.AddColumn("Reference Images");
 
         foreach (var provider in _providerRegistry.All)
         {
@@ -85,7 +86,8 @@ internal sealed class DoctorCommand : AsyncCommand
                 Markup.Escape(provider.DisplayName),
                 provider.Kind.ToString(),
                 status,
-                Markup.Escape(reason));
+                Markup.Escape(reason),
+                Markup.Escape(provider.ReferenceImageSupport?.Summary ?? "—"));
         }
         AnsiConsole.Write(providerTable);
         AnsiConsole.WriteLine();
