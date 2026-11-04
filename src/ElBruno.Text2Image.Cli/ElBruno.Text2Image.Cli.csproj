@@ -32,7 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Skills\SKILL.md" LogicalName="ElBruno.Text2Image.Cli.Skills.SKILL.md" />
+    <EmbeddedResource Include="Skills\**\*">
+      <LogicalName>ElBruno.Text2Image.Cli.SkillFiles.%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <None Include="Skills\**\*"
+          Pack="true"
+          PackagePath="skills/t2i/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

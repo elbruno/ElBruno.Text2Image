@@ -320,7 +320,7 @@ public class InitCommandTests : IDisposable
         
         // Verify content contains expected markers from SKILL.md
         Assert.Contains("# t2i", githubContent);
-        Assert.Contains("text-to-image", githubContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("text prompts", githubContent, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -332,12 +332,37 @@ public class InitCommandTests : IDisposable
         Assert.Equal(0, exitCode);
 
         var content = File.ReadAllText(Path.Combine(_testDir, ".github", "skills", "t2i", "SKILL.md"));
-        Assert.Contains("foundry-gpt-image-1p5", content);
-        Assert.Contains("foundry-gpt-image-2", content);
-        Assert.Contains("`--out`, `-o`", content);
+        Assert.Contains("`--out`", content);
         Assert.Contains("t2i upgrade", content);
-        Assert.Contains("binary updates", content);
+        Assert.Contains("references/providers.md", content);
+        Assert.Contains("references/configuration-and-security.md", content);
+        Assert.Contains("references/automation-and-troubleshooting.md", content);
         Assert.Contains("<!-- t2i:managed-skill -->", content);
+
+        var providers = File.ReadAllText(Path.Combine(_testDir, ".github", "skills", "t2i", "references", "providers.md"));
+        Assert.Contains("foundry-gpt-image-1p5", providers);
+        Assert.Contains("foundry-gpt-image-2", providers);
+    }
+
+    [Fact]
+    public void Init_WritesAValidBoundedSkillWithAllReferences()
+    {
+        var exitCode = new InitCommand().Execute(CreateContext(), new InitCommand.Settings { Target = "github" });
+
+        Assert.Equal(0, exitCode);
+        var skillDirectory = Path.Combine(_testDir, ".github", "skills", "t2i");
+        var skillPath = Path.Combine(skillDirectory, "SKILL.md");
+        var content = File.ReadAllText(skillPath);
+        var lines = File.ReadAllLines(skillPath);
+
+        Assert.True(lines.Length < 500, $"Expected SKILL.md to stay under 500 lines, found {lines.Length}.");
+        Assert.StartsWith("---", content);
+        Assert.Contains("name: t2i", content);
+        Assert.Contains("description:", content);
+        Assert.Contains("license: MIT", content);
+        Assert.DoesNotContain("\nversion:", content);
+        Assert.True(Directory.Exists(Path.Combine(skillDirectory, "references")));
+        Assert.Equal(3, Directory.GetFiles(Path.Combine(skillDirectory, "references"), "*.md").Length);
     }
 
     [Fact]
@@ -352,6 +377,9 @@ public class InitCommandTests : IDisposable
         File.WriteAllText(
             githubSkillPath,
             "---\nname: t2i\n---\n# t2i — Text-to-Image CLI Skill\n\nOUTDATED T2I SKILL");
+        var providersPath = Path.Combine(Path.GetDirectoryName(githubSkillPath)!, "references", "providers.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(providersPath)!);
+        File.WriteAllText(providersPath, "<!-- t2i:managed-skill-reference -->\nOUTDATED PROVIDERS");
         File.WriteAllText(unrelatedPath, "USER-OWNED SKILL");
 
         var command = new UpgradeCommand();
@@ -359,7 +387,9 @@ public class InitCommandTests : IDisposable
 
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("OUTDATED T2I SKILL", File.ReadAllText(githubSkillPath));
-        Assert.Contains("foundry-gpt-image-2", File.ReadAllText(githubSkillPath));
+        Assert.Contains("references/providers.md", File.ReadAllText(githubSkillPath));
+        Assert.DoesNotContain("OUTDATED PROVIDERS", File.ReadAllText(providersPath));
+        Assert.Contains("foundry-gpt-image-2", File.ReadAllText(providersPath));
         Assert.False(File.Exists(claudeSkillPath));
         Assert.Equal("USER-OWNED SKILL", File.ReadAllText(unrelatedPath));
     }

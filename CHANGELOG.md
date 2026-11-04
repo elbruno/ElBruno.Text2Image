@@ -8,6 +8,8 @@ All notable changes to ElBruno.Text2Image are documented in this file.
 - Consolidates GPT-Image-2.5-Sunburst and GPT-Image-2.5-Flare support, retired-provider
   migration handling, GPT image sizing fixes, managed skill updates, and the
   `ElBruno.Text2Image.BlazorComponents` Razor Class Library for the 1.5.2 candidate.
+- Packages the CLI Agent Skill and its references under `skills/t2i/` for explicit
+  NuGet package inspection, while preserving the `t2i init` and `t2i upgrade` flows.
 
 ## [1.5.1] — 2026-09-14
 

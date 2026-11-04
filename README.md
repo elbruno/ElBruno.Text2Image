@@ -17,7 +17,7 @@
 
 | Release | Highlights |
 |---------|------------|
-| **1.5.2 (candidate)** | Candidate release with GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
+| **1.5.2 (candidate)** | Candidate release with GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, NuGet-discoverable CLI skill assets, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.5.1** | Added GPT-Image-2.5 Sunburst/Flare support, retired-provider migration handling, GPT image sizing fixes, managed skill updates, and the `ElBruno.Text2Image.BlazorComponents` Razor Class Library |
 | **1.4.0** | Added MAI-Image-2.5 and MAI-Image-2.5-Flash support |
 | **1.4.0** | Added Foundry batch-generation sample and current cloud-provider setup guidance |
@@ -200,7 +200,13 @@ See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 
 ## 🤖 AI Agent Integration
 
-The `t2i` CLI is now discoverable by GitHub Copilot and Claude Code as a native skill, enabling AI agents to generate images directly within your development workflow. Run `t2i init` to configure skill integration, which adds the necessary metadata to `.github/skills/t2i/` or `.claude/skills/t2i/` directories in your workspace. Once integrated, AI agents can autonomously invoke `t2i` for image generation tasks without manual configuration.
+The `t2i` CLI includes an Agent Skill for GitHub Copilot and Claude Code. Run
+`t2i init` to install the skill and its reference files under
+`.github/skills/t2i/` or `.claude/skills/t2i/` in your workspace. The CLI
+NuGet tool package also contains the skill under `skills/t2i/` for compatible
+package inspection tools. Installing the tool does not automatically activate
+the skill in an agent, and image-generation providers must be configured
+separately.
 
 See [docs/skill-integration.md](docs/skill-integration.md) for the complete setup guide.
 

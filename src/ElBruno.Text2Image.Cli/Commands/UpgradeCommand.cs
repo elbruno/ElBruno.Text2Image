@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -11,6 +10,7 @@ namespace ElBruno.Text2Image.Cli.Commands;
 internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
 {
     private const string ManagedSkillMarker = "<!-- t2i:managed-skill -->";
+    private const string ManagedSkillReferenceMarker = "<!-- t2i:managed-skill-reference -->";
     private const string LegacySkillHeader = "# t2i — Text-to-Image CLI Skill";
 
     public sealed class Settings : CommandSettings
@@ -23,10 +23,10 @@ internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var skillContent = LoadEmbeddedSkillContent();
-        if (skillContent == null)
+        var skillFiles = SkillFileResources.Load();
+        if (skillFiles == null)
         {
-            AnsiConsole.MarkupLine("[red]Error:[/] Failed to load embedded SKILL.md resource");
+            AnsiConsole.MarkupLine("[red]Error:[/] Failed to load embedded skill files");
             return 1;
         }
 
@@ -43,8 +43,10 @@ internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
 
         foreach (var target in targets)
         {
-            var relativePath = GetRelativePath(target);
-            var fullPath = Path.GetFullPath(Path.Combine(cwd, relativePath));
+            var relativeDirectory = GetRelativeDirectory(target);
+            var fullDirectory = Path.GetFullPath(Path.Combine(cwd, relativeDirectory));
+            var relativePath = Path.Combine(relativeDirectory, "SKILL.md");
+            var fullPath = Path.Combine(fullDirectory, "SKILL.md");
 
             if (!File.Exists(fullPath))
             {
@@ -71,21 +73,8 @@ internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
             }
 
             managedSkillCount++;
-            if (string.Equals(existingContent, skillContent, StringComparison.Ordinal))
-            {
-                AnsiConsole.MarkupLineInterpolated($"[dim]•[/] {Markup.Escape(relativePath)} [dim]current[/]");
-                continue;
-            }
-
-            if (ReplaceSkillFile(fullPath, skillContent, out var error))
-            {
-                AnsiConsole.MarkupLineInterpolated($"[green]✓[/] {Markup.Escape(relativePath)} [green]updated[/]");
-            }
-            else
-            {
-                errorCount++;
-                AnsiConsole.MarkupLineInterpolated($"[red]✗[/] {Markup.Escape(relativePath)} [red]error: {Markup.Escape(error!)}[/]");
-            }
+            foreach (var (assetPath, content) in skillFiles.OrderBy(file => file.Key == "SKILL.md" ? 1 : 0))
+                errorCount += RefreshSkillFile(fullDirectory, relativeDirectory, assetPath, content, existingContent);
         }
 
         if (managedSkillCount == 0)
@@ -94,19 +83,6 @@ internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
         }
 
         return errorCount == 0 ? 0 : 1;
-    }
-
-    private static string? LoadEmbeddedSkillContent()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        const string resourceName = "ElBruno.Text2Image.Cli.Skills.SKILL.md";
-
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream == null)
-            return null;
-
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
     }
 
     private static List<string> GetTargets(string target)
@@ -120,14 +96,109 @@ internal sealed class UpgradeCommand : Command<UpgradeCommand.Settings>
         };
     }
 
-    private static string GetRelativePath(string target)
+    private static string GetRelativeDirectory(string target)
     {
         return target switch
         {
-            "github" => Path.Combine(".github", "skills", "t2i", "SKILL.md"),
-            "claude" => Path.Combine(".claude", "skills", "t2i", "SKILL.md"),
+            "github" => Path.Combine(".github", "skills", "t2i"),
+            "claude" => Path.Combine(".claude", "skills", "t2i"),
             _ => throw new ArgumentException($"Unknown target: {target}")
         };
+    }
+
+    private static int RefreshSkillFile(
+        string fullDirectory,
+        string relativeDirectory,
+        string assetPath,
+        string content,
+        string existingMainContent)
+    {
+        var relativePath = Path.Combine(relativeDirectory, assetPath);
+        var fullPath = Path.GetFullPath(Path.Combine(fullDirectory, assetPath));
+        if (!IsWithinDirectory(fullDirectory, fullPath))
+        {
+            AnsiConsole.MarkupLineInterpolated($"[red]✗[/] {Markup.Escape(relativePath)} [red]error: invalid skill path[/]");
+            return 1;
+        }
+
+        if (assetPath != "SKILL.md")
+        {
+            if (!File.Exists(fullPath))
+            {
+                if (CreateSkillFile(fullPath, content, out var createError))
+                {
+                    AnsiConsole.MarkupLineInterpolated($"[green]✓[/] {Markup.Escape(relativePath)} [green]created[/]");
+                    return 0;
+                }
+
+                AnsiConsole.MarkupLineInterpolated($"[red]✗[/] {Markup.Escape(relativePath)} [red]error: {Markup.Escape(createError!)}[/]");
+                return 1;
+            }
+
+            string existingReference;
+            try
+            {
+                existingReference = File.ReadAllText(fullPath);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLineInterpolated($"[red]✗[/] {Markup.Escape(relativePath)} [red]error: {Markup.Escape(ex.Message)}[/]");
+                return 1;
+            }
+
+            if (!existingReference.Contains(ManagedSkillReferenceMarker, StringComparison.Ordinal))
+            {
+                AnsiConsole.MarkupLineInterpolated($"[yellow]•[/] {Markup.Escape(relativePath)} [yellow]preserved (not a managed t2i reference)[/]");
+                return 0;
+            }
+
+            if (string.Equals(existingReference, content, StringComparison.Ordinal))
+            {
+                AnsiConsole.MarkupLineInterpolated($"[dim]•[/] {Markup.Escape(relativePath)} [dim]current[/]");
+                return 0;
+            }
+        }
+        else if (string.Equals(existingMainContent, content, StringComparison.Ordinal))
+        {
+            AnsiConsole.MarkupLineInterpolated($"[dim]•[/] {Markup.Escape(relativePath)} [dim]current[/]");
+            return 0;
+        }
+
+        if (ReplaceSkillFile(fullPath, content, out var error))
+        {
+            AnsiConsole.MarkupLineInterpolated($"[green]✓[/] {Markup.Escape(relativePath)} [green]updated[/]");
+            return 0;
+        }
+
+        AnsiConsole.MarkupLineInterpolated($"[red]✗[/] {Markup.Escape(relativePath)} [red]error: {Markup.Escape(error!)}[/]");
+        return 1;
+    }
+
+    private static bool IsWithinDirectory(string directory, string path)
+    {
+        var normalizedDirectory = Path.GetFullPath(directory);
+        var directoryPrefix = Path.EndsInDirectorySeparator(normalizedDirectory)
+            ? normalizedDirectory
+            : normalizedDirectory + Path.DirectorySeparatorChar;
+        return path.StartsWith(directoryPrefix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool CreateSkillFile(string fullPath, string content, out string? error)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            using var stream = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            using var writer = new StreamWriter(stream);
+            writer.Write(content);
+            error = null;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
     }
 
     private static bool IsManagedSkill(string content)

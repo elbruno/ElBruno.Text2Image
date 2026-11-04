@@ -129,13 +129,20 @@ Run diagnostics:
 t2i doctor
 ```
 
-Initialize AI agent skill file:
+Initialize the AI agent skill:
 
 ```bash
 t2i init
 ```
 
-This creates `.github/skills/t2i/SKILL.md` and `.claude/skills/t2i/SKILL.md` in your repository so AI coding agents (GitHub Copilot, Claude Code) automatically know how to use the t2i CLI.
+This creates `.github/skills/t2i/` and `.claude/skills/t2i/` in your repository,
+including `SKILL.md` and its reference files. Run `t2i upgrade` after updating
+the tool to refresh the installed skill and restore missing packaged references.
+
+The NuGet tool package also contains the skill under `skills/t2i/` for direct
+inspection by compatible package tools. Installing the tool does not
+automatically activate its skill in an agent. Review packaged skill
+instructions, and install tools only from sources you trust.
 
 ## Documentation
 

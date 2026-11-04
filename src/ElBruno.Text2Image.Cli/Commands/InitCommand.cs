@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Reflection;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -24,10 +23,10 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var skillContent = LoadEmbeddedSkillContent();
-        if (skillContent == null)
+        var skillFiles = SkillFileResources.Load();
+        if (skillFiles == null)
         {
-            AnsiConsole.MarkupLine("[red]Error:[/] Failed to load embedded SKILL.md resource");
+            AnsiConsole.MarkupLine("[red]Error:[/] Failed to load embedded skill files");
             return 1;
         }
 
@@ -43,18 +42,22 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
 
         foreach (var target in targets)
         {
-            var relativePath = GetRelativePath(target);
-            var fullPath = Path.GetFullPath(Path.Combine(cwd, relativePath));
-            
-            // Prevent directory traversal: ensure resolved path is under cwd
-            if (!fullPath.StartsWith(Path.GetFullPath(cwd), StringComparison.OrdinalIgnoreCase))
+            var relativeDirectory = GetRelativeDirectory(target);
+            var fullDirectory = Path.GetFullPath(Path.Combine(cwd, relativeDirectory));
+
+            foreach (var (assetPath, content) in skillFiles)
             {
-                results.Add((relativePath, "error: path traversal"));
-                continue;
+                var fullPath = Path.GetFullPath(Path.Combine(fullDirectory, assetPath));
+                if (!IsWithinDirectory(fullDirectory, fullPath))
+                {
+                    results.Add((Path.Combine(relativeDirectory, assetPath), "error: invalid skill path"));
+                    continue;
+                }
+
+                var relativePath = Path.Combine(relativeDirectory, assetPath);
+                var (status, _) = WriteSkillFile(fullPath, content, settings.KeepExisting);
+                results.Add((relativePath, status));
             }
-            
-            var (status, written) = WriteSkillFile(fullPath, skillContent, settings.KeepExisting);
-            results.Add((relativePath, status));
         }
 
         // Display results
@@ -98,20 +101,7 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
             AnsiConsole.Write(panel);
         }
 
-        return 0;
-    }
-
-    private static string? LoadEmbeddedSkillContent()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = "ElBruno.Text2Image.Cli.Skills.SKILL.md";
-
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream == null)
-            return null;
-
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        return results.Any(result => result.Status.StartsWith("error", StringComparison.Ordinal)) ? 1 : 0;
     }
 
     private static List<string> GetTargets(string target)
@@ -125,14 +115,23 @@ internal sealed class InitCommand : Command<InitCommand.Settings>
         };
     }
 
-    private static string GetRelativePath(string target)
+    private static string GetRelativeDirectory(string target)
     {
         return target switch
         {
-            "github" => Path.Combine(".github", "skills", "t2i", "SKILL.md"),
-            "claude" => Path.Combine(".claude", "skills", "t2i", "SKILL.md"),
+            "github" => Path.Combine(".github", "skills", "t2i"),
+            "claude" => Path.Combine(".claude", "skills", "t2i"),
             _ => throw new ArgumentException($"Unknown target: {target}")
         };
+    }
+
+    private static bool IsWithinDirectory(string directory, string path)
+    {
+        var normalizedDirectory = Path.GetFullPath(directory);
+        var directoryPrefix = Path.EndsInDirectorySeparator(normalizedDirectory)
+            ? normalizedDirectory
+            : normalizedDirectory + Path.DirectorySeparatorChar;
+        return path.StartsWith(directoryPrefix, StringComparison.OrdinalIgnoreCase);
     }
 
     private static (string Status, bool Written) WriteSkillFile(string fullPath, string content, bool keepExisting)

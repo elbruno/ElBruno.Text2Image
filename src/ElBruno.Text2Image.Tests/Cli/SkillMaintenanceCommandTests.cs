@@ -33,27 +33,25 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
             Assert.True(File.Exists(path), $"Expected skill file '{path}' to be created.");
 
             var content = await File.ReadAllTextAsync(path);
+            Assert.Contains("references/providers.md", content);
+            Assert.Contains("t2i upgrade", content);
+        }
+
+        foreach (var path in ProviderSkillPaths)
+        {
+            Assert.True(File.Exists(path), $"Expected provider reference '{path}' to be created.");
+            var content = await File.ReadAllTextAsync(path);
             Assert.Contains("foundry-flux2", content);
             Assert.Contains("FLUX.2 Pro", content);
             Assert.Contains("foundry-mai2", content);
-            Assert.Contains("MAI-Image-2", content);
             Assert.Contains("foundry-mai25", content);
             Assert.Contains("MAI-Image-2.5", content);
             Assert.Contains("foundry-mai25-flash", content);
-            Assert.Contains("MAI-Image-2.5-Flash", content);
             Assert.Contains("foundry-gpt-image-1p5", content);
-            Assert.Contains("GPT-Image-1.5", content);
             Assert.Contains("foundry-gpt-image-2", content);
-            Assert.Contains("GPT-Image-2", content);
             Assert.Contains("foundry-gpt-image-25-sunburst", content);
-            Assert.Contains("GPT-Image-2.5-Sunburst", content);
             Assert.Contains("foundry-gpt-image-25-flare", content);
-            Assert.Contains("GPT-Image-2.5-Flare", content);
-            Assert.Contains("Seven current cloud providers", content);
-            Assert.Contains("ElBruno.Text2Image.Cli >=1.5.1", content);
-            Assert.Contains("foundry-mai2", content);
-            Assert.Contains("do not use", content, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("t2i upgrade", content);
+            Assert.Contains("do not select", content, StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -81,8 +79,12 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
         Assert.Equal(0, result.ExitCode);
         var content = await File.ReadAllTextAsync(githubPath);
         Assert.DoesNotContain("outdated skill content", content);
-        Assert.Contains("MAI-Image-2.5-Flash", content);
+        Assert.Contains("references/providers.md", content);
+        Assert.True(File.Exists(ProviderSkillPaths[0]));
+        Assert.Contains("MAI-Image-2.5-Flash", await File.ReadAllTextAsync(ProviderSkillPaths[0]));
+        Assert.True(File.Exists(Path.Combine(Path.GetDirectoryName(githubPath)!, "references", "configuration-and-security.md")));
         Assert.False(File.Exists(SkillPaths[1]));
+        Assert.False(File.Exists(ProviderSkillPaths[1]));
         Assert.Equal("unrelated skill content", await File.ReadAllTextAsync(unrelatedSkillPath));
     }
 
@@ -154,18 +156,28 @@ public sealed class SkillMaintenanceCommandTests : IDisposable
         }
     }
 
-    private string[] SkillPaths =>
+    private string[] SkillDirectories =>
     [
-        Path.Combine(_workspace, ".github", "skills", "t2i", "SKILL.md"),
-        Path.Combine(_workspace, ".claude", "skills", "t2i", "SKILL.md")
+        Path.Combine(_workspace, ".github", "skills", "t2i"),
+        Path.Combine(_workspace, ".claude", "skills", "t2i")
     ];
+
+    private string[] SkillPaths => SkillDirectories.Select(path => Path.Combine(path, "SKILL.md")).ToArray();
+
+    private string[] ProviderSkillPaths => SkillDirectories.Select(path => Path.Combine(path, "references", "providers.md")).ToArray();
 
     private async Task<string[]> ReadAllSkillsAsync()
     {
-        var contents = new string[SkillPaths.Length];
-        for (var i = 0; i < SkillPaths.Length; i++)
+        var paths = SkillDirectories
+            .SelectMany(directory => Directory.Exists(directory)
+                ? Directory.GetFiles(directory, "*.md", SearchOption.AllDirectories)
+                : Array.Empty<string>())
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+        var contents = new string[paths.Length];
+        for (var i = 0; i < paths.Length; i++)
         {
-            contents[i] = await File.ReadAllTextAsync(SkillPaths[i]);
+            contents[i] = paths[i] + Environment.NewLine + await File.ReadAllTextAsync(paths[i]);
         }
 
         return contents;

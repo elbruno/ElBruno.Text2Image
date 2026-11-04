@@ -121,6 +121,10 @@ jobs:
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
           unzip -l "$CLI_PKG" | grep -q "tools/net8.0/any/DotnetToolSettings.xml"
           unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/SKILL.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/providers.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/configuration-and-security.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/automation-and-troubleshooting.md"
 
           mkdir -p artifacts/tool-validation
           pushd artifacts/tool-validation
@@ -215,6 +219,10 @@ jobs:
           CLI_PKG=$(ls artifacts/ElBruno.Text2Image.Cli.*.nupkg | head -n 1)
           unzip -l "$CLI_PKG" | grep -q "tools/net8.0/any/DotnetToolSettings.xml"
           unzip -l "$CLI_PKG" | grep -q "tools/net10.0/any/DotnetToolSettings.xml"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/SKILL.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/providers.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/configuration-and-security.md"
+          unzip -l "$CLI_PKG" | grep -q "skills/t2i/references/automation-and-troubleshooting.md"
 
           mkdir -p artifacts/tool-validation
           pushd artifacts/tool-validation

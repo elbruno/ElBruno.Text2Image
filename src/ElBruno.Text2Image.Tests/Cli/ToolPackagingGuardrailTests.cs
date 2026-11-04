@@ -21,7 +21,7 @@ public class ToolPackagingGuardrailTests
             var version = "9.9.9-guardrail";
             await RunProcessAsync(
                 "dotnet",
-                $"pack \"{projectPath}\" -c Release -o \"{outputDir}\" -p:Version={version}",
+                $"pack \"{projectPath}\" -c Release -o \"{outputDir}\" -p:Version={version} --no-restore",
                 outputDir);
 
             var packagePath = Directory
@@ -36,6 +36,18 @@ public class ToolPackagingGuardrailTests
                 Assert.Contains(
                     archive.Entries,
                     e => string.Equals(e.FullName, "tools/net10.0/any/DotnetToolSettings.xml", StringComparison.Ordinal));
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "skills/t2i/SKILL.md", StringComparison.Ordinal));
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "skills/t2i/references/providers.md", StringComparison.Ordinal));
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "skills/t2i/references/configuration-and-security.md", StringComparison.Ordinal));
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "skills/t2i/references/automation-and-troubleshooting.md", StringComparison.Ordinal));
             }
 
             var installDir = Path.Combine(outputDir, "tool-install");
@@ -44,7 +56,7 @@ public class ToolPackagingGuardrailTests
             await RunProcessAsync("dotnet", "new tool-manifest --force", installDir);
             await RunProcessAsync(
                 "dotnet",
-                $"tool install ElBruno.Text2Image.Cli --version {version} --add-source \"{outputDir}\" --ignore-failed-sources",
+                $"tool install ElBruno.Text2Image.Cli --version {version} --source \"{outputDir}\"",
                 installDir);
             await RunProcessAsync("dotnet", "tool run t2i -- --help", installDir);
         }
