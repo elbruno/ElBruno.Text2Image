@@ -2,6 +2,19 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.7.2] — 2026-11-14
+
+### Added
+- .NET 11.0 target support across all seven NuGet packages, retaining .NET 8.0
+  and .NET 10.0 compatibility.
+
+### Changed
+- Updated the NuGet release workflows and package validation to use the .NET 11 SDK
+  and verify all three target frameworks in the CLI tool package.
+- Updated the core package to ElBruno.HuggingFace.Downloader 1.6.2, which supports
+  .NET 8, .NET 10, and .NET 11.
+- Aligned Microsoft.Extensions.DependencyInjection.Abstractions with Downloader 1.6.2.
+
 ## [1.7.1] — 2026-11-04
 
 ### Added

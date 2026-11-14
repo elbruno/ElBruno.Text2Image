@@ -17,11 +17,11 @@
 
 | Release | Highlights |
 |---------|------------|
+| **1.7.2** | Adds .NET 11 support across all seven NuGet packages while retaining .NET 8 and .NET 10 targets |
 | **1.7.1** | Packages the CLI Agent Skill and its references under `skills/t2i/` for compatible NuGet inspection tools, while preserving `t2i init` and `t2i upgrade` |
 | **1.7.0** | Added Microsoft Foundry MAI-Image-2.6 and 2.6-Flash providers, dynamic sizing, aspect-ratio selection, optional web grounding, and replaced ImageSharp with managed PNG encoding |
 | **1.6.0** | Added reference-image (image-to-image) support: `t2i --image`/`--mask`/`--input-fidelity` for FLUX.2, GPT-Image (`images/edits`), and MAI-Image-2.5 (`/mai/v1/images/edits`) |
 | **1.5.2** | Improved GPT-Image-2.5 sizing and retired-provider migration handling, and completed the Blazor Components release |
-| **1.5.1** | Introduced GPT-Image-2.5 Sunburst/Flare and the `ElBruno.Text2Image.BlazorComponents` package |
 
 See the [Blazor components guide](docs/blazor-components.md) and
 [sample documentation](src/samples/BlazorText2ImageDemo/README.md).
@@ -206,7 +206,7 @@ See [docs/cli-tool.md](docs/cli-tool.md) for the full guide.
 - 🔧 **ONNX Runtime** — Fast, cross-platform inference (CPU, CUDA, DirectML)
 - ⚡ **Auto GPU Detection** — Automatically uses GPU if available (CUDA → DirectML → CPU)
 - 📦 **NuGet Package** — Simple `dotnet add package` installation
-- 🎯 **Multi-target** — Supports .NET 8.0 and .NET 10.0
+- 🎯 **Multi-target** — Supports .NET 8.0, .NET 10.0, and .NET 11.0
 - 🔌 **Microsoft.Extensions.AI** — All generators implement `IImageGenerator` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI.Abstractions)
 - 🌱 **Reproducible** — Seed-based generation for reproducible results
 

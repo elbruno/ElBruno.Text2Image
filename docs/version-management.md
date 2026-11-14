@@ -12,6 +12,7 @@ All NuGet packages in the ElBruno.Text2Image monorepo must maintain identical ve
 - **ElBruno.Text2Image.Cpu** — CPU inference
 - **ElBruno.Text2Image.Cuda** — CUDA GPU support
 - **ElBruno.Text2Image.DirectML** — DirectML GPU support
+- **ElBruno.Text2Image.BlazorComponents** — Blazor UI components
 
 The version number is defined in each `.csproj` file using the `<Version>` tag. When you bump one package, you must bump all others to match.
 
@@ -132,8 +133,9 @@ gh release create v1.3.0 --title "v1.3.0 — New Features" --notes "Added suppor
 
 | Version | Release Date | Status |
 |---------|--------------|--------|
-| 1.2.3 | 2026-04-24 | Current — All packages synchronized |
-| 1.2.2 | — | Previous |
+| 1.7.2 | 2026-11-14 | Current — All packages synchronized |
+| 1.7.1 | 2026-11-04 | Previous |
+| 1.7.0 | 2026-10-23 | Previous |
 
 ## See Also
 

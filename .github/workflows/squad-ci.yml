@@ -1,5 +1,4 @@
 name: Squad CI
-# dotnet project — configure build/test commands below
 
 on:
   pull_request:
@@ -17,12 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "11.0.x"
+
+      - name: Restore
+        run: dotnet restore ElBruno.Text2Image.slnx
+
       - name: Build and test
-        run: |
-          # TODO: Add your dotnet build/test commands here
-          # Go:            go test ./...
-          # Python:        pip install -r requirements.txt && pytest
-          # .NET:          dotnet test
-          # Java (Maven):  mvn test
-          # Java (Gradle): ./gradlew test
-          echo "No build commands configured — update squad-ci.yml"
+        run: dotnet test ElBruno.Text2Image.slnx -c Release --no-restore

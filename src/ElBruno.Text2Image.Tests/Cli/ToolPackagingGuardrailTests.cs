@@ -1,4 +1,4 @@
-#if NET10_0_OR_GREATER
+#if NET10_0
 using System.Diagnostics;
 using System.IO.Compression;
 using Xunit;
@@ -36,6 +36,9 @@ public class ToolPackagingGuardrailTests
                 Assert.Contains(
                     archive.Entries,
                     e => string.Equals(e.FullName, "tools/net10.0/any/DotnetToolSettings.xml", StringComparison.Ordinal));
+                Assert.Contains(
+                    archive.Entries,
+                    e => string.Equals(e.FullName, "tools/net11.0/any/DotnetToolSettings.xml", StringComparison.Ordinal));
                 Assert.Contains(
                     archive.Entries,
                     e => string.Equals(e.FullName, "skills/t2i/SKILL.md", StringComparison.Ordinal));
