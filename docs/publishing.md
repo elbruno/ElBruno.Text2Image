@@ -14,6 +14,8 @@ This guide covers how to publish new versions of **ElBruno.Text2Image** to NuGet
 | `ElBruno.Text2Image.BlazorComponents` | `src/ElBruno.Text2Image.BlazorComponents/` | Reusable Blazor UI components |
 | `ElBruno.Text2Image.Cli` | `src/ElBruno.Text2Image.Cli/` | Cloud-first `t2i` .NET tool, including an inspectable Agent Skill under `skills/t2i/` |
 
+All seven packages target .NET 8, .NET 10, and .NET 11.
+
 > **Maintenance rule:** If a new packable library is added under `src/`, update `.github/workflows/publish.yml` in the same PR so the new project is packed/pushed, and add a matching NuGet Trusted Publishing policy.
 
 ## Prerequisites (One-Time Setup)
@@ -65,13 +67,13 @@ Configure a Trusted Publishing policy for each package above, using this reposit
 **Use the provided script to update all at once:**
 
 ```powershell
-.\scripts\Update-AllVersions.ps1 -Version "1.7.1"
+.\scripts\Update-AllVersions.ps1 -Version "1.7.2"
 ```
 
 Add `-Commit` to auto-commit, and `-Tag` to auto-create the git tag:
 
 ```powershell
-.\scripts\Update-AllVersions.ps1 -Version "1.7.1" -Commit -Tag
+.\scripts\Update-AllVersions.ps1 -Version "1.7.2" -Commit -Tag
 ```
 
 A pre-commit hook (`.githooks/pre-commit-version-check`) will verify that all packages have matching versions before you commit. If versions don't match, you'll see an error — use the script above to fix them.
@@ -87,7 +89,7 @@ This is the standard workflow — the version is derived from the release tag.
 1. **Update all package versions** using the version script:
 
    ```powershell
-   .\scripts\Update-AllVersions.ps1 -Version "1.7.1"
+   .\scripts\Update-AllVersions.ps1 -Version "1.7.2"
    ```
 
 2. **NuGet icon source** (already configured):
@@ -98,7 +100,7 @@ This is the standard workflow — the version is derived from the release tag.
 3. **Commit and push** the tested release changes and version bump to `main`
 4. **Create a GitHub Release:**
    - Go to the repo → **Releases** → **Draft a new release**
-   - Create a new tag: `v1.7.1` (must match the version in the csproj)
+   - Create a new tag: `v1.7.2` (must match the version in the csproj)
    - Fill in the release title and notes
    - Click **Publish release**
 5. The **Publish to NuGet** workflow runs automatically:
