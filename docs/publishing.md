@@ -104,8 +104,18 @@ This is the standard workflow — the version is derived from the release tag.
    - Fill in the release title and notes
    - Click **Publish release**
 5. The **Publish to NuGet** workflow runs automatically:
-   - Strips the `v` prefix from the tag → uses `1.7.1` as the package version
+   - Strips the `v` prefix from the tag to determine the package version
    - Builds, tests, packs, and pushes to NuGet.org
+   - Waits up to 20 minutes each for package availability and CLI indexing, verifies
+     all seven packages contain their .NET 8, .NET 10, and .NET 11 assets, then installs
+     the CLI from NuGet and runs `t2i --help`
+
+### Verify an Existing Release
+
+To recheck NuGet propagation or package assets without publishing or pushing anything,
+run **Verify NuGet Release** from the Actions tab and enter the published version. The
+workflow checks all seven package archives and the CLI installation. It has read-only
+permissions and never pushes packages.
 
 ### Option B: Manual Dispatch
 

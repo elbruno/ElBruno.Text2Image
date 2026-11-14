@@ -65,6 +65,9 @@ jobs:
         with:
           dotnet-version: "11.0.x"
 
+      - name: Test NuGet verifier
+        run: python3 -m unittest discover -s tests/scripts -p "test_verify_nuget_release.py"
+
       - name: Determine version
         id: version
         run: |
@@ -161,35 +164,13 @@ jobs:
               --skip-duplicate
           done
 
-      - name: Verify published CLI tool from NuGet.org
-        run: |
-          dotnet nuget locals all --clear
-          for i in {1..30}; do
-            rm -rf artifacts/post-publish-verify
-            mkdir -p artifacts/post-publish-verify
-            pushd artifacts/post-publish-verify
-            dotnet new tool-manifest --force
-            INSTALL_OUTPUT=$(dotnet tool install ElBruno.Text2Image.Cli \
-              --version "${{ steps.version.outputs.version }}" \
-              --ignore-failed-sources \
-              --verbosity minimal 2>&1) && INSTALL_EXIT=0 || INSTALL_EXIT=$?
-            if [ "$INSTALL_EXIT" -eq 0 ]; then
-              dotnet tool run t2i -- --help
-              popd
-              exit 0
-            fi
-            echo "$INSTALL_OUTPUT"
-            popd
-            if echo "$INSTALL_OUTPUT" | grep -q "not found in NuGet feeds"; then
-              echo "Package not indexed yet on NuGet.org (attempt $i/30). Retrying..."
-              sleep 20
-            else
-              echo "ERROR: dotnet tool install failed with a non-propagation error."
-              exit 1
-            fi
-          done
-          echo "ERROR: Published CLI package was not discoverable on NuGet.org after retries."
-          exit 1
+      - name: Verify published packages on NuGet.org
+        run: python3 scripts/verify_nuget_release.py "$VERSION"
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          NUGET_VERIFY_ATTEMPTS: "60"
+          NUGET_VERIFY_DELAY_SECONDS: "20"
+          NUGET_VERIFY_TIMEOUT_SECONDS: "30"
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4
@@ -209,6 +190,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "11.0.x"
+
+      - name: Test NuGet verifier
+        run: python3 -m unittest discover -s tests/scripts -p "test_verify_nuget_release.py"
 
       - name: Determine CLI version
         id: version
@@ -260,35 +244,13 @@ jobs:
       - name: Push to NuGet.org
         run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-      - name: Verify published CLI tool from NuGet.org
-        run: |
-          dotnet nuget locals all --clear
-          for i in {1..30}; do
-            rm -rf artifacts/post-publish-verify
-            mkdir -p artifacts/post-publish-verify
-            pushd artifacts/post-publish-verify
-            dotnet new tool-manifest --force
-            INSTALL_OUTPUT=$(dotnet tool install ElBruno.Text2Image.Cli \
-              --version "${{ steps.version.outputs.version }}" \
-              --ignore-failed-sources \
-              --verbosity minimal 2>&1) && INSTALL_EXIT=0 || INSTALL_EXIT=$?
-            if [ "$INSTALL_EXIT" -eq 0 ]; then
-              dotnet tool run t2i -- --help
-              popd
-              exit 0
-            fi
-            echo "$INSTALL_OUTPUT"
-            popd
-            if echo "$INSTALL_OUTPUT" | grep -q "not found in NuGet feeds"; then
-              echo "Package not indexed yet on NuGet.org (attempt $i/30). Retrying..."
-              sleep 20
-            else
-              echo "ERROR: dotnet tool install failed with a non-propagation error."
-              exit 1
-            fi
-          done
-          echo "ERROR: Published CLI package was not discoverable on NuGet.org after retries."
-          exit 1
+      - name: Verify published packages on NuGet.org
+        run: python3 scripts/verify_nuget_release.py "$VERSION"
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          NUGET_VERIFY_ATTEMPTS: "60"
+          NUGET_VERIFY_DELAY_SECONDS: "20"
+          NUGET_VERIFY_TIMEOUT_SECONDS: "30"
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4

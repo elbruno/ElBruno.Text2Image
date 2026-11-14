@@ -1,0 +1,35 @@
+name: Verify NuGet Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Published package version to verify (for example 1.7.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "11.0.x"
+
+      - name: Test NuGet verifier
+        run: python3 -m unittest discover -s tests/scripts -p "test_verify_nuget_release.py"
+
+      - name: Verify published packages
+        run: python3 scripts/verify_nuget_release.py "$VERSION"
+        env:
+          VERSION: ${{ inputs.version }}
+          NUGET_VERIFY_ATTEMPTS: "60"
+          NUGET_VERIFY_DELAY_SECONDS: "20"
+          NUGET_VERIFY_TIMEOUT_SECONDS: "30"
