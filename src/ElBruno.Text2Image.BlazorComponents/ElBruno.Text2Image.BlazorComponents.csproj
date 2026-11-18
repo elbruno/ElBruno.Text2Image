@@ -3,7 +3,7 @@
     <TargetFrameworks>net8.0;net10.0;net11.0</TargetFrameworks>
     <RootNamespace>ElBruno.Text2Image.BlazorComponents</RootNamespace>
     <PackageId>ElBruno.Text2Image.BlazorComponents</PackageId>
-    <Version>1.7.2</Version>
+    <Version>1.7.3</Version>
     <Authors>Bruno Capuano</Authors>
     <Description>Reusable Blazor components for ElBruno.Text2Image generation experiences.</Description>
     <PackageTags>blazor;text-to-image;image-generation;ai;stable-diffusion</PackageTags>
@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />

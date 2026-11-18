@@ -84,6 +84,7 @@ public class ToolPackagingGuardrailTests
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        psi.Environment["MSBUILDDISABLENODEREUSE"] = "1";
 
         using var process = Process.Start(psi);
         Assert.NotNull(process);
@@ -103,6 +104,15 @@ public class ToolPackagingGuardrailTests
 
             await process.WaitForExitAsync();
             throw new TimeoutException($"Command timed out: {fileName} {arguments}");
+        }
+
+        try
+        {
+            await Task.WhenAll(stdOutTask, stdErrTask).WaitAsync(TimeSpan.FromMinutes(2));
+        }
+        catch (TimeoutException)
+        {
+            throw new TimeoutException($"Timed out draining command output: {fileName} {arguments}");
         }
 
         var stdOut = await stdOutTask;

@@ -2,6 +2,18 @@
 
 All notable changes to ElBruno.Text2Image are documented in this file.
 
+## [1.7.3] — 2026-11-18
+
+### Changed
+- Updated CPU and CUDA ONNX Runtime packages to 1.32.0 while retaining the
+  DirectML provider on its 1.24.4 version line.
+- Upgraded Microsoft.Extensions.AI.Abstractions to 11.0.0 and aligned
+  dependency-injection abstractions with 10.0.15.
+
+### Fixed
+- Prevented the .NET 10 CLI packaging guardrail test from hanging on reused
+  MSBuild node output handles.
+
 ## [1.7.2] — 2026-11-14
 
 ### Added

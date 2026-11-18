@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Override the CPU-only OnnxRuntime with GPU version -->
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" ExcludeAssets="native" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.24.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.32.0" ExcludeAssets="native" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.32.0" />
   </ItemGroup>
 </Project>
