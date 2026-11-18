@@ -13,7 +13,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
     <!-- Direct reference needed: the Cpu project has no source files (thin metapackage),
          so native assets from Microsoft.ML.OnnxRuntime don't flow transitively. -->
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.32.0" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.*" />
     <!-- Spectre.Console.Cli needed for InitCommandTests to construct CommandContext -->
     <PackageReference Include="Spectre.Console.Cli" Version="0.49.1" Condition="'$(TargetFramework)' != 'net8.0'" />

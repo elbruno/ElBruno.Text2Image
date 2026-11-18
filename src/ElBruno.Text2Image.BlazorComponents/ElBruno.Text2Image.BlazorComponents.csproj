@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ElBruno.Text2Image\ElBruno.Text2Image.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.*" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" Condition="Exists('..\..\README.md')" />

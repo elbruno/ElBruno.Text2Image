@@ -27,9 +27,10 @@
 
   <ItemGroup>
     <PackageReference Include="ElBruno.HuggingFace.Downloader" Version="1.6.2" />
-    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.3.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="11.0.0" />
+    <!-- Keep the shared managed runtime aligned with DirectML; CPU/CUDA packages bring their matching runtime. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
     <PackageReference Include="System.Numerics.Tensors" Version="9.*" />
   </ItemGroup>
